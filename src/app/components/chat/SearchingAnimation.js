@@ -20,20 +20,20 @@ export default function SearchingAnimation() {
   }, [])
   
   return (
-    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-      <div className="flex items-center space-x-2">
-        <span className="text-gray-700 font-medium">Buscando en</span>
+    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-3 inline-block">
+      <div className="flex items-center space-x-3">
+        <span className="text-gray-600 text-sm">Buscando en</span>
         <span 
-          className="font-bold transition-all duration-300"
+          className="font-bold text-sm transition-all duration-300"
           style={{ color: logos[currentLogo].color }}
         >
           {logos[currentLogo].name}
         </span>
-      </div>
-      <div className="flex space-x-1">
-        <span className="animate-bounce animation-delay-0">.</span>
-        <span className="animate-bounce animation-delay-100">.</span>
-        <span className="animate-bounce animation-delay-200">.</span>
+        <div className="flex space-x-1">
+          <span className="animate-bounce">.</span>
+          <span className="animate-bounce" style={{animationDelay: '0.1s'}}>.</span>
+          <span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span>
+        </div>
       </div>
     </div>
   )
