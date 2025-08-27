@@ -33,3 +33,13 @@ body {
 * {
   font-family: var(--font-poppins), system-ui, sans-serif;
 }
+
+/* Animación de búsqueda */
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
+}
+
+.animation-delay-0 { animation-delay: 0ms; }
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
