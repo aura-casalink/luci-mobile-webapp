@@ -102,7 +102,26 @@ export default function DiscoverProperties({
           style={{
             backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(${getPropertyImage(currentProperty)})`,
           }}
-          onClick={() => onPropertyClick && onPropertyClick(currentProperty)}
+          onClick={() => if (onPropertyClick) {
+                          // Parsear multimedia antes de enviar
+                          let propertyWithImages = {...currentProperty}
+                          if (currentProperty.multimedia) {
+                            try {
+                              if (currentProperty.multimedia.images) {
+                                propertyWithImages.images = currentProperty.multimedia.images
+                                  .map(item => item.url)
+                                  .filter(Boolean)
+                                  .slice(0, 15)
+                              }
+                            } catch (e) {}
+                          }
+                          
+                          if (!propertyWithImages.images || propertyWithImages.images.length === 0) {
+                            propertyWithImages.images = [currentProperty.thumbnail]
+                          }
+                          
+                          onPropertyClick(propertyWithImages)
+                        }
         />
 
         {/* Botones de share y like - arriba a la derecha en fila */}
