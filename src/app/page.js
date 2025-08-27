@@ -1,103 +1,132 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect } from 'react'
+import BottomNavigation from './components/layout/BottomNavigation'
+import TopNavigation from './components/layout/TopNavigation'
+import ChatInterface from './components/chat/ChatInterface'
+import SavedPropertiesContainer from './components/saved/SavedPropertiesContainer'
+import { useSavedProperties } from './hooks/useSavedProperties'
+import NearbyContainer from './components/nearby/NearbyContainer'
+import ExploreContainer from './components/explore/ExploreContainer'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState('chat')
+  const [sessionId, setSessionId] = useState('')
+  const [isStreetViewActive, setIsStreetViewActive] = useState(false)
+  const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
+  const [previousSavedCount, setPreviousSavedCount] = useState(0)
+  
+  // UN SOLO HOOK CENTRAL - todos los componentes usarán estas props
+  const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
+  
+  useEffect(() => {
+    const generateSessionId = () => {
+      const stored = localStorage.getItem('luci_session_id')
+      const storedTime = localStorage.getItem('luci_session_time')
+      const oneHour = 60 * 60 * 1000 // 1 hora en milisegundos
+      
+      if (stored && storedTime && (Date.now() - parseInt(storedTime) < oneHour)) {
+        // Usar sessionId existente si no ha pasado 1 hora
+        setSessionId(stored)
+        console.log('Using existing sessionId:', stored)
+      } else {
+        // Generar nuevo sessionId si es la primera vez o ha pasado 1 hora
+        const newId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        localStorage.setItem('luci_session_id', newId)
+        localStorage.setItem('luci_session_time', Date.now().toString())
+        setSessionId(newId)
+        console.log('Generated new sessionId:', newId)
+      }
+    }
+    generateSessionId()
+  }, [])
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  // Detectar cambios en propiedades guardadas
+  useEffect(() => {
+    if (savedProperties.size > previousSavedCount) {
+      setHasUnvisitedSaves(true)
+    } else if (savedProperties.size < previousSavedCount) {
+      // No cambiar hasUnvisitedSaves automáticamente cuando se quitan
+    }
+    setPreviousSavedCount(savedProperties.size)
+  }, [savedProperties.size, previousSavedCount])
+
+  // Función para manejar envío de mensajes
+  const handleSendMessage = (message) => {
+    console.log('Mensaje enviado:', message)
+  }
+
+  // Función para manejar cambio de pestañas
+  const handleTabChange = (tabId) => {
+    if (tabId === 'saved') {
+      setHasUnvisitedSaves(false)
+    }
+    setActiveTab(tabId)
+  }
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'chat':
+        return (
+          <ChatInterface 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={toggleSaveProperty}
+            onStreetViewChange={setIsStreetViewActive}
+          />
+        )
+      case 'explore':
+        return (
+          <ExploreContainer 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={toggleSaveProperty}
+            onSendMessage={handleSendMessage}
+          />
+        )
+      case 'saved':
+        return (
+          <SavedPropertiesContainer 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={toggleSaveProperty}
+          />
+        )
+      case 'nearby':
+        return (
+          <NearbyContainer 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={toggleSaveProperty}
+          />
+        )
+      default:
+        return (
+          <ChatInterface 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={toggleSaveProperty}
+            onStreetViewChange={setIsStreetViewActive}
+          />
+        )
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <TopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      
+      <main className={`flex-1 overflow-hidden ${activeTab === 'nearby' ? 'pt-0 pb-20' : 'pt-20 pb-20'}`}>
+        {renderContent()}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      
+      {!isStreetViewActive && (
+        <BottomNavigation 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange}
+          savedCount={savedProperties.size}
+          hasUnvisitedSaves={hasUnvisitedSaves}
+        />
+      )}
     </div>
-  );
+  )
 }

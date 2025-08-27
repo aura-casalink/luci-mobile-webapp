@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Poppins font configuration */
+.font-sans {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+* {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
