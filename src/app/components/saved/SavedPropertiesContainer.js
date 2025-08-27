@@ -284,6 +284,7 @@ export default function SavedPropertiesContainer({ sessionId, savedProperties, o
                     const parsedImages = multimediaData.images
                       .map(item => item.url)
                       .filter(url => url && typeof url === 'string')
+                      .slice(0, 15)
                     
                     if (parsedImages.length > 0) {
                       images = parsedImages
