@@ -387,19 +387,51 @@ export default function MapView({ properties, userLocation, savedProperties, onP
       {userLocation && (
         <button
           onClick={recenterMap}
-          className="absolute bottom-24 right-4 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all z-10 hover:scale-105"
-          title="Centrar en mi ubicación"
+          className="absolute right-[10px] bottom-[180px] z-10"
+          style={{
+            width: '40px',
+            height: '40px',
+            backgroundColor: 'white',
+            border: 'none',
+            borderRadius: '2px',
+            boxShadow: 'rgba(0, 0, 0, 0.3) 0px 1px 4px -1px',
+            cursor: 'pointer',
+            padding: '0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+          title="Tu ubicación"
         >
           <svg 
-            width="24" 
-            height="24" 
+            width="20" 
+            height="20" 
             viewBox="0 0 24 24" 
-            fill="none" 
-            className="text-blue-600"
+            fill="none"
           >
-            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" opacity="0.3" />
+            {/* Target/Crosshair simple */}
+            <circle 
+              cx="12" 
+              cy="12" 
+              r="8" 
+              stroke="#666" 
+              strokeWidth="2"
+              fill="none"
+            />
+            <circle 
+              cx="12" 
+              cy="12" 
+              r="3" 
+              fill="#4285F4"
+            />
+            <path 
+              d="M12 2v6m0 8v6M2 12h6m8 0h6" 
+              stroke="#666" 
+              strokeWidth="2"
+            />
           </svg>
         </button>
       )}
