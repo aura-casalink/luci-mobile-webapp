@@ -86,7 +86,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         .eq('session_id', sessionId)
         .single()
       
-      if (currentSession?.ip && currentSession.ip !== 'unknown') {
+      if (currentSession?.ip && currentSession.ip !== 'unknown' && currentSession.ip !== 'web-app') {
         // Buscar TODAS las sesiones con esta IP
         const { data: allSessions } = await supabase
           .from('chat_sessions')
@@ -248,7 +248,6 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             conversations: updatedMessages,
             updated_at: new Date().toISOString(),
             device_id: sessionId,
-            ip: 'web-app'
           })
         
         if (upsertError) {
