@@ -328,27 +328,20 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                     let images = [property.thumbnail]
                     if (property.multimedia) {
                       try {
-                        let multimediaArray = property.multimedia
-                        
-                        // Si es string, intentar parsearlo
-                        if (typeof property.multimedia === 'string') {
-                          multimediaArray = JSON.parse(property.multimedia)
-                        }
-                        
-                        // Si es array directo de URLs
-                        if (Array.isArray(multimediaArray) && multimediaArray.length > 0) {
-                          // Verificar si son objetos con propiedad url o strings directos
-                          if (typeof multimediaArray[0] === 'string') {
-                            images = multimediaArray.filter(Boolean)
-                          } else if (multimediaArray[0].url) {
-                            images = multimediaArray.map(m => m.url).filter(Boolean)
+                        let multimediaArray = property.multimedia        
+                        if (multimediaData.images && Array.isArray(multimediaData.images)) {
+                          const parsedImages = multimediaData.images
+                            .map(item => item.url)
+                            .filter(url => url && typeof url === 'string')
+                          
+                          if (parsedImages.length > 0) {
+                            images = parsedImages
                           }
                         }
                         
-                        console.log('✅ Parsed multimedia successfully:', images.length, 'images')
+                        console.log(`✅ Property ${property.propertyCode}: ${images.length} images`)
                       } catch (e) {
-                        console.log('❌ Error parsing multimedia:', e.message)
-                        console.log('Raw multimedia value:', property.multimedia)
+                        console.error('Parse error for', property.propertyCode, ':', e)
                       }
                     }
                     
