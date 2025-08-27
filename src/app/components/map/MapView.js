@@ -300,7 +300,16 @@ export default function MapView({ properties, userLocation, savedProperties, onP
               e.stopImmediatePropagation()
               e.preventDefault()
               infoWindow.close()
-              onPropertyClick && onPropertyClick(property)
+              if (onPropertyClick) {
+                // Asegurar que la propiedad tenga las imágenes
+                const propertyWithImages = {
+                  ...property,
+                  images: property.images && property.images.length > 0 
+                    ? property.images.slice(0, 15) 
+                    : [property.thumbnail]
+                }
+                onPropertyClick(propertyWithImages)
+              }
               document.removeEventListener('click', currentHandler, true)
               currentHandler = null
             }
