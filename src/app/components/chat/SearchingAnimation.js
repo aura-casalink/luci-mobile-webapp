@@ -4,87 +4,63 @@ import { useState, useEffect } from 'react'
 export default function SearchingAnimation() {
   const [currentLogo, setCurrentLogo] = useState(0)
   
-  // URLs de los logos de los portales inmobiliarios
   const logos = [
     {
-      name: 'Idealista',
-      url: 'https://x.idealista.com/idealista-app/app-static/brand/logo_android_main@3x.png',
-      bg: '#6DB83F'
+      name: 'idealista',
+      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1154154b098fe610_d20250827_m223950_c003_v0312030_t0027_u01756334390521'
     },
     {
-      name: 'Fotocasa',
-      url: 'https://st.fotocasa.es/images/logos/fotocasa-logo.svg',
-      bg: '#FF6B00'
+      name: 'fotocasa',
+      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1128682f1d191f53_d20250827_m223948_c003_v0312030_t0059_u01756334388927'
     },
     {
-      name: 'Habitaclia',
-      url: 'https://static.habitaclia.com/img/logos/habitaclia-logo-color.svg',
-      bg: '#FF6700'
+      name: 'habitaclia',
+      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1017b698c5209bad_d20250827_m223947_c003_v0312028_t0002_u01756334387564'
     },
     {
-      name: 'Pisos.com',
-      url: 'https://st.pisosypisos.com/statics/pisos/img/logos/pisos-logo.svg',
-      bg: '#004B87'
+      name: 'pisos.com',
+      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f11409ae20b84d572_d20250827_m223945_c003_v0312030_t0032_u01756334385521'
     },
     {
-      name: 'Yaencontre',
-      url: 'https://www.yaencontre.com/img/yaencontre-logo.svg',
-      bg: '#E91E63'
+      name: 'yaencontre',
+      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f10185d237c9eac9a_d20250827_m223943_c003_v0312030_t0057_u01756334383566'
     }
   ]
   
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentLogo((prev) => (prev + 1) % logos.length)
-    }, 1500) // Cambiar cada 1.5 segundos
+    }, 1200)
     
     return () => clearInterval(interval)
   }, [])
   
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-4 inline-block">
+    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-3 inline-block">
       <div className="flex items-center space-x-3">
         <span className="text-gray-600 text-sm">Buscando en</span>
         
-        {/* Contenedor para los logos con transición */}
-        <div className="relative w-24 h-8 overflow-hidden">
+        {/* Contenedor para los logos */}
+        <div className="relative w-24 h-7 flex items-center justify-center">
           {logos.map((logo, index) => (
-            <div
+            <img 
               key={logo.name}
-              className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+              src={logo.url} 
+              alt={logo.name}
+              className={`absolute h-6 w-auto object-contain transition-all duration-300 ${
                 index === currentLogo 
-                  ? 'opacity-100 transform translate-y-0' 
-                  : index === (currentLogo - 1 + logos.length) % logos.length
-                  ? 'opacity-0 transform -translate-y-full'
-                  : 'opacity-0 transform translate-y-full'
+                  ? 'opacity-100 scale-100' 
+                  : 'opacity-0 scale-75'
               }`}
-            >
-              <img 
-                src={logo.url} 
-                alt={logo.name}
-                className="h-6 object-contain"
-                style={{ maxWidth: '80px' }}
-                onError={(e) => {
-                  // Si falla la imagen, mostrar el nombre como fallback
-                  e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'block'
-                }}
-              />
-              <span 
-                className="font-bold text-sm hidden"
-                style={{ color: logo.bg, display: 'none' }}
-              >
-                {logo.name}
-              </span>
-            </div>
+            />
           ))}
         </div>
         
         {/* Puntos animados */}
         <div className="flex space-x-1">
-          <span className="animate-bounce">.</span>
-          <span className="animate-bounce" style={{animationDelay: '0.1s'}}>.</span>
-          <span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span>
+          <span className="animate-bounce text-gray-600">•</span>
+          <span className="animate-bounce text-gray-600" style={{animationDelay: '0.1s'}}>•</span>
+          <span className="animate-bounce text-gray-600" style={{animationDelay: '0.2s'}}>•</span>
         </div>
       </div>
     </div>
