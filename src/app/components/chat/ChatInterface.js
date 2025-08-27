@@ -10,25 +10,29 @@ import SearchingAnimation from './SearchingAnimation'
 export default function ChatInterface({ sessionId, savedProperties, onToggleSave }) {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
-  const [isLoading, setIsLoadingState] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem(`searching_${sessionId}`) === 'true'
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // Nuevo estado para esperar callbacks
+  const [isWaitingForCallback, setIsWaitingForCallbackState] = useState(() => {
+    if (typeof window !== 'undefined' && sessionId) {
+      return sessionStorage.getItem(`waiting_callback_${sessionId}`) === 'true'
     }
     return false
   })
   
-  const setIsLoading = (value) => {
-    setIsLoadingState(value)
+  const setIsWaitingForCallback = (value) => {
+    setIsWaitingForCallbackState(value)
     if (typeof window !== 'undefined' && sessionId) {
       if (value) {
-        sessionStorage.setItem(`searching_${sessionId}`, 'true')
+        sessionStorage.setItem(`waiting_callback_${sessionId}`, 'true')
       } else {
-        sessionStorage.removeItem(`searching_${sessionId}`)
+        sessionStorage.removeItem(`waiting_callback_${sessionId}`)
       }
     }
   }
+  
   const [isRecording, setIsRecording] = useState(false)
-  const [isPreparing, setIsPreparing] = useState(false) // Nuevo estado
+  const [isPreparing, setIsPreparing] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
   const [propertySets, setPropertySets] = useState([])
   const [mediaRecorder, setMediaRecorder] = useState(null)
@@ -108,6 +112,9 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   }
 
   const processCallback = (callback) => {
+    // Desactivar estado de espera cuando llega cualquier callback
+    setIsWaitingForCallback(false)
+    
     try {
       const payload = callback.payload
       console.log('Processing callback:', payload)
@@ -153,7 +160,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         
         setPropertySets(prev => {
           const newSets = [...prev, newPropertySet]
-          savePropertySetsToSession(newSets) // Guardar todo el array
+          savePropertySetsToSession(newSets)
           return newSets
         })
         setIsLoading(false)
@@ -171,6 +178,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       console.error('Error processing callback:', error)
       addMessage('Error procesando respuesta', 'error')
       setIsLoading(false)
+      setIsWaitingForCallback(false)
     }
   }
 
@@ -245,8 +253,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       await supabase
         .from('chat_sessions')
         .update({
-          property_sets: propertySets, // Guardar TODOS los conjuntos
-          last_properties: propertySets[propertySets.length - 1]?.properties || [], // Mantener compatibilidad
+          property_sets: propertySets,
+          last_properties: propertySets[propertySets.length - 1]?.properties || [],
           updated_at: new Date().toISOString()
         })
         .eq('session_id', sessionId)
@@ -260,10 +268,9 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   const sendVoiceMessage = async (audioBlob, duration) => {
     try {
       console.log('🎤 Sending voice message with duration:', duration)
-      // Convertir audio a base64
       const reader = new FileReader()
       reader.onloadend = async () => {
-        const base64Audio = reader.result.split(",")[1] // Remover "data:audio/...;base64,"
+        const base64Audio = reader.result.split(",")[1]
         
         addMessage(`🎤 Nota de voz (${duration}s)`, "user")
         setIsLoading(true)
@@ -291,7 +298,11 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             if (data.assistant_reply) {
               setTimeout(() => {
                 addMessage(data.assistant_reply, "assistant")
-                if (!data.search_started) {
+                
+                if (data.search_started) {
+                  setIsWaitingForCallback(true)
+                  setIsLoading(false)
+                } else {
                   setIsLoading(false)
                 }
               }, 500)
@@ -347,7 +358,10 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           setTimeout(() => {
             addMessage(data.assistant_reply, 'assistant')
             
-            if (!data.search_started) {
+            if (data.search_started) {
+              setIsWaitingForCallback(true)
+              setIsLoading(false)
+            } else {
               setIsLoading(false)
             }
           }, 500)
@@ -370,7 +384,6 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
 
   const toggleRecording = async () => {
     if (!isRecording && !isPreparing) {
-      // Empezar preparación
       setIsPreparing(true)
       
       try {
@@ -388,15 +401,13 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           }
         }
         
-        // Cuando realmente empiece a grabar
         recorder.onstart = () => {
           startTime = Date.now()
-          setIsPreparing(false) // Ya no preparando
-          setIsRecording(true)  // Ahora sí grabando
-          setRecordingDuration(1) // Empezar en 1 segundo
+          setIsPreparing(false)
+          setIsRecording(true)
+          setRecordingDuration(1)
           console.log('🎤 Recording actually started')
           
-          // Contador sincronizado
           const interval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000) + 1
             setRecordingDuration(elapsed)
@@ -420,12 +431,10 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           setRecordedAudio({ blob: audioBlob, url: audioUrl, duration: actualDuration })
           setShowAudioPreview(true)
           
-          // Limpiar estados
           setIsRecording(false)
           setIsPreparing(false)
           setRecordingDuration(0)
           
-          // Parar stream
           stream.getTracks().forEach(track => track.stop())
         }
         
@@ -438,7 +447,6 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         addMessage("No se pudo acceder al micrófono. Verifica los permisos.", "error")
       }
     } else {
-      // Parar grabación
       if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop()
       }
@@ -510,16 +518,13 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     addMessage(message, 'user')
   }
 
-  // Combinar mensajes y propiedades en orden cronológico
   const getCombinedItems = () => {
     const items = []
     
-    // Añadir todos los mensajes
     messages.forEach(message => {
       items.push({ type: 'message', data: message, timestamp: message.timestamp })
     })
     
-    // Añadir cada conjunto de propiedades
     propertySets.forEach((propertySet, index) => {
       items.push({ 
         type: 'properties', 
@@ -529,22 +534,19 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       })
     })
     
-    // Ordenar por timestamp
     return items.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
   }
 
-  // Función para obtener texto del placeholder
   const getPlaceholderText = () => {
     if (isPreparing) return "Preparando micrófono..."
     if (isRecording) return `Grabando... ${recordingDuration}s`
     return "Escribe o mantén pulsado para hablar"
   }
 
-  // Función para obtener color del botón
   const getButtonColor = () => {
-    if (isPreparing) return "#f59e0b" // Amarillo/naranja
-    if (isRecording) return "#ef4444" // Rojo
-    return inputText.trim() ? "#0A0A23" : "#D1D5DB" // Azul oscuro o gris
+    if (isPreparing) return "#f59e0b"
+    if (isRecording) return "#ef4444"
+    return inputText.trim() ? "#0A0A23" : "#D1D5DB"
   }
 
   if (selectedProperty) {
@@ -669,7 +671,21 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             return null
           })}
           
-          {isLoading && (
+          {/* Typing normal cuando esperamos respuesta del webhook */}
+          {isLoading && !isWaitingForCallback && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-3">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Animación de búsqueda cuando esperamos callback */}
+          {isWaitingForCallback && (
             <div className="flex justify-start">
               <SearchingAnimation />
             </div>
