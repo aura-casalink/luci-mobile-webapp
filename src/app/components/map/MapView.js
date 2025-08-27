@@ -89,7 +89,19 @@ export default function MapView({ properties, userLocation, savedProperties, onP
       if (!lat || !lng) return
 
       const propertyId = property.property_id || property.propertyCode || property.id
-      const isSaved = savedProperties?.has(propertyId)
+
+      console.log('🗺️ Checking property:', {
+        id: propertyId,
+        title: property.title,
+        savedPropertiesArray: Array.from(savedProperties || new Set()),
+        hasNumeric: savedProperties?.has(Number(propertyId)),
+        hasString: savedProperties?.has(String(propertyId)),
+        hasRaw: savedProperties?.has(propertyId)
+      })
+      
+      const isSaved = savedProperties?.has(String(propertyId)) || 
+                      savedProperties?.has(Number(propertyId)) || 
+                      savedProperties?.has(propertyId)
 
       const marker = new googleMaps.Marker({
         position: { lat, lng },
