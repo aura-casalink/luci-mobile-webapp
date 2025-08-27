@@ -238,10 +238,10 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
     const loadNearbyProperties = async () => {
       try {
         const allProperties = []
-
+  
         // Siempre agregar propiedades hardcodeadas
         allProperties.push(...HARDCODED_PROPERTIES)
-
+  
         // Cargar propiedades de búsqueda desde Supabase
         try {
           const { data: sessionData, error } = await supabase
@@ -249,12 +249,12 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
             .select('property_sets')
             .eq('session_id', sessionId)
             .single()
-
+  
           if (!error && sessionData?.property_sets) {
             const propertySets = Array.isArray(sessionData.property_sets) 
               ? sessionData.property_sets 
               : [sessionData.property_sets]
-
+  
             propertySets.forEach((set) => {
               if (set.properties && Array.isArray(set.properties)) {
                 set.properties.forEach(property => {
@@ -285,7 +285,51 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
         } catch (supabaseError) {
           console.log('Could not load search properties:', supabaseError)
         }
-
+  
+        // NUEVO: Cargar propiedades favoritas desde Descubre Propiedades
+        try {
+          const { data: favData } = await supabase
+            .from('chat_sessions')
+            .select('favorited_properties')
+            .eq('session_id', sessionId)
+            .single()
+          
+          if (favData?.favorited_properties && favData.favorited_properties.length > 0) {
+            const { data: discoverProps } = await supabase
+              .from('properties_database')
+              .select('*')
+              .in('propertyCode', favData.favorited_properties)
+            
+            if (discoverProps && discoverProps.length > 0) {
+              discoverProps.forEach(property => {
+                if (property.latitude && property.longitude) {
+                  allProperties.push({
+                    property_id: property.propertyCode,
+                    propertyCode: property.propertyCode,
+                    title: property.title || property.subtitle,
+                    address: property.address || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim(),
+                    price: property.price,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    builtArea: property.sqft,
+                    lat: property.latitude,  // Conversión clave
+                    lng: property.longitude, // Conversión clave
+                    thumbnail: property.thumbnail,
+                    images: property.multimedia ? JSON.parse(property.multimedia || '[]').map(m => m.url || m) : [property.thumbnail],
+                    description: property.description,
+                    neighborhood: property.neighborhood,
+                    municipality: property.municipality,
+                    source: "discover"
+                  })
+                }
+              })
+              console.log(`Loaded ${discoverProps.length} favorited properties from Discover`)
+            }
+          }
+        } catch (error) {
+          console.log('Could not load favorited discover properties:', error)
+        }
+  
         setProperties(allProperties)
       } catch (error) {
         console.error('Error loading nearby properties:', error)
@@ -294,7 +338,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
         setLoading(false)
       }
     }
-
+  
     loadNearbyProperties()
   }, [sessionId])
 
