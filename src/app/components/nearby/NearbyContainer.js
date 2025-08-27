@@ -293,34 +293,55 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
             .select('favorited_properties')
             .eq('session_id', sessionId)
             .single()
+
+          console.log('🔍 DEBUG - Favorited IDs:', favData?.favorited_properties) 
           
           if (favData?.favorited_properties && favData.favorited_properties.length > 0) {
             const { data: discoverProps } = await supabase
               .from('properties_database')
               .select('*')
               .in('propertyCode', favData.favorited_properties)
+
+            console.log('🔍 DEBUG - Properties found in DB:', discoverProps?.length) 
+            console.log('🔍 DEBUG - First property data:', discoverProps?.[0])
             
             if (discoverProps && discoverProps.length > 0) {
               discoverProps.forEach(property => {
+                console.log('🔍 DEBUG - Property coords:', {
+                  id: property.propertyCode,
+                  lat: property.latitude, 
+                  lng: property.longitude,
+                  hasCoords: !!(property.latitude && property.longitude)
+                })
                 if (property.latitude && property.longitude) {
-                  allProperties.push({
-                    property_id: property.propertyCode,
-                    propertyCode: property.propertyCode,
-                    title: property.title || property.subtitle,
-                    address: property.address || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim(),
-                    price: property.price,
-                    bedrooms: property.bedrooms,
-                    bathrooms: property.bathrooms,
-                    builtArea: property.sqft,
-                    lat: property.latitude,  // Conversión clave
-                    lng: property.longitude, // Conversión clave
-                    thumbnail: property.thumbnail,
-                    images: property.multimedia ? JSON.parse(property.multimedia || '[]').map(m => m.url || m) : [property.thumbnail],
-                    description: property.description,
-                    neighborhood: property.neighborhood,
-                    municipality: property.municipality,
-                    source: "discover"
-                  })
+                  // Verificar duplicados
+                  const exists = allProperties.some(p => 
+                    p.propertyCode === property.propertyCode || 
+                    p.property_id === property.propertyCode
+                  )
+
+                  if (exists) {
+                    console.log('⚠️ Property already exists, skipping:', property.propertyCode)
+                  } else {
+                    allProperties.push({
+                      property_id: property.propertyCode,
+                      propertyCode: property.propertyCode,
+                      title: property.title || property.subtitle,
+                      address: property.address || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim(),
+                      price: property.price,
+                      bedrooms: property.bedrooms,
+                      bathrooms: property.bathrooms,
+                      builtArea: property.sqft,
+                      lat: property.latitude,  // Conversión clave
+                      lng: property.longitude, // Conversión clave
+                      thumbnail: property.thumbnail,
+                      images: property.multimedia ? JSON.parse(property.multimedia || '[]').map(m => m.url || m) : [property.thumbnail],
+                      description: property.description,
+                      neighborhood: property.neighborhood,
+                      municipality: property.municipality,
+                      source: "discover"
+                    })
+                  }
                 }
               })
               console.log(`Loaded ${discoverProps.length} favorited properties from Discover`)
