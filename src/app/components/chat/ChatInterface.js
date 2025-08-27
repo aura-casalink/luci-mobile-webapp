@@ -187,11 +187,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           timestamp: new Date().toISOString()
         }
         
-        setPropertySets(prev => {
-          const newSets = [...prev, newPropertySet]
-          savePropertySetsToSession(newSets)
-          return newSets
-        })
+        setPropertySets(prev => [...prev, newPropertySet])
+        savePropertySetToCurrentSession(newPropertySet)
         setIsLoading(false)
       }
       else {
@@ -269,6 +266,35 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       console.log('💾 Conversation saved successfully')
     } catch (error) {
       console.error('💾 Error saving conversation:', error)
+    }
+  }
+
+  const savePropertySetToCurrentSession = async (newPropertySet) => {
+    if (!sessionId || !newPropertySet) return
+    
+    try {
+      // Primero obtener los property_sets actuales de SOLO esta sesión
+      const { data: currentData } = await supabase
+        .from('chat_sessions')
+        .select('property_sets')
+        .eq('session_id', sessionId)
+        .single()
+      
+      const currentSessionSets = currentData?.property_sets || []
+      currentSessionSets.push(newPropertySet)
+      
+      console.log('💾 Saving new property set to current session only')
+      
+      await supabase
+        .from('chat_sessions')
+        .update({
+          property_sets: currentSessionSets,
+          last_properties: newPropertySet.properties,
+          updated_at: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
+    } catch (error) {
+      console.error('💾 Error saving property set:', error)
     }
   }
 
