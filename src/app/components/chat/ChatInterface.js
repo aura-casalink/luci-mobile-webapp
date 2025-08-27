@@ -79,32 +79,50 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     try {
       console.log('📄 loadExistingMessages called for session:', sessionId)
       
-      const { data, error } = await supabase
+      // Buscar la sesión actual para obtener la IP
+      const { data: currentSession, error } = await supabase
         .from('chat_sessions')
-        .select('conversations, property_sets, last_properties') 
+        .select('conversations, property_sets, last_properties, ip')
         .eq('session_id', sessionId)
         .single()
-
-      console.log('📄 Supabase response:', { data, error })
-
-      if (data && data.conversations && data.conversations.length > 0) {
-        console.log('📄 Loading existing messages:', data.conversations.length, 'messages')
-        setMessages(data.conversations)
-        setShowWelcome(false)
-      }
-
-      if (data && data.property_sets && data.property_sets.length > 0) {
-        console.log('🏠 Loading property sets:', data.property_sets.length, 'sets')
-        setPropertySets(data.property_sets)
-      } else if (data && data.last_properties && data.last_properties.length > 0) {
-        // Fallback para compatibilidad con formato anterior
-        console.log('🏠 Loading existing properties (legacy):', data.last_properties.length, 'properties')
-        const existingSet = {
-          id: 'existing',
-          properties: data.last_properties,
-          timestamp: new Date(data.updated_at || Date.now()).toISOString()
+      
+      if (currentSession?.ip && currentSession.ip !== 'unknown') {
+        // Buscar TODAS las sesiones con esta IP
+        const { data: allSessions } = await supabase
+          .from('chat_sessions')
+          .select('conversations, session_id, created_at')
+          .eq('ip', currentSession.ip)
+          .order('created_at', { ascending: true }) // Ordenar por fecha
+        
+        if (allSessions && allSessions.length > 0) {
+          // Combinar todas las conversaciones
+          const allConversations = []
+          allSessions.forEach(session => {
+            if (session.conversations && Array.isArray(session.conversations)) {
+              allConversations.push(...session.conversations)
+            }
+          })
+          
+          // Ordenar por timestamp
+          allConversations.sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+          )
+          
+          console.log('📄 Loading conversations from IP:', currentSession.ip, '- Total:', allConversations.length, 'messages from', allSessions.length, 'sessions')
+          setMessages(allConversations)
+          setShowWelcome(allConversations.length === 0)
         }
-        setPropertySets([existingSet])
+      } else if (currentSession?.conversations) {
+        // Fallback: solo sesión actual si no hay IP
+        console.log('📄 Loading session only (no IP):', currentSession.conversations.length, 'messages')
+        setMessages(currentSession.conversations)
+        setShowWelcome(currentSession.conversations.length === 0)
+      }
+  
+      // Cargar property_sets de la sesión actual
+      if (currentSession?.property_sets && currentSession.property_sets.length > 0) {
+        console.log('🏠 Loading property sets:', currentSession.property_sets.length, 'sets')
+        setPropertySets(currentSession.property_sets)
       }
     } catch (error) {
       console.log('📄 Error loading existing data:', error)
