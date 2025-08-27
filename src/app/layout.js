@@ -8,8 +8,13 @@ const poppins = Poppins({
 })
 
 export const metadata = {
-  title: 'Luci - Tu Asistente Inmobiliario',
-  description: 'Encuentra tu hogar perfecto con Luci',
+  title: 'Luci - Tu Asistente Inmobiliario con IA',
+  description: 'Encuentra tu hogar perfecto con AURA',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  }
 }
 
 export default function RootLayout({ children }) {
