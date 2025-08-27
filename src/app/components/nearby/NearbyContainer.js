@@ -261,7 +261,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                   if (property.lat && property.lng) {
                     allProperties.push({
                       property_id: property.property_id,
-                      propertyCode: property.property_id,
+                      propertyCode: property.property_id, // NORMALIZAR ID
                       title: property.title,
                       address: property.location || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim().replace(/^,\s*/, ''),
                       price: property.price,
@@ -286,23 +286,23 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
           console.log('Could not load search properties:', supabaseError)
         }
   
-        // NUEVO: Cargar propiedades favoritas desde Descubre Propiedades
+        // Cargar propiedades favoritas desde Descubre Propiedades
         try {
           const { data: favData } = await supabase
             .from('chat_sessions')
             .select('favorited_properties')
             .eq('session_id', sessionId)
             .single()
-
-          console.log('🔍 DEBUG - Favorited IDs:', favData?.favorited_properties) 
+          
+          console.log('🔍 DEBUG - Favorited IDs:', favData?.favorited_properties)
           
           if (favData?.favorited_properties && favData.favorited_properties.length > 0) {
             const { data: discoverProps } = await supabase
               .from('properties_database')
               .select('*')
               .in('propertyCode', favData.favorited_properties)
-
-            console.log('🔍 DEBUG - Properties found in DB:', discoverProps?.length) 
+            
+            console.log('🔍 DEBUG - Properties found in DB:', discoverProps?.length)
             console.log('🔍 DEBUG - First property data:', discoverProps?.[0])
             
             if (discoverProps && discoverProps.length > 0) {
@@ -313,18 +313,34 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                   lng: property.longitude,
                   hasCoords: !!(property.latitude && property.longitude)
                 })
+                
                 if (property.latitude && property.longitude) {
-                  // Verificar duplicados
-                  const exists = allProperties.some(p => 
-                    p.propertyCode === property.propertyCode || 
-                    p.property_id === property.propertyCode
-                  )
-
+                  // Mejorar detección de duplicados
+                  const exists = allProperties.some(p => {
+                    const existingId = String(p.propertyCode || p.property_id)
+                    const newId = String(property.propertyCode)
+                    return existingId === newId
+                  })
+                  
                   if (exists) {
                     console.log('⚠️ Property already exists, skipping:', property.propertyCode)
                   } else {
+                    let images = [property.thumbnail]
+                    if (property.multimedia) {
+                      try {
+                        const multimediaArray = typeof property.multimedia === 'string' 
+                          ? JSON.parse(property.multimedia) 
+                          : property.multimedia
+                        if (Array.isArray(multimediaArray)) {
+                          images = multimediaArray.map(m => m.url || m).filter(Boolean)
+                        }
+                      } catch (e) {
+                        console.log('Error parsing multimedia:', e)
+                      }
+                    }
+                    
                     allProperties.push({
-                      property_id: property.propertyCode,
+                      property_id: property.propertyCode, // NORMALIZAR ID
                       propertyCode: property.propertyCode,
                       title: property.title || property.subtitle,
                       address: property.address || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim(),
@@ -332,14 +348,14 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                       bedrooms: property.bedrooms,
                       bathrooms: property.bathrooms,
                       builtArea: property.sqft,
-                      lat: property.latitude,  // Conversión clave
-                      lng: property.longitude, // Conversión clave
+                      lat: property.latitude,
+                      lng: property.longitude,
                       thumbnail: property.thumbnail,
-                      images: property.multimedia ? JSON.parse(property.multimedia || '[]').map(m => m.url || m) : [property.thumbnail],
+                      images: images,
                       description: property.description,
                       neighborhood: property.neighborhood,
                       municipality: property.municipality,
-                      source: "discover"
+                      source: "discover_favorite"
                     })
                   }
                 }
@@ -361,7 +377,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
     }
   
     loadNearbyProperties()
-  }, [sessionId])
+  }, [sessionId, savedProperties]) // Añadir savedProperties como dependencia
 
   const handlePropertyClick = (property) => {
     setSelectedProperty(property)
