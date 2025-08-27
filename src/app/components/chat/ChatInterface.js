@@ -5,11 +5,28 @@ import { Send, Mic, MicOff, Play, Pause, X, Check } from 'lucide-react'
 import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
+import SearchingAnimation from './SearchingAnimation'
 
 export default function ChatInterface({ sessionId, savedProperties, onToggleSave }) {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoadingState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem(`searching_${sessionId}`) === 'true'
+    }
+    return false
+  })
+  
+  const setIsLoading = (value) => {
+    setIsLoadingState(value)
+    if (typeof window !== 'undefined' && sessionId) {
+      if (value) {
+        sessionStorage.setItem(`searching_${sessionId}`, 'true')
+      } else {
+        sessionStorage.removeItem(`searching_${sessionId}`)
+      }
+    }
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isPreparing, setIsPreparing] = useState(false) // Nuevo estado
   const [showWelcome, setShowWelcome] = useState(true)
@@ -654,13 +671,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                </div>
-              </div>
+              <SearchingAnimation />
             </div>
           )}
         </div>
