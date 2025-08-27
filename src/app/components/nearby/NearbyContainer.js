@@ -332,7 +332,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
       userLocation={userLocation}
       savedProperties={savedProperties}
       onToggleSave={onToggleSave}
-      onPropertyClick={handlePropertyClick} onToggleSave={onToggleSave} onToggleSave={onToggleSave}
+      onPropertyClick={handlePropertyClick} 
     />
   )
 }
