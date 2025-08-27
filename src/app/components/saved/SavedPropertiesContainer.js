@@ -277,16 +277,21 @@ export default function SavedPropertiesContainer({ sessionId, savedProperties, o
               let images = [property.thumbnail]
               if (property.multimedia) {
                 try {
-                  // Si multimedia es un array JSON string, parsearlo
-                  let multimediaArray = Array.isArray(property.multimedia) 
-                    ? property.multimedia 
-                    : JSON.parse(property.multimedia || '[]')
+                  let multimediaData = property.multimedia
                   
-                  if (multimediaArray.length > 0) {
-                    images = multimediaArray
+                  // Formato: {"images": [{tag: "...", url: "..."}, ...]}
+                  if (multimediaData.images && Array.isArray(multimediaData.images)) {
+                    const parsedImages = multimediaData.images
+                      .map(item => item.url)
+                      .filter(url => url && typeof url === 'string')
+                    
+                    if (parsedImages.length > 0) {
+                      images = parsedImages
+                    }
                   }
+                  
+                  console.log('Parsed', images.length, 'images for property:', property.propertyCode)
                 } catch (e) {
-                  // Si no se puede parsear, usar solo thumbnail
                   console.log('Could not parse multimedia for property:', property.propertyCode)
                 }
               }
