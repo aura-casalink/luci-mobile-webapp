@@ -1,27 +1,16 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getRealUserIP, validateIP } from '@/lib/utils/ip-helper';
 
 export async function POST(request) {
   try {
     const { message, session_id, timestamp, source, message_type, audio_data, audio_duration } = await request.json()
 
-    // Capturar información adicional - MEJORADA para IP real
-    const forwardedFor = request.headers.get('x-forwarded-for')
-    const realIP = request.headers.get('x-real-ip')
-    const cfIP = request.headers.get('cf-connecting-ip')
+    const userIP = getRealUserIP(request);
+    const isValidIP = validateIP(userIP); 
     
-    // Priorizar IPs reales sobre localhost
-    let userIP = 'unknown'
-    if (cfIP && cfIP !== '::1' && cfIP !== '127.0.0.1') {
-      userIP = cfIP
-    } else if (forwardedFor && forwardedFor !== '::1' && forwardedFor !== '127.0.0.1') {
-      // x-forwarded-for puede tener múltiples IPs, tomar la primera
-      userIP = forwardedFor.split(',')[0].trim()
-    } else if (realIP && realIP !== '::1' && realIP !== '127.0.0.1') {
-      userIP = realIP
-    } else {
-      // En desarrollo local, usar info más útil
-      userIP = `localhost-dev-${new Date().toISOString().split('T')[0]}`
+    if (!isValidIP) {
+       console.warn('Invalid IP detected:', userIP);
     }
 
     const userAgent = request.headers.get('user-agent') || 'unknown'
