@@ -317,6 +317,26 @@ export default function MapView({ properties, userLocation, savedProperties, onP
     }).format(price)
   }
 
+  const recenterMap = () => {
+    if (!mapInstanceRef.current || !userLocation) {
+      console.log('Cannot recenter: map or location not ready')
+      return
+    }
+    
+    mapInstanceRef.current.setCenter(userLocation)
+    mapInstanceRef.current.setZoom(14) // Zoom más cercano al recentrar
+    
+    // Animar el marcador del usuario
+    if (userMarkerRef.current && googleMaps) {
+      userMarkerRef.current.setAnimation(googleMaps.Animation.BOUNCE)
+      setTimeout(() => {
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setAnimation(null)
+        }
+      }, 2000)
+    }
+  }
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -364,6 +384,25 @@ export default function MapView({ properties, userLocation, savedProperties, onP
           <p className="text-xs text-gray-500">📍 {userLocation.city}</p>
         )}
       </div>
+      {userLocation && (
+        <button
+          onClick={recenterMap}
+          className="absolute bottom-24 right-4 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all z-10 hover:scale-105"
+          title="Centrar en mi ubicación"
+        >
+          <svg 
+            width="24" 
+            height="24" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            className="text-blue-600"
+          >
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" opacity="0.3" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
