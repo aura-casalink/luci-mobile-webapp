@@ -423,8 +423,8 @@ export default function MapView({ properties, userLocation, savedProperties, onP
             justifyContent: 'center',
             transition: 'background-color 0.2s'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
           title="Tu ubicación"
         >
           <svg 
@@ -432,8 +432,8 @@ export default function MapView({ properties, userLocation, savedProperties, onP
             height="20" 
             viewBox="0 0 24 24" 
             fill="none"
+            style={{ pointerEvents: 'none' }} // Añadir esto también
           >
-            {/* Target/Crosshair simple */}
             <circle 
               cx="12" 
               cy="12" 
