@@ -37,30 +37,23 @@ export default function SearchingAnimation() {
   
   return (
     <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md p-3 inline-block">
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         <span className="text-gray-600 text-sm">Buscando en</span>
         
-        {/* Contenedor para los logos */}
-        <div className="relative w-24 h-7 flex items-center justify-center">
+        {/* Contenedor para los logos - más grande */}
+        <div className="relative w-28 h-8 flex items-center justify-center">
           {logos.map((logo, index) => (
             <img 
               key={logo.name}
               src={logo.url} 
               alt={logo.name}
-              className={`absolute h-6 w-auto object-contain transition-all duration-300 ${
+              className={`absolute h-8 w-auto object-contain transition-all duration-300 ${
                 index === currentLogo 
                   ? 'opacity-100 scale-100' 
                   : 'opacity-0 scale-75'
               }`}
             />
           ))}
-        </div>
-        
-        {/* Puntos animados */}
-        <div className="flex space-x-1">
-          <span className="animate-bounce text-gray-600">•</span>
-          <span className="animate-bounce text-gray-600" style={{animationDelay: '0.1s'}}>•</span>
-          <span className="animate-bounce text-gray-600" style={{animationDelay: '0.2s'}}>•</span>
         </div>
       </div>
     </div>
