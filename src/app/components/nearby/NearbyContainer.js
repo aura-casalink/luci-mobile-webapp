@@ -328,11 +328,14 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                     let images = [property.thumbnail]
                     if (property.multimedia) {
                       try {
-                        let multimediaArray = property.multimedia        
+                        let multimediaData = property.multimedia
+                        
+                        // El formato es {"images": [{tag: "...", url: "..."}, ...]}
                         if (multimediaData.images && Array.isArray(multimediaData.images)) {
                           const parsedImages = multimediaData.images
                             .map(item => item.url)
                             .filter(url => url && typeof url === 'string')
+                            .slice(0, 15) // Limitar a 15 imágenes
                           
                           if (parsedImages.length > 0) {
                             images = parsedImages
@@ -346,7 +349,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                     }
                     
                     allProperties.push({
-                      property_id: property.propertyCode, // NORMALIZAR ID
+                      property_id: property.propertyCode,
                       propertyCode: property.propertyCode,
                       title: property.title || property.subtitle,
                       address: property.address || `${property.neighborhood || ''}, ${property.municipality || ''}`.trim(),
@@ -357,7 +360,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
                       lat: property.latitude,
                       lng: property.longitude,
                       thumbnail: property.thumbnail,
-                      images: images,
+                      images: images, 
                       description: property.description,
                       neighborhood: property.neighborhood,
                       municipality: property.municipality,
