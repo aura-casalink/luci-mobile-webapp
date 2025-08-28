@@ -79,55 +79,51 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     try {
       console.log('📄 loadExistingMessages called for session:', sessionId)
       
-      const { data: currentSession } = await supabase
+      const { data: currentSession, error: sessionError } = await supabase
         .from('chat_sessions')
         .select('conversations, property_sets, last_properties, ip')
         .eq('session_id', sessionId)
         .single()
-
+      
       console.log('📄 Current session data:', {
         hasSession: !!currentSession,
         ip: currentSession?.ip,
         conversationsCount: currentSession?.conversations?.length || 0,
-        error: error
+        error: sessionError
       })
       
       if (currentSession?.ip && currentSession.ip !== 'unknown' && currentSession.ip !== 'web-app') {
-        // Cargar TODAS las sesiones con esta IP
-        const { data: allSessions } = await supabase
+        console.log('📄 Searching for sessions with IP:', currentSession.ip)
+        
+        const { data: allSessions, error: ipError } = await supabase
           .from('chat_sessions')
           .select('conversations, property_sets, session_id, created_at')
           .eq('ip', currentSession.ip)
           .order('created_at', { ascending: true })
-
+        
         console.log('📄 IP search results:', {
           foundSessions: allSessions?.length || 0,
           error: ipError
         })
         
         if (allSessions && allSessions.length > 0) {
-          // Combinar todas las conversaciones
           const allConversations = []
           const allPropertySets = []
           
           allSessions.forEach(session => {
-            // Agregar conversaciones
             if (session.conversations && Array.isArray(session.conversations)) {
               allConversations.push(...session.conversations)
             }
             
-            // Agregar property_sets
             if (session.property_sets && Array.isArray(session.property_sets)) {
               allPropertySets.push(...session.property_sets)
             }
           })
           
-          // Ordenar conversaciones por timestamp
           allConversations.sort((a, b) => 
             new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
           )
           
-          // Ordenar property_sets por timestamp
           allPropertySets.sort((a, b) => 
             new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
           )
@@ -140,12 +136,23 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           setPropertySets(allPropertySets)
           setShowWelcome(allConversations.length === 0)
         }
-      } else if (currentSession?.conversations) {
-        // Fallback: solo sesión actual si no hay IP válida
-        console.log('📄 Loading session only (no valid IP)')
-        setMessages(currentSession.conversations || [])
-        setPropertySets(currentSession.property_sets || [])
-        setShowWelcome(!currentSession.conversations || currentSession.conversations.length === 0)
+      } else {
+        console.log('📄 Not loading by IP because:', {
+          hasIP: !!currentSession?.ip,
+          ipValue: currentSession?.ip,
+          reason: !currentSession?.ip ? 'no IP' : 
+                  currentSession.ip === 'unknown' ? 'IP is unknown' :
+                  currentSession.ip === 'web-app' ? 'IP is web-app' : 'other'
+        })
+        
+        if (currentSession?.conversations) {
+          setMessages(currentSession.conversations)
+          setShowWelcome(currentSession.conversations.length === 0)
+        }
+        
+        if (currentSession?.property_sets) {
+          setPropertySets(currentSession.property_sets)
+        }
       }
     } catch (error) {
       console.log('📄 Error loading existing data:', error)
