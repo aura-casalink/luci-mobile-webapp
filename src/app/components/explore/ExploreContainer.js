@@ -105,30 +105,52 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         <ServicesCarousel />
       </section>
 
-      <section ref={discoverRef} className="py-6 scroll-mt-16 min-h-screen">
-        <div 
-          className={`px-4 pb-4 ${isTikTokMode ? 'sticky bg-white z-40 border-b' : ''}`}
-          style={isTikTokMode ? { top: 'var(--top-nav-height)' } : {}}
+      <section className="py-6 scroll-mt-16 min-h-screen">
+        {/* BLOQUE STICKY: título + viewport feed */}
+        <div
+          ref={discoverRef}
+          className={`${isTikTokMode ? 'sticky z-40 bg-white' : ''}`}
+          style={
+            isTikTokMode
+              ? {
+                  top: 'var(--top-nav-height)',
+                  height: 'calc(100dvh - var(--top-nav-height))',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderTop: '1px solid #f1f1f1'
+                }
+              : {}
+          }
         >
-          <h2 className="text-xl font-bold text-[#0A0A23] mb-2">Descubre Propiedades</h2>
-          {!isTikTokMode && <p className="text-sm text-gray-500">Continúa para explorar</p>}
-          {isTikTokMode && (
-            <p className="text-sm text-gray-500">
-              Propiedad {discoverCurrentIndex + 1} • Desliza para navegar
+          {/* Header dentro del bloque */}
+          <div
+            className={`px-4 pb-3 pt-2 ${isTikTokMode ? 'border-b' : ''}`}
+            style={isTikTokMode ? { 
+              height: 'var(--discover-title-height)', 
+              flex: '0 0 var(--discover-title-height)' 
+            } : {}}
+          >
+            <h2 className="text-xl font-bold text-[#0A0A23] leading-none">Descubre Propiedades</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {isTikTokMode 
+                ? `Propiedad ${discoverCurrentIndex + 1} • Desliza para navegar`
+                : 'Continúa para explorar'}
             </p>
-          )}
-        </div>
-        
-        <div className="px-4">
-          <DiscoverProperties 
-            sessionId={sessionId}
-            savedProperties={savedProperties}
-            onToggleSave={onToggleSave}
-            onPropertyClick={handlePropertyClick}
-            isFullscreen={isTikTokMode}
-            currentIndex={discoverCurrentIndex}
-            onCurrentIndexChange={setDiscoverCurrentIndex}
-          />
+          </div>
+
+          {/* Viewport del feed: ocupa el resto */}
+          <div className="px-4" style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0 } : {}}>
+            <DiscoverProperties
+              sessionId={sessionId}
+              savedProperties={savedProperties}
+              onToggleSave={onToggleSave}
+              onPropertyClick={handlePropertyClick}
+              currentIndex={discoverCurrentIndex}
+              onCurrentIndexChange={setDiscoverCurrentIndex}
+              isFullscreen={isTikTokMode}
+              fillParent={isTikTokMode}
+            />
+          </div>
         </div>
       </section>
       
