@@ -12,13 +12,16 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   const [isTikTokMode, setIsTikTokMode] = useState(false)
   const discoverRef = useRef(null)
   const beforeDiscoverRef = useRef(null)
+  const wheelHandlerRef = useRef(null)
+  const touchPreventRef = useRef(null)
+  const ioCooldownRef = useRef(0)
   const { getPropertyDetails } = useExploreProperties()
 
   const handlePropertyClick = (property) => {
-    const fullProperty = getPropertyDetails(property.id)
-    if (fullProperty) {
-      setSelectedProperty(fullProperty)
-    }
+    // Buscar por diferentes tipos de ID
+    const pid = property?.propertyCode || property?.id || property?.propertyId
+    const fullProperty = pid ? getPropertyDetails(pid) : null
+    setSelectedProperty(fullProperty || property) // Si no encuentra detalles, usa la propiedad tal cual
   }
 
   const exitTikTokToTop = () => {
@@ -26,19 +29,26 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     setIsTikTokMode(false)
     setDiscoverCurrentIndex(0)
 
-    // 2) Forzar desbloqueo del scroll inmediatamente
+    // 2) Quitar listeners inmediatamente
+    if (wheelHandlerRef.current) window.removeEventListener('wheel', wheelHandlerRef.current)
+    if (touchPreventRef.current) window.removeEventListener('touchmove', touchPreventRef.current)
+
+    // 3) Forzar desbloqueo del scroll
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
     document.documentElement.style.overscrollBehaviorY = ''
     document.body.style.overscrollBehaviorY = ''
 
-    // 3) Esperar a que React actualice el DOM y luego hacer scroll
+    // 4) Evitar que el IntersectionObserver reenganche inmediatamente
+    ioCooldownRef.current = Date.now() + 700
+
+    // 5) Esperar a que React actualice el DOM y luego hacer scroll
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const topNav = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--top-nav-height')) || 64
         const el = beforeDiscoverRef.current
         if (el) {
-          const y = el.getBoundingClientRect().bottom + window.scrollY - topNav - 100
+          const y = el.getBoundingClientRect().top + window.scrollY - topNav - 12
           window.scrollTo({ top: y, behavior: 'smooth' })
         } else {
           window.scrollBy({ top: -400, behavior: 'smooth' })
@@ -54,6 +64,9 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     const el = discoverRef.current
     const io = new IntersectionObserver(
       ([entry]) => {
+        // No activar durante el cooldown
+        if (Date.now() < ioCooldownRef.current) return
+        
         if (entry.isIntersecting && entry.intersectionRatio > 0.3 && !isTikTokMode) {
           setIsTikTokMode(true)
           el.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -83,6 +96,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         }
       }
     }
+    wheelHandlerRef.current = handleWheel
 
     // Guardar estados previos
     const prevBodyOverflow = document.body.style.overflow
@@ -100,6 +114,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     
     // Prevenir touchmove para bloqueo total en móviles
     const prevent = (e) => e.preventDefault()
+    touchPreventRef.current = prevent
     
     window.addEventListener('wheel', handleWheel, { passive: false })
     window.addEventListener('touchmove', prevent, { passive: false })
