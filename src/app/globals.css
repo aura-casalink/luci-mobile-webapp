@@ -4,7 +4,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --top-nav-height: 64px;
-  --discover-title-height: 80px;
+  --bottom-nav-height: 72px;
+  --discover-title-height: 60px;
 }
 
 @theme inline {
