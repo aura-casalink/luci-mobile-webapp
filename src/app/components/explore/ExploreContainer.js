@@ -20,23 +20,23 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     }
   }
 
+  // Detectar cuando llegar a la sección con IntersectionObserver
   useEffect(() => {
-    const checkScroll = () => {
-      if (!discoverRef.current) return
-      
-      const rect = discoverRef.current.getBoundingClientRect()
-      
-      // Activar TikTok cuando la sección Descubre está arriba
-      if (rect.top <= 100 && !isTikTokMode) {
-        console.log('Activando modo TikTok')
-        setIsTikTokMode(true)
-        // Hacer scroll para que quede bien posicionado
-        discoverRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }
-
-    window.addEventListener('scroll', checkScroll)
-    return () => window.removeEventListener('scroll', checkScroll)
+    if (!discoverRef.current) return
+    
+    const el = discoverRef.current
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio > 0.3 && !isTikTokMode) {
+          setIsTikTokMode(true)
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      },
+      { root: null, threshold: [0, 0.3, 1] }
+    )
+    
+    io.observe(el)
+    return () => io.disconnect()
   }, [isTikTokMode])
 
   // Manejar navegación en modo TikTok
@@ -47,14 +47,11 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       e.preventDefault()
       
       if (e.deltaY > 0) {
-        // Siguiente
         setDiscoverCurrentIndex(prev => prev + 1)
       } else {
-        // Anterior
         if (discoverCurrentIndex > 0) {
           setDiscoverCurrentIndex(prev => prev - 1)
         } else {
-          // Salir del modo TikTok
           setIsTikTokMode(false)
           setDiscoverCurrentIndex(0)
           window.scrollBy(0, -200)
@@ -62,8 +59,16 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       }
     }
 
+    // Bloquear scroll del body
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    
     window.addEventListener('wheel', handleWheel, { passive: false })
-    return () => window.removeEventListener('wheel', handleWheel)
+    
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('wheel', handleWheel)
+    }
   }, [isTikTokMode, discoverCurrentIndex])
 
   if (selectedProperty) {
@@ -80,10 +85,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
 
   return (
     <div className="h-full overflow-y-auto bg-white scroll-smooth">
-      {/* Espaciador inicial */}
       <div className="h-16"></div>
       
-      {/* Nuestras Propiedades */}
       <section className="py-6 scroll-mt-16">
         <div className="px-4">
           <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestras Propiedades</h2>
@@ -95,7 +98,6 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         />
       </section>
 
-      {/* Nuestros Servicios */}
       <section className="py-6 scroll-mt-16">
         <div className="px-4">
           <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestros Servicios</h2>
@@ -103,11 +105,11 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         <ServicesCarousel />
       </section>
 
-      {/* Descubre Propiedades */}
       <section ref={discoverRef} className="py-6 scroll-mt-16 min-h-screen">
-        <div className={`px-4 pb-4 ${
-          isTikTokMode ? 'sticky top-16 bg-white z-40 border-b' : ''
-        }`}>
+        <div 
+          className={`px-4 pb-4 ${isTikTokMode ? 'sticky bg-white z-40 border-b' : ''}`}
+          style={isTikTokMode ? { top: 'var(--top-nav-height)' } : {}}
+        >
           <h2 className="text-xl font-bold text-[#0A0A23] mb-2">Descubre Propiedades</h2>
           {!isTikTokMode && <p className="text-sm text-gray-500">Continúa para explorar</p>}
           {isTikTokMode && (
@@ -123,14 +125,13 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
             savedProperties={savedProperties}
             onToggleSave={onToggleSave}
             onPropertyClick={handlePropertyClick}
-            isFullscreen={isTikTokMode}  // IMPORTANTE: pasar el estado correcto
+            isFullscreen={isTikTokMode}
             currentIndex={discoverCurrentIndex}
             onCurrentIndexChange={setDiscoverCurrentIndex}
           />
         </div>
       </section>
       
-      {/* Espaciador para el tab bar */}
       <div className="h-20"></div>
     </div>
   )
