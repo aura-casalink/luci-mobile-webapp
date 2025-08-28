@@ -100,7 +100,7 @@ export default function DiscoverProperties({
   if (!properties || properties.length === 0) {
     return (
       <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-        <p className="text-gray-600">No hay propiedades disponibles</p>
+        <p className="text-gray-600">Usa primero el chat para ver propiedades personalizadas para ti</p>
       </div>
     )
   }
