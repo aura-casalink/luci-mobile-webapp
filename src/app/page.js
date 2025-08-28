@@ -10,53 +10,6 @@ import ExploreContainer from './components/explore/ExploreContainer'
 import AuthModal from './components/auth/AuthModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
 
-// Dentro del componente, después de los estados existentes:
-const [user, setUser] = useState(null)
-const [showAuthModal, setShowAuthModal] = useState(false)
-const [authMessage, setAuthMessage] = useState('')
-const supabaseAuth = createBrowserSupabaseClient()
-
-// Verificar sesión al cargar
-useEffect(() => {
-  supabaseAuth.auth.getSession().then(({ data: { session } }) => {
-    setUser(session?.user ?? null)
-    // Hacer disponible globalmente
-    window.currentUser = session?.user ?? null
-  })
-
-  const { data: { subscription } } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
-    setUser(session?.user ?? null)
-    window.currentUser = session?.user ?? null
-  })
-
-  return () => subscription.unsubscribe()
-}, [])
-
-// Función global para requerir auth
-useEffect(() => {
-  window.requireAuth = (message = '', callback) => {
-    if (user) {
-      callback?.()
-    } else {
-      setAuthMessage(message)
-      setShowAuthModal(true)
-      window.pendingAuthCallback = callback
-    }
-  }
-}, [user])
-
-// Al final del return, antes del último div:
-<AuthModal 
-  isOpen={showAuthModal}
-  onClose={() => setShowAuthModal(false)}
-  onSuccess={(user) => {
-    setUser(user)
-    setShowAuthModal(false)
-    window.pendingAuthCallback?.()
-  }}
-  message={authMessage}
-/>
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat')
   const [sessionId, setSessionId] = useState('')
@@ -64,8 +17,42 @@ export default function Home() {
   const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
   const [previousSavedCount, setPreviousSavedCount] = useState(0)
   
+  // Estados para auth
+  const [user, setUser] = useState(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMessage, setAuthMessage] = useState('')
+  const supabaseAuth = createBrowserSupabaseClient()
+  
   // UN SOLO HOOK CENTRAL - todos los componentes usarán estas props
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
+  
+  // Verificar sesión al cargar
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      window.currentUser = session?.user ?? null
+    })
+
+    const { data: { subscription } } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      window.currentUser = session?.user ?? null
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Función global para requerir auth
+  useEffect(() => {
+    window.requireAuth = (message = '', callback) => {
+      if (user) {
+        callback?.()
+      } else {
+        setAuthMessage(message)
+        setShowAuthModal(true)
+        window.pendingAuthCallback = callback
+      }
+    }
+  }, [user])
   
   useEffect(() => {
     const generateSessionId = () => {
@@ -176,6 +163,17 @@ export default function Home() {
           hasUnvisitedSaves={hasUnvisitedSaves}
         />
       )}
+      
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(user) => {
+          setUser(user)
+          setShowAuthModal(false)
+          window.pendingAuthCallback?.()
+        }}
+        message={authMessage}
+      />
     </div>
   )
 }
