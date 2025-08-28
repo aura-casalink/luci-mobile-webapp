@@ -127,7 +127,45 @@ export default function DiscoverProperties({
       <div
         className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
         style={{ height: cardHeight, width: '100%' }}
-        onClick={() => onPropertyClick && onPropertyClick(property)}
+        onClick={() => {
+          if (onPropertyClick) {
+            let propertyWithImages = {...property}
+            
+            // Recopilar todas las imágenes posibles
+            const allImages = []
+            
+            // De multimedia
+            if (property.multimedia?.images) {
+              property.multimedia.images.forEach(img => {
+                if (img?.url) allImages.push(img.url)
+                else if (typeof img === 'string') allImages.push(img)
+              })
+            } else if (Array.isArray(property.multimedia)) {
+              allImages.push(...property.multimedia.filter(Boolean))
+            }
+            
+            // De images directamente
+            if (Array.isArray(property.images)) {
+              allImages.push(...property.images.filter(Boolean))
+            }
+            
+            // De photos
+            if (Array.isArray(property.photos)) {
+              property.photos.forEach(photo => {
+                if (typeof photo === 'string') allImages.push(photo)
+                else if (photo?.url) allImages.push(photo.url)
+              })
+            }
+            
+            // Thumbnail como respaldo
+            if (property.thumbnail) allImages.push(property.thumbnail)
+            
+            // Eliminar duplicados y asignar
+            propertyWithImages.images = [...new Set(allImages)].slice(0, 15)
+            
+            onPropertyClick(propertyWithImages)
+          }
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
