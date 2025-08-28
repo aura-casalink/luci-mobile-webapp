@@ -10,6 +10,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [discoverCurrentIndex, setDiscoverCurrentIndex] = useState(0)
   const [isTikTokMode, setIsTikTokMode] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   const discoverRef = useRef(null)
   const beforeDiscoverRef = useRef(null)
   const wheelHandlerRef = useRef(null)
@@ -25,24 +26,27 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   }
 
   const exitTikTokToTop = () => {
-    // 1) Salir del modo TikTok
+    // 1) Congelar el alto visual mientras salimos
+    setIsExiting(true)
+    
+    // 2) Desactivar el modo sticky y resetear índice
     setIsTikTokMode(false)
     setDiscoverCurrentIndex(0)
-
-    // 2) Quitar listeners inmediatamente
+  
+    // 3) Quitar listeners inmediatamente
     if (wheelHandlerRef.current) window.removeEventListener('wheel', wheelHandlerRef.current)
     if (touchPreventRef.current) window.removeEventListener('touchmove', touchPreventRef.current)
-
-    // 3) Forzar desbloqueo del scroll
+  
+    // 4) Desbloquear scroll del body
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
     document.documentElement.style.overscrollBehaviorY = ''
     document.body.style.overscrollBehaviorY = ''
-
-    // 4) Evitar que el IntersectionObserver reenganche inmediatamente
-    ioCooldownRef.current = Date.now() + 700
-
-    // 5) Esperar a que React actualice el DOM y luego hacer scroll
+  
+    // 5) Evitar reenganche inmediato del IntersectionObserver
+    ioCooldownRef.current = Date.now() + 800
+  
+    // 6) Hacer scroll después de que React quite el sticky
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const topNav = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--top-nav-height')) || 64
@@ -53,6 +57,9 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         } else {
           window.scrollBy({ top: -400, behavior: 'smooth' })
         }
+        
+        // 7) Liberar el estado visual después del scroll
+        setTimeout(() => setIsExiting(false), 500)
       })
     })
   }
@@ -172,13 +179,12 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
           ref={discoverRef}
           className={`${isTikTokMode ? 'sticky z-30 bg-white' : ''}`}
           style={
-            isTikTokMode
+            (isTikTokMode || isExiting)
               ? {
-                  top: 'var(--top-nav-height)',
+                  ...(isTikTokMode ? { top: 'var(--top-nav-height)', overscrollBehaviorY: 'contain' } : {}),
                   height: 'calc(100dvh - var(--top-nav-height) - var(--bottom-nav-height) - env(safe-area-inset-bottom))',
                   display: 'flex',
-                  flexDirection: 'column',
-                  overscrollBehaviorY: 'contain'
+                  flexDirection: 'column'
                 }
               : {}
           }
@@ -208,8 +214,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
               onPropertyClick={handlePropertyClick}
               currentIndex={discoverCurrentIndex}
               onCurrentIndexChange={setDiscoverCurrentIndex}
-              isFullscreen={isTikTokMode}
-              fillParent={isTikTokMode}
+              isFullscreen={isTikTokMode || isExiting} 
+              fillParent={isTikTokMode || isExiting} 
               onExitTop={exitTikTokToTop}
             />
           </div>
