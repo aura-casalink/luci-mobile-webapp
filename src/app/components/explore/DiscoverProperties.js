@@ -11,7 +11,8 @@ export default function DiscoverProperties({
   currentIndex = 0,
   onCurrentIndexChange,
   isFullscreen = false,
-  fillParent = false
+  fillParent = false,
+  onExitTop
 }) {
   const { properties, loading, error } = useDiscoverProperties(sessionId)
   
@@ -78,9 +79,12 @@ export default function DiscoverProperties({
       // Swipe up -> siguiente
       onCurrentIndexChange && onCurrentIndexChange(currentIndex + 1)
     } else {
-      // Swipe down -> anterior
+      // Swipe down -> anterior o salir
       if (currentIndex > 0) {
         onCurrentIndexChange && onCurrentIndexChange(currentIndex - 1)
+      } else {
+        // Salir del modo TikTok
+        onExitTop && onExitTop()
       }
     }
     touchStartY.current = null
@@ -106,86 +110,93 @@ export default function DiscoverProperties({
   const property = properties[currentIndex % properties.length]
   const isLiked = savedProperties?.has(property.propertyCode || property.id)
   
+  // Padding para crear el efecto "peek"
+  const outerPadding = isFullscreen ? 8 : 0
   const cardHeight = isFullscreen
-    ? (fillParent ? '100%' : 'calc(100dvh - var(--top-nav-height) - var(--discover-title-height))')
+    ? (fillParent ? `calc(100% - ${outerPadding * 2}px)` : 'calc(100dvh - var(--top-nav-height) - 16px)')
     : '420px'
 
   return (
     <div
-      className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
-      style={{ height: cardHeight, width: '100%' }}
-      onClick={() => onPropertyClick && onPropertyClick(property)}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
+      className="relative w-full h-full"
+      style={{ padding: isFullscreen ? `${outerPadding}px 12px` : '0px' }}
     >
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url(${getPropertyImage(property)})`,
-        }}
-      />
-
-      <div className="absolute top-4 right-4 flex space-x-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleShare(property)
+      <div
+        className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
+        style={{ height: cardHeight, width: '100%' }}
+        onClick={() => onPropertyClick && onPropertyClick(property)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url(${getPropertyImage(property)})`,
           }}
-          className="bg-white/20 backdrop-blur p-3 rounded-full"
-        >
-          <Share2 size={20} className="text-white" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleLike(property)
-          }}
-          className="bg-white/20 backdrop-blur p-3 rounded-full"
-        >
-          <Heart 
-            size={20} 
-            className={isLiked ? "text-[#FFB300] fill-[#FFB300]" : "text-white"}
-          />
-        </button>
-      </div>
+        />
 
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="text-white">
-          <h3 className="text-2xl font-bold mb-2">
-            {property.title || property.subtitle || 'Propiedad'}
-          </h3>
-          
-          {property.neighborhood && (
-            <p className="text-base opacity-90 mb-3 flex items-center">
-              <MapPin size={16} className="mr-2" />
-              {property.neighborhood}
+        <div className="absolute top-4 right-4 flex space-x-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleShare(property)
+            }}
+            className="bg-white/20 backdrop-blur p-3 rounded-full"
+          >
+            <Share2 size={20} className="text-white" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLike(property)
+            }}
+            className="bg-white/20 backdrop-blur p-3 rounded-full"
+          >
+            <Heart 
+              size={20} 
+              className={isLiked ? "text-[#FFB300] fill-[#FFB300]" : "text-white"}
+            />
+          </button>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="text-white">
+            <h3 className="text-2xl font-bold mb-2">
+              {property.title || property.subtitle || 'Propiedad'}
+            </h3>
+            
+            {property.neighborhood && (
+              <p className="text-base opacity-90 mb-3 flex items-center">
+                <MapPin size={16} className="mr-2" />
+                {property.neighborhood}
+              </p>
+            )}
+
+            <p className="text-3xl font-bold mb-3">
+              {formatPrice(property.price)}
             </p>
-          )}
 
-          <p className="text-3xl font-bold mb-3">
-            {formatPrice(property.price)}
-          </p>
-
-          <div className="flex items-center space-x-6">
-            {property.bedrooms && (
-              <div className="flex items-center">
-                <Home size={16} className="mr-2" />
-                <span>{property.bedrooms} hab</span>
-              </div>
-            )}
-            {property.bathrooms && (
-              <div className="flex items-center">
-                <Bath size={16} className="mr-2" />
-                <span>{property.bathrooms} baños</span>
-              </div>
-            )}
-            {property.sqft && (
-              <div className="flex items-center">
-                <Maximize size={16} className="mr-2" />
-                <span>{property.sqft} m²</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-6">
+              {property.bedrooms && (
+                <div className="flex items-center">
+                  <Home size={16} className="mr-2" />
+                  <span>{property.bedrooms} hab</span>
+                </div>
+              )}
+              {property.bathrooms && (
+                <div className="flex items-center">
+                  <Bath size={16} className="mr-2" />
+                  <span>{property.bathrooms} baños</span>
+                </div>
+              )}
+              {property.sqft && (
+                <div className="flex items-center">
+                  <Maximize size={16} className="mr-2" />
+                  <span>{property.sqft} m²</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
