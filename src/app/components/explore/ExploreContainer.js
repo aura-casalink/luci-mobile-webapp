@@ -109,22 +109,21 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         {/* BLOQUE STICKY: título + viewport feed */}
         <div
           ref={discoverRef}
-          className={`${isTikTokMode ? 'sticky z-40 bg-white' : ''}`}
+          className={`${isTikTokMode ? 'sticky z-30 bg-white' : ''}`}
           style={
             isTikTokMode
               ? {
                   top: 'var(--top-nav-height)',
                   height: 'calc(100dvh - var(--top-nav-height))',
                   display: 'flex',
-                  flexDirection: 'column',
-                  borderTop: '1px solid #f1f1f1'
+                  flexDirection: 'column'
                 }
               : {}
           }
         >
           {/* Header dentro del bloque */}
           <div
-            className={`px-4 pb-3 pt-2 ${isTikTokMode ? 'border-b' : ''}`}
+            className={`px-4 pb-3 pt-2`}
             style={isTikTokMode ? { 
               height: 'var(--discover-title-height)', 
               flex: '0 0 var(--discover-title-height)' 
