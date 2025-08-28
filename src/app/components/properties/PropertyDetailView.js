@@ -221,7 +221,9 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           <div>
           {/* Botón WhatsApp */}
           <a
-            href={`https://wa.me/34910626648?text=Hola, me interesa la propiedad: ${property.title} - ${formatPrice(property.price)}`}
+            href={`https://wa.me/34910626648?text=${encodeURIComponent(
+              `Hola! Quiero más información sobre el piso ${property.propertyCode || property.property_id || 'ref. ' + property.id}, en ${property.address || property.neighborhood || property.municipality || 'esta ubicación'}.`
+            )}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 mb-6 transition-colors"
