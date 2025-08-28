@@ -84,6 +84,22 @@ export default function Home() {
     generateSessionId()
   }, [])
 
+  // Recuperar sessionId de URL si viene del callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sidFromUrl = urlParams.get('sid');
+    
+    if (sidFromUrl) {
+      localStorage.setItem('luci_session_id', sidFromUrl);
+      setSessionId(sidFromUrl);
+      
+      // Limpiar URL
+      urlParams.delete('sid');
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [])
+  
   // Detectar cambios en propiedades guardadas
   useEffect(() => {
     if (savedProperties.size > previousSavedCount) {
