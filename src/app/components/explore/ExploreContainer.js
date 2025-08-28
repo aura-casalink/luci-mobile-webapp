@@ -24,88 +24,52 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
 
   useEffect(() => {
     let isAutoScrolling = false
-    let lastScrollTop = 0
-
-    const handleScroll = (e) => {
-      if (isAutoScrolling) return
+    
+    const handleScroll = () => {
+      if (!discoverRef.current || isAutoScrolling || isTikTokMode) return
       
-      const scrollTop = containerRef.current?.scrollTop || 0
-      const scrollingDown = scrollTop > lastScrollTop
-      lastScrollTop = scrollTop
-
-      // Puntos de anclaje
-      const servicesTop = servicesRef.current?.offsetTop || 0
-      const discoverTop = discoverRef.current?.offsetTop || 0
+      const discoverRect = discoverRef.current.getBoundingClientRect()
+      const windowHeight = window.innerHeight
       
-      // Auto-scroll a puntos clave
-      if (scrollingDown) {
-        // Si estamos cerca de servicios, anclar ahí
-        if (scrollTop > servicesTop - 200 && scrollTop < servicesTop + 50) {
-          isAutoScrolling = true
-          containerRef.current?.scrollTo({
-            top: servicesTop - 20,
-            behavior: 'smooth'
-          })
-          setTimeout(() => { isAutoScrolling = false }, 500)
-        }
-        // Si estamos cerca de descubre, anclar ahí
-        else if (scrollTop > discoverTop - 300 && scrollTop < discoverTop - 100) {
-          isAutoScrolling = true
-          containerRef.current?.scrollTo({
-            top: discoverTop - 80,
-            behavior: 'smooth'
-          })
-          setTimeout(() => { isAutoScrolling = false }, 500)
-        }
-        // Si vemos casi toda la primera imagen, modo TikTok
-        else if (scrollTop > discoverTop + 100 && !isTikTokMode) {
-          isAutoScrolling = true
-          setIsTikTokMode(true)
-          containerRef.current?.scrollTo({
-            top: discoverTop + 200,
-            behavior: 'smooth'
-          })
-          setTimeout(() => { isAutoScrolling = false }, 500)
-        }
+      // Solo activar TikTok cuando la imagen esté casi completa en pantalla
+      if (discoverRect.top < -200 && !isTikTokMode) {
+        setIsTikTokMode(true)
       }
     }
-
+  
     const handleWheel = (e) => {
-      // Solo intervenir en modo TikTok
+      // SOLO intervenir si estamos en modo TikTok Y en la zona correcta
       if (!isTikTokMode) return
       
       const discoverRect = discoverRef.current?.getBoundingClientRect()
-      if (!discoverRect || discoverRect.top < -200) return
       
+      // Verificar que realmente estamos en la zona de Descubre
+      if (!discoverRect || discoverRect.top > 0) {
+        setIsTikTokMode(false)
+        return
+      }
+      
+      // Solo prevenir default en modo TikTok activo
       e.preventDefault()
       
       if (e.deltaY > 0) {
-        // Siguiente propiedad
         setDiscoverCurrentIndex(prev => prev + 1)
       } else {
-        // Anterior o salir de TikTok
         if (discoverCurrentIndex > 0) {
           setDiscoverCurrentIndex(prev => prev - 1)
         } else {
-          // Volver a vista con título
           setIsTikTokMode(false)
-          containerRef.current?.scrollTo({
-            top: discoverRef.current.offsetTop - 80,
-            behavior: 'smooth'
-          })
+          window.scrollBy(0, -100)
         }
       }
     }
-
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('scroll', handleScroll)
-      window.addEventListener('wheel', handleWheel, { passive: false })
-      
-      return () => {
-        container.removeEventListener('scroll', handleScroll)
-        window.removeEventListener('wheel', handleWheel)
-      }
+  
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('wheel', handleWheel)
     }
   }, [isTikTokMode, discoverCurrentIndex])
 
@@ -144,19 +108,15 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       </section>
 
       {/* Descubre Propiedades */}
-      <section ref={discoverRef} className="py-6">
-        <div className={`px-4 pb-4 transition-all duration-500 ${
-          isTikTokMode ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'
+      <section ref={discoverRef} className="py-6 min-h-screen">
+        <div className={`px-4 pb-4 ${
+          isTikTokMode ? 'fixed top-16 left-0 right-0 bg-white z-10' : ''
         }`}>
           <h2 className="text-xl font-bold text-[#0A0A23]">Descubre Propiedades</h2>
-          <p className="text-sm text-gray-500 mt-1">Continúa para explorar</p>
+          {!isTikTokMode && <p className="text-sm text-gray-500 mt-1">Continúa para explorar</p>}
         </div>
         
-        {/* Altura dinámica basada en modo */}
-        <div style={{ 
-          height: isTikTokMode ? '100vh' : '80vh',
-          transition: 'height 0.5s ease'
-        }}>
+        <div className={isTikTokMode ? 'fixed inset-0 pt-32' : ''}>
           <DiscoverProperties 
             sessionId={sessionId}
             savedProperties={savedProperties}
