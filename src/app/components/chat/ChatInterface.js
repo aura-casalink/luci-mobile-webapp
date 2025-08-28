@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
-const supabase = createBrowserSupabaseClient()
 import { Send, Mic, MicOff, Play, Pause, X, Check } from 'lucide-react'
 import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import SearchingAnimation from './SearchingAnimation'
+
+const supabase = createBrowserSupabaseClient()
 
 export default function ChatInterface({ sessionId, savedProperties, onToggleSave }) {
   const [messages, setMessages] = useState([])
