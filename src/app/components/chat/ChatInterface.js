@@ -125,10 +125,9 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         setMessages(allConversations)
         setPropertySets(allPropertySets)
         setShowWelcome(allConversations.length === 0)
-        } else {
-          console.log('📱 No previous sessions found for this IP')
-          setShowWelcome(true)
-        }
+      } else {
+        console.log('📱 No previous sessions found for this IP')
+        setShowWelcome(true)
       }
       
       // Verificar callbacks pendientes después de cargar todo
@@ -154,6 +153,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         setShowWelcome(true)
       }
     }
+  }
 
   // Procesar nuevos callbacks
   useEffect(() => {
