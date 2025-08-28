@@ -18,9 +18,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     setLoading(true)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { 
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
+      options: { redirectTo: makeRedirect() } 
     })
   }
 
@@ -29,9 +27,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { 
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
+      options: { emailRedirectTo: makeRedirect() }
     })
     if (!error) {
       alert('Te hemos enviado un enlace. Revisa tu email.')
