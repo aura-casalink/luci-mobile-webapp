@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+const supabase = createBrowserSupabaseClient()
 import { Send, Mic, MicOff, Play, Pause, X, Check } from 'lucide-react'
 import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
