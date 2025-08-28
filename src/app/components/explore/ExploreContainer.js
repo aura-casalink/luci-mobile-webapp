@@ -21,56 +21,49 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   }
 
   useEffect(() => {
-    let isScrolling = false
-
-    const handleScroll = () => {
-      if (!discoverRef.current || isScrolling) return
+    const checkScroll = () => {
+      if (!discoverRef.current) return
       
-      const discoverRect = discoverRef.current.getBoundingClientRect()
+      const rect = discoverRef.current.getBoundingClientRect()
       
-      // Activar TikTok mode cuando el título de Descubre está en la parte superior
-      if (discoverRect.top <= 80 && !isTikTokMode) {
+      // Activar TikTok cuando la sección Descubre está arriba
+      if (rect.top <= 100 && !isTikTokMode) {
+        console.log('Activando modo TikTok')
         setIsTikTokMode(true)
-      }
-      
-      // Desactivar si scrolleamos hacia arriba fuera de la sección
-      if (discoverRect.top > 100 && isTikTokMode) {
-        setIsTikTokMode(false)
-        setDiscoverCurrentIndex(0)
+        // Hacer scroll para que quede bien posicionado
+        discoverRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     }
 
+    window.addEventListener('scroll', checkScroll)
+    return () => window.removeEventListener('scroll', checkScroll)
+  }, [isTikTokMode])
+
+  // Manejar navegación en modo TikTok
+  useEffect(() => {
+    if (!isTikTokMode) return
+
     const handleWheel = (e) => {
-      if (!isTikTokMode) return
-      
-      // Solo intervenir en modo TikTok
       e.preventDefault()
-      isScrolling = true
       
       if (e.deltaY > 0) {
-        // Siguiente propiedad
+        // Siguiente
         setDiscoverCurrentIndex(prev => prev + 1)
       } else {
-        // Anterior o salir
+        // Anterior
         if (discoverCurrentIndex > 0) {
           setDiscoverCurrentIndex(prev => prev - 1)
         } else {
           // Salir del modo TikTok
           setIsTikTokMode(false)
-          window.scrollBy(0, -100)
+          setDiscoverCurrentIndex(0)
+          window.scrollBy(0, -200)
         }
       }
-      
-      setTimeout(() => { isScrolling = false }, 300)
     }
 
-    window.addEventListener('scroll', handleScroll)
     window.addEventListener('wheel', handleWheel, { passive: false })
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('wheel', handleWheel)
-    }
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [isTikTokMode, discoverCurrentIndex])
 
   if (selectedProperty) {
@@ -87,7 +80,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
 
   return (
     <div className="h-full overflow-y-auto bg-white scroll-smooth">
-      {/* Espaciador inicial para el nav bar */}
+      {/* Espaciador inicial */}
       <div className="h-16"></div>
       
       {/* Nuestras Propiedades */}
@@ -111,32 +104,31 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       </section>
 
       {/* Descubre Propiedades */}
-      <section ref={discoverRef} className="py-6 scroll-mt-16">
+      <section ref={discoverRef} className="py-6 scroll-mt-16 min-h-screen">
         <div className={`px-4 pb-4 ${
-          isTikTokMode ? 'fixed top-16 left-0 right-0 bg-white z-40 border-b' : ''
+          isTikTokMode ? 'sticky top-16 bg-white z-40 border-b' : ''
         }`}>
           <h2 className="text-xl font-bold text-[#0A0A23] mb-2">Descubre Propiedades</h2>
           {!isTikTokMode && <p className="text-sm text-gray-500">Continúa para explorar</p>}
+          {isTikTokMode && (
+            <p className="text-sm text-gray-500">
+              Propiedad {discoverCurrentIndex + 1} • Desliza para navegar
+            </p>
+          )}
         </div>
         
-        {/* Espaciador cuando el título está fijo */}
-        {isTikTokMode && <div className="h-20"></div>}
-        
-        <div className={`px-4 ${isTikTokMode ? 'fixed top-32 left-0 right-0 bottom-0 overflow-hidden bg-white z-30' : ''}`}>
+        <div className="px-4">
           <DiscoverProperties 
             sessionId={sessionId}
             savedProperties={savedProperties}
             onToggleSave={onToggleSave}
             onPropertyClick={handlePropertyClick}
-            isFullscreen={isTikTokMode}
+            isFullscreen={isTikTokMode}  // IMPORTANTE: pasar el estado correcto
             currentIndex={discoverCurrentIndex}
             onCurrentIndexChange={setDiscoverCurrentIndex}
           />
         </div>
       </section>
-      
-      {/* Espaciador extra en modo TikTok */}
-      {isTikTokMode && <div style={{ height: '200vh' }}></div>}
       
       {/* Espaciador para el tab bar */}
       <div className="h-20"></div>
