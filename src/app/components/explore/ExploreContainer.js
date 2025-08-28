@@ -231,7 +231,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
             <p className="text-sm text-gray-500 mt-1">
               {isTikTokMode 
                 ? 'Desliza hacia abajo para ver más'
-                : 'Continúa para explorar'}
+                : 'Desliza hacia abajo para ver más'}
             </p>
           </div>
 
