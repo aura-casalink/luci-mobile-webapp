@@ -157,7 +157,18 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         onClose={() => {
           setSelectedProperty(null)
           unlockScroll()
-          ioCooldownRef.current = Date.now() + 500
+          ioCooldownRef.current = Date.now() + 200
+        }}
+        // Reactivar TikTok si estamos en la sección
+          requestAnimationFrame(() => {
+            const el = discoverRef.current
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+              setIsTikTokMode(true)
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          })
         }}
         onSendMessage={onSendMessage || (() => {})}
         savedProperties={savedProperties}
@@ -195,11 +206,12 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         {/* BLOQUE STICKY: título + viewport feed */}
         <div
           ref={discoverRef}
-          className={`${isTikTokMode ? 'sticky z-30 bg-white' : ''}`}
+          className={`${(isTikTokMode || isExiting) ? 'sticky z-30 bg-white' : ''}`}
           style={
             (isTikTokMode || isExiting)
               ? {
-                  ...(isTikTokMode ? { top: 'var(--top-nav-height)', overscrollBehaviorY: 'contain' } : {}),
+                  top: 'var(--top-nav-height)',
+                  overscrollBehaviorY: 'contain',
                   height: 'calc(100dvh - var(--top-nav-height) - var(--bottom-nav-height) - env(safe-area-inset-bottom))',
                   display: 'flex',
                   flexDirection: 'column'
