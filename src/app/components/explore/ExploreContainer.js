@@ -108,6 +108,28 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       e.preventDefault()
       
       if (e.deltaY > 0) {
+        const nextIndex = discoverCurrentIndex + 1
+        
+        // Bloquear después de 3 (índice 0-3 = 4 propiedades)
+        if (nextIndex > 3 && !window.currentUser) {
+          window.requireAuth?.(
+            'Regístrate para ver todas las propiedades disponibles',
+            () => setDiscoverCurrentIndex(nextIndex)
+          )
+        } else {
+          setDiscoverCurrentIndex(prev => prev + 1)
+        }
+      } else {
+        if (discoverCurrentIndex > 0) {
+          setDiscoverCurrentIndex(prev => prev - 1)
+        } else {
+          exitTikTokToTop()
+        }
+      }
+    }
+      e.preventDefault()
+      
+      if (e.deltaY > 0) {
         setDiscoverCurrentIndex(prev => prev + 1)
       } else {
         if (discoverCurrentIndex > 0) {
