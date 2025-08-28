@@ -127,18 +127,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         }
       }
     }
-      e.preventDefault()
-      
-      if (e.deltaY > 0) {
-        setDiscoverCurrentIndex(prev => prev + 1)
-      } else {
-        if (discoverCurrentIndex > 0) {
-          setDiscoverCurrentIndex(prev => prev - 1)
-        } else {
-          exitTikTokToTop()
-        }
-      }
-    }
+    
     wheelHandlerRef.current = handleWheel
 
     // Guardar estados previos
