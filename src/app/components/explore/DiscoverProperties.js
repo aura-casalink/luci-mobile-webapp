@@ -10,7 +10,8 @@ export default function DiscoverProperties({
   onPropertyClick,
   currentIndex = 0,
   onCurrentIndexChange,
-  isFullscreen = false
+  isFullscreen = false,
+  fillParent = false
 }) {
   const { properties, loading, error } = useDiscoverProperties(sessionId)
   
@@ -106,13 +107,13 @@ export default function DiscoverProperties({
   const isLiked = savedProperties?.has(property.propertyCode || property.id)
   
   const cardHeight = isFullscreen
-    ? 'calc(100dvh - var(--top-nav-height) - var(--discover-title-height))'
+    ? (fillParent ? '100%' : 'calc(100dvh - var(--top-nav-height) - var(--discover-title-height))')
     : '420px'
 
   return (
     <div
       className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
-      style={{ height: cardHeight }}
+      style={{ height: cardHeight, width: '100%' }}
       onClick={() => onPropertyClick && onPropertyClick(property)}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -177,6 +178,12 @@ export default function DiscoverProperties({
               <div className="flex items-center">
                 <Bath size={16} className="mr-2" />
                 <span>{property.bathrooms} baños</span>
+              </div>
+            )}
+            {property.sqft && (
+              <div className="flex items-center">
+                <Maximize size={16} className="mr-2" />
+                <span>{property.sqft} m²</span>
               </div>
             )}
           </div>
