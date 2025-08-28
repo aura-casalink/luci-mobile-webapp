@@ -265,10 +265,7 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
               </div>
 
               <button
-                onClick={() => {
-                  const url = getStreetViewUrl(property)
-                  window.open(url, '_blank')
-                }}
+                onClick={() => setShowStreetView(true)}
                 className="w-full flex items-center justify-center p-4 text-white rounded-lg hover:bg-opacity-90 transition-colors"
                 style={{ backgroundColor: '#0A0A23' }}
               >
