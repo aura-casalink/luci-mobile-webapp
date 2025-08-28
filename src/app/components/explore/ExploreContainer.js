@@ -18,11 +18,24 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   const ioCooldownRef = useRef(0)
   const { getPropertyDetails } = useExploreProperties()
 
+  const unlockScroll = () => {
+    if (wheelHandlerRef.current) window.removeEventListener('wheel', wheelHandlerRef.current)
+    if (touchPreventRef.current) window.removeEventListener('touchmove', touchPreventRef.current)
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
+    document.documentElement.style.overscrollBehaviorY = ''
+    document.body.style.overscrollBehaviorY = ''
+  }
+  
   const handlePropertyClick = (property) => {
-    // Buscar por diferentes tipos de ID
+    // Desbloquear scroll al abrir
+    unlockScroll()
+    setIsTikTokMode(false)
+    ioCooldownRef.current = Date.now() + 800
+    
     const pid = property?.propertyCode || property?.id || property?.propertyId
     const fullProperty = pid ? getPropertyDetails(pid) : null
-    setSelectedProperty(fullProperty || property) // Si no encuentra detalles, usa la propiedad tal cual
+    setSelectedProperty(fullProperty || property)
   }
 
   const exitTikTokToTop = () => {
@@ -38,6 +51,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     if (touchPreventRef.current) window.removeEventListener('touchmove', touchPreventRef.current)
   
     // 4) Desbloquear scroll del body
+    unlockScroll()
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
     document.documentElement.style.overscrollBehaviorY = ''
@@ -140,7 +154,11 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     return (
       <PropertyDetailView
         property={selectedProperty}
-        onClose={() => setSelectedProperty(null)}
+        onClose={() => {
+          setSelectedProperty(null)
+          unlockScroll()
+          ioCooldownRef.current = Date.now() + 500
+        }}
         onSendMessage={onSendMessage || (() => {})}
         savedProperties={savedProperties}
         onToggleSave={onToggleSave}
@@ -192,7 +210,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
           {/* Header dentro del bloque */}
           <div
             className="px-4 pb-3 pt-2"
-            style={isTikTokMode ? { 
+            style={(isTikTokMode || isExiting) ? { 
               height: 'var(--discover-title-height)', 
               flex: '0 0 var(--discover-title-height)' 
             } : {}}
@@ -206,7 +224,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
           </div>
 
           {/* Viewport del feed */}
-          <div style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0, overflow: 'hidden' } : {}}>
+          <div style={(isTikTokMode || isExiting) ? { flex: '1 1 auto', minHeight: 0, overflow: 'hidden' } : {}}>
             <DiscoverProperties
               sessionId={sessionId}
               savedProperties={savedProperties}
