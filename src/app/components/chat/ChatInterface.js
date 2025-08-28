@@ -863,4 +863,4 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       </div>
     </div>
   )
-}
+} 
