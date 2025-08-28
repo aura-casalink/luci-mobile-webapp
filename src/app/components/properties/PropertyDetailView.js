@@ -92,8 +92,8 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
   const description = property.description || 'No hay descripción disponible.'
   const shortDescription = description.length > 150 ? description.substring(0, 150) + '...' : description
 
-  const latitude = property.lat || property.latitude || 40.4168
-  const longitude = property.lng || property.longitude || -3.7038
+  const latitude = property.latitude || property.lat || 40.4168
+  const longitude = property.longitude || property.lng || -3.7038
   const mapSrc = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAf-L38UI3hGyYrMJjeFO0Ij2n1p1mCyMk&q=${latitude},${longitude}&zoom=16`
 
   return (
@@ -265,7 +265,10 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
               </div>
 
               <button
-                onClick={() => setShowStreetView(true)}
+                onClick={() => {
+                  const url = getStreetViewUrl(property)
+                  window.open(url, '_blank')
+                }}
                 className="w-full flex items-center justify-center p-4 text-white rounded-lg hover:bg-opacity-90 transition-colors"
                 style={{ backgroundColor: '#0A0A23' }}
               >
@@ -314,10 +317,7 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           <div className="flex-shrink-0 h-16 bg-black/90 flex items-center justify-between px-4">
             <div className="text-white font-medium">Street View</div>
             <button
-              onClick={() => {
-                const url = getStreetViewUrl(property)
-                window.open(url, '_blank')
-              }}
+              onClick={() => setShowStreetView(false)}
               className="w-10 h-10 rounded-full bg-white text-[#0A0A23] flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
               <X size={20} />
