@@ -42,7 +42,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   // Manejar navegación en modo TikTok
   useEffect(() => {
     if (!isTikTokMode) return
-
+  
     const handleWheel = (e) => {
       e.preventDefault()
       
@@ -58,16 +58,34 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         }
       }
     }
-
-    // Bloquear scroll del body
-    const prevOverflow = document.body.style.overflow
+  
+    // Guardar estados previos
+    const prevBodyOverflow = document.body.style.overflow
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    const prevHtmlOB = document.documentElement.style.overscrollBehaviorY
+    const prevBodyOB = document.body.style.overscrollBehaviorY
+    
+    // Bloquea scroll del body y del root (iOS)
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    
+    // Evita scroll chaining (empujar el viewport) en iOS/Android
+    document.documentElement.style.overscrollBehaviorY = 'none'
+    document.body.style.overscrollBehaviorY = 'none'
+    
+    // Prevenir touchmove para bloqueo total en móviles
+    const prevent = (e) => e.preventDefault()
     
     window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('touchmove', prevent, { passive: false })
     
     return () => {
-      document.body.style.overflow = prevOverflow
+      document.body.style.overflow = prevBodyOverflow
+      document.documentElement.style.overflow = prevHtmlOverflow
+      document.documentElement.style.overscrollBehaviorY = prevHtmlOB
+      document.body.style.overscrollBehaviorY = prevBodyOB
       window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchmove', prevent)
     }
   }, [isTikTokMode, discoverCurrentIndex])
 
@@ -116,7 +134,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
                   top: 'var(--top-nav-height)',
                   height: 'calc(100dvh - var(--top-nav-height))',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  overscrollBehaviorY: 'contain',
                 }
               : {}
           }
