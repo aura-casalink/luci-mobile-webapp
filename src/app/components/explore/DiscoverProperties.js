@@ -1,16 +1,23 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Heart, Share2, MapPin, Home, Bath, Maximize } from 'lucide-react'
 import { useDiscoverProperties } from '../../hooks/useDiscoverProperties'
 
-export default function DiscoverProperties({ 
-  sessionId, 
-  savedProperties, 
-  onToggleSave, 
+export default function DiscoverProperties({
+  sessionId,
+  savedProperties,
+  onToggleSave,
   onPropertyClick,
-  currentIndex = 0
+  currentIndex = 0,
+  onCurrentIndexChange,
+  isFullscreen = false
 }) {
   const { properties, loading, error } = useDiscoverProperties(sessionId)
+  
+  // Swipe móvil
+  const touchStartY = useRef(null)
+  const touchBlocked = useRef(false)
+  const SWIPE_THRESHOLD = 60
 
   const formatPrice = (price) => {
     if (!price) return 'Precio no disponible'
@@ -49,6 +56,35 @@ export default function DiscoverProperties({
     onToggleSave && onToggleSave(property.propertyCode || property.id)
   }
 
+  const onTouchStart = (e) => {
+    touchBlocked.current = false
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const onTouchMove = (e) => {
+    if (isFullscreen) e.preventDefault()
+  }
+
+  const onTouchEnd = (e) => {
+    if (touchBlocked.current || touchStartY.current == null) return
+    
+    const endY = e.changedTouches[0].clientY
+    const delta = endY - touchStartY.current
+    
+    if (Math.abs(delta) < SWIPE_THRESHOLD) return
+    
+    if (delta < 0) {
+      // Swipe up -> siguiente
+      onCurrentIndexChange && onCurrentIndexChange(currentIndex + 1)
+    } else {
+      // Swipe down -> anterior
+      if (currentIndex > 0) {
+        onCurrentIndexChange && onCurrentIndexChange(currentIndex - 1)
+      }
+    }
+    touchStartY.current = null
+  }
+
   if (loading) {
     return (
       <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -68,12 +104,19 @@ export default function DiscoverProperties({
   // SIEMPRE mostrar SOLO LA PROPIEDAD ACTUAL
   const property = properties[currentIndex % properties.length]
   const isLiked = savedProperties?.has(property.propertyCode || property.id)
+  
+  const cardHeight = isFullscreen
+    ? 'calc(100dvh - var(--top-nav-height) - var(--discover-title-height))'
+    : '420px'
 
   return (
-    <div 
-      className="relative bg-black rounded-lg overflow-hidden cursor-pointer"
-      style={{ height: 'calc(100vh - 240px)' }}
+    <div
+      className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
+      style={{ height: cardHeight }}
       onClick={() => onPropertyClick && onPropertyClick(property)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       <div 
         className="absolute inset-0 bg-cover bg-center"
