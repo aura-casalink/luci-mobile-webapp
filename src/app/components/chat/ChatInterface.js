@@ -84,6 +84,13 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         .select('conversations, property_sets, last_properties, ip')
         .eq('session_id', sessionId)
         .single()
+
+      console.log('📄 Current session data:', {
+        hasSession: !!currentSession,
+        ip: currentSession?.ip,
+        conversationsCount: currentSession?.conversations?.length || 0,
+        error: error
+      })
       
       if (currentSession?.ip && currentSession.ip !== 'unknown' && currentSession.ip !== 'web-app') {
         // Cargar TODAS las sesiones con esta IP
@@ -92,6 +99,11 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           .select('conversations, property_sets, session_id, created_at')
           .eq('ip', currentSession.ip)
           .order('created_at', { ascending: true })
+
+        console.log('📄 IP search results:', {
+          foundSessions: allSessions?.length || 0,
+          error: ipError
+        })
         
         if (allSessions && allSessions.length > 0) {
           // Combinar todas las conversaciones
