@@ -8,9 +8,11 @@ import DiscoverProperties from './DiscoverProperties'
 
 export default function ExploreContainer({ sessionId, savedProperties, onToggleSave, onSendMessage }) {
   const [selectedProperty, setSelectedProperty] = useState(null)
-  const [isDiscoverLocked, setIsDiscoverLocked] = useState(false)
   const [discoverCurrentIndex, setDiscoverCurrentIndex] = useState(0)
+  const [isTikTokMode, setIsTikTokMode] = useState(false)
   const discoverRef = useRef(null)
+  const servicesRef = useRef(null)
+  const containerRef = useRef(null)
   const { getPropertyDetails } = useExploreProperties()
 
   const handlePropertyClick = (property) => {
@@ -22,104 +24,90 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
 
   useEffect(() => {
     let isAutoScrolling = false
+    let lastScrollTop = 0
 
-    const handleScroll = () => {
-      if (!discoverRef.current || isAutoScrolling || isDiscoverLocked) return
+    const handleScroll = (e) => {
+      if (isAutoScrolling) return
       
-      const rect = discoverRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
+      const scrollTop = containerRef.current?.scrollTop || 0
+      const scrollingDown = scrollTop > lastScrollTop
+      lastScrollTop = scrollTop
+
+      // Puntos de anclaje
+      const servicesTop = servicesRef.current?.offsetTop || 0
+      const discoverTop = discoverRef.current?.offsetTop || 0
       
-      // Detectar cuando el 25% de la primera imagen está visible
-      if (rect.top < viewportHeight * 0.75 && rect.top > -100) {
-        isAutoScrolling = true
-        
-        // Auto-completar el scroll hasta posición perfecta
-        window.scrollTo({
-          top: discoverRef.current.offsetTop - 64, // 64px es la altura del nav
-          behavior: 'smooth'
-        })
-        
-        setTimeout(() => {
-          setIsDiscoverLocked(true)
-          isAutoScrolling = false
-        }, 500)
+      // Auto-scroll a puntos clave
+      if (scrollingDown) {
+        // Si estamos cerca de servicios, anclar ahí
+        if (scrollTop > servicesTop - 200 && scrollTop < servicesTop + 50) {
+          isAutoScrolling = true
+          containerRef.current?.scrollTo({
+            top: servicesTop - 20,
+            behavior: 'smooth'
+          })
+          setTimeout(() => { isAutoScrolling = false }, 500)
+        }
+        // Si estamos cerca de descubre, anclar ahí
+        else if (scrollTop > discoverTop - 300 && scrollTop < discoverTop - 100) {
+          isAutoScrolling = true
+          containerRef.current?.scrollTo({
+            top: discoverTop - 80,
+            behavior: 'smooth'
+          })
+          setTimeout(() => { isAutoScrolling = false }, 500)
+        }
+        // Si vemos casi toda la primera imagen, modo TikTok
+        else if (scrollTop > discoverTop + 100 && !isTikTokMode) {
+          isAutoScrolling = true
+          setIsTikTokMode(true)
+          containerRef.current?.scrollTo({
+            top: discoverTop + 200,
+            behavior: 'smooth'
+          })
+          setTimeout(() => { isAutoScrolling = false }, 500)
+        }
       }
     }
 
     const handleWheel = (e) => {
-      if (!isDiscoverLocked) return
+      // Solo intervenir en modo TikTok
+      if (!isTikTokMode) return
       
-      // Verificar si estamos en la zona de Descubre
-      const rect = discoverRef.current?.getBoundingClientRect()
-      if (!rect || rect.top > 100) {
-        setIsDiscoverLocked(false)
-        return
-      }
+      const discoverRect = discoverRef.current?.getBoundingClientRect()
+      if (!discoverRect || discoverRect.top < -200) return
       
       e.preventDefault()
       
-      // Navegación entre propiedades
       if (e.deltaY > 0) {
-        // Scroll down - siguiente propiedad
+        // Siguiente propiedad
         setDiscoverCurrentIndex(prev => prev + 1)
-      } else if (e.deltaY < 0) {
-        // Scroll up
+      } else {
+        // Anterior o salir de TikTok
         if (discoverCurrentIndex > 0) {
-          // Propiedad anterior
           setDiscoverCurrentIndex(prev => prev - 1)
         } else {
-          // Salir del modo locked y volver arriba
-          setIsDiscoverLocked(false)
-          window.scrollBy(0, -200)
+          // Volver a vista con título
+          setIsTikTokMode(false)
+          containerRef.current?.scrollTo({
+            top: discoverRef.current.offsetTop - 80,
+            behavior: 'smooth'
+          })
         }
       }
     }
 
-    // Touch events para móvil
-    let touchStartY = 0
-    
-    const handleTouchStart = (e) => {
-      touchStartY = e.touches[0].clientY
-    }
-    
-    const handleTouchMove = (e) => {
-      if (!isDiscoverLocked) return
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+      window.addEventListener('wheel', handleWheel, { passive: false })
       
-      const touchEndY = e.touches[0].clientY
-      const diff = touchStartY - touchEndY
-      
-      if (Math.abs(diff) > 50) {
-        e.preventDefault()
-        
-        if (diff > 0) {
-          // Swipe up - siguiente
-          setDiscoverCurrentIndex(prev => prev + 1)
-        } else {
-          // Swipe down
-          if (discoverCurrentIndex > 0) {
-            setDiscoverCurrentIndex(prev => prev - 1)
-          } else {
-            setIsDiscoverLocked(false)
-            window.scrollBy(0, -200)
-          }
-        }
-        
-        touchStartY = touchEndY
+      return () => {
+        container.removeEventListener('scroll', handleScroll)
+        window.removeEventListener('wheel', handleWheel)
       }
     }
-
-    window.addEventListener('scroll', handleScroll)
-    window.addEventListener('wheel', handleWheel, { passive: false })
-    window.addEventListener('touchstart', handleTouchStart)
-    window.addEventListener('touchmove', handleTouchMove, { passive: false })
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('wheel', handleWheel)
-      window.removeEventListener('touchstart', handleTouchStart)
-      window.removeEventListener('touchmove', handleTouchMove)
-    }
-  }, [isDiscoverLocked, discoverCurrentIndex])
+  }, [isTikTokMode, discoverCurrentIndex])
 
   if (selectedProperty) {
     return (
@@ -134,7 +122,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white">
+    <div ref={containerRef} className="flex-1 overflow-y-auto bg-white">
+      {/* Nuestras Propiedades - normal */}
       <section className="py-6">
         <div className="px-4">
           <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestras Propiedades</h2>
@@ -146,45 +135,43 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         />
       </section>
 
-      <section className="py-6">
+      {/* Nuestros Servicios - normal */}
+      <section ref={servicesRef} className="py-6">
         <div className="px-4">
           <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestros Servicios</h2>
         </div>
         <ServicesCarousel />
       </section>
 
-      <section 
-        ref={discoverRef}
-        className={`${isDiscoverLocked ? 'fixed top-16 left-0 right-0 bottom-0 bg-white z-40' : 'py-6'}`}
-      >
-        <div className="px-4 pb-4">
-          <h2 className="text-xl font-bold text-[#0A0A23]">
-            Descubre Propiedades
-            {isDiscoverLocked && (
-              <span className="text-sm font-normal text-gray-500 ml-2">
-                ↕ Desliza para navegar
-              </span>
-            )}
-          </h2>
+      {/* Descubre Propiedades */}
+      <section ref={discoverRef} className="py-6">
+        <div className={`px-4 pb-4 transition-all duration-500 ${
+          isTikTokMode ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'
+        }`}>
+          <h2 className="text-xl font-bold text-[#0A0A23]">Descubre Propiedades</h2>
+          <p className="text-sm text-gray-500 mt-1">Continúa para explorar</p>
         </div>
         
-        {/* Siempre mostrar a tamaño completo */}
-        <div style={{ height: isDiscoverLocked ? 'calc(100vh - 120px)' : `${window.innerHeight - 120}px` }}>
+        {/* Altura dinámica basada en modo */}
+        <div style={{ 
+          height: isTikTokMode ? '100vh' : '80vh',
+          transition: 'height 0.5s ease'
+        }}>
           <DiscoverProperties 
             sessionId={sessionId}
             savedProperties={savedProperties}
             onToggleSave={onToggleSave}
             onPropertyClick={(property) => setSelectedProperty(property)}
-            isFullscreen={true} // Siempre en tamaño completo
+            isFullscreen={isTikTokMode}
             currentIndex={discoverCurrentIndex}
             onCurrentIndexChange={setDiscoverCurrentIndex}
           />
         </div>
       </section>
-      
-      {/* Espaciador cuando está locked para mantener el scroll */}
-      {isDiscoverLocked && (
-        <div style={{ height: `${window.innerHeight}px` }} />
+
+      {/* Espaciador extra cuando está en TikTok mode para permitir scroll */}
+      {isTikTokMode && (
+        <div style={{ height: '200vh' }} />
       )}
     </div>
   )
