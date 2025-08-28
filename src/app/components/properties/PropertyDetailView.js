@@ -91,8 +91,8 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
   const description = property.description || 'No hay descripción disponible.'
   const shortDescription = description.length > 150 ? description.substring(0, 150) + '...' : description
 
-  const latitude = property.lat || 40.4168
-  const longitude = property.lng || -3.7038
+  const latitude = property.lat || property.latitude || 40.4168
+  const longitude = property.lng || property.longitude || -3.7038
   const mapSrc = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAf-L38UI3hGyYrMJjeFO0Ij2n1p1mCyMk&q=${latitude},${longitude}&zoom=16`
 
   return (
