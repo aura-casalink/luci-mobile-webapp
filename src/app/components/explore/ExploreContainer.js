@@ -11,12 +11,24 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   const [discoverCurrentIndex, setDiscoverCurrentIndex] = useState(0)
   const [isTikTokMode, setIsTikTokMode] = useState(false)
   const discoverRef = useRef(null)
+  const beforeDiscoverRef = useRef(null)
   const { getPropertyDetails } = useExploreProperties()
 
   const handlePropertyClick = (property) => {
     const fullProperty = getPropertyDetails(property.id)
     if (fullProperty) {
       setSelectedProperty(fullProperty)
+    }
+  }
+
+  const exitTikTokToTop = () => {
+    setIsTikTokMode(false)
+    setDiscoverCurrentIndex(0)
+    // Scroll suave a los carruseles
+    if (beforeDiscoverRef.current) {
+      beforeDiscoverRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    } else {
+      window.scrollBy({ top: -400, behavior: 'smooth' })
     }
   }
 
@@ -42,7 +54,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   // Manejar navegación en modo TikTok
   useEffect(() => {
     if (!isTikTokMode) return
-  
+
     const handleWheel = (e) => {
       e.preventDefault()
       
@@ -52,13 +64,11 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         if (discoverCurrentIndex > 0) {
           setDiscoverCurrentIndex(prev => prev - 1)
         } else {
-          setIsTikTokMode(false)
-          setDiscoverCurrentIndex(0)
-          window.scrollBy(0, -200)
+          exitTikTokToTop()
         }
       }
     }
-  
+
     // Guardar estados previos
     const prevBodyOverflow = document.body.style.overflow
     const prevHtmlOverflow = document.documentElement.style.overflow
@@ -123,6 +133,9 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         <ServicesCarousel />
       </section>
 
+      {/* Ancla para volver a carruseles al salir del modo TikTok */}
+      <div ref={beforeDiscoverRef} />
+
       <section className="py-6 scroll-mt-16 min-h-screen">
         {/* BLOQUE STICKY: título + viewport feed */}
         <div
@@ -134,30 +147,29 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
                   top: 'var(--top-nav-height)',
                   height: 'calc(100dvh - var(--top-nav-height))',
                   display: 'flex',
-                  flexDirection: 'column',
-                  overscrollBehaviorY: 'contain',
+                  flexDirection: 'column'
                 }
               : {}
           }
         >
           {/* Header dentro del bloque */}
           <div
-            className={`px-4 pb-3 pt-2`}
+            className="px-4 pb-3 pt-2"
             style={isTikTokMode ? { 
-              height: 'var(--discover-title-height)', 
-              flex: '0 0 var(--discover-title-height)' 
+              height: '60px', 
+              flex: '0 0 60px' 
             } : {}}
           >
             <h2 className="text-xl font-bold text-[#0A0A23] leading-none">Descubre Propiedades</h2>
             <p className="text-sm text-gray-500 mt-1">
               {isTikTokMode 
-                ? `Propiedad ${discoverCurrentIndex + 1} • Desliza para navegar`
+                ? 'Desliza hacia abajo para ver más'
                 : 'Continúa para explorar'}
             </p>
           </div>
 
           {/* Viewport del feed: ocupa el resto */}
-          <div className="px-4" style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0 } : {}}>
+          <div style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0 } : {}}>
             <DiscoverProperties
               sessionId={sessionId}
               savedProperties={savedProperties}
@@ -167,6 +179,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
               onCurrentIndexChange={setDiscoverCurrentIndex}
               isFullscreen={isTikTokMode}
               fillParent={isTikTokMode}
+              onExitTop={exitTikTokToTop}
             />
           </div>
         </div>
