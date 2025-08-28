@@ -404,6 +404,14 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return
     
+    // Si ya hubo búsquedas y no hay usuario, pedir login
+    if (propertySets.length > 0 && !window.currentUser) {
+      window.requireAuth?.(
+        'Inicia sesión para continuar la conversación',
+        () => sendMessage()
+      )
+      return
+    }
     const message = inputText.trim()
     setInputText('')
     
