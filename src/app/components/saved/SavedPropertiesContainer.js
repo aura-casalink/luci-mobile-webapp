@@ -12,7 +12,9 @@ const HARDCODED_PROPERTIES = {
     address: "Palacio, Madrid", 
     price: 1480000, 
     bedrooms: 4, 
-    bathrooms: 3, 
+    bathrooms: 3,
+    lat: 40.4271276,
+    lng: -3.7090447,
     builtArea: 193, 
     thumbnail: "https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_z8d6e5dd5a5cccbf59d6b0816_f111c9c7653cb0e93_d20250710_m075738_c003_v0312029_t0056_u01752134258027", 
     images: [
@@ -33,6 +35,8 @@ const HARDCODED_PROPERTIES = {
     price: 332000, 
     bedrooms: 2, 
     bathrooms: 2, 
+    lat: 36.2874961,
+    lng: -5.2828522,
     builtArea: 142, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/be/b2/f1/1217657644.webp", 
     images: [
@@ -53,6 +57,8 @@ const HARDCODED_PROPERTIES = {
     price: 489000, 
     bedrooms: 3, 
     bathrooms: 2, 
+    lat: 36.2871823,
+    lng: -5.2825606,
     builtArea: 174, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/47/aa/2a/1217657655.webp", 
     images: [
@@ -73,6 +79,8 @@ const HARDCODED_PROPERTIES = {
     price: 459000, 
     bedrooms: 3, 
     bathrooms: 3, 
+    lat: 36.4726642,
+    lng: -5.0179132,
     builtArea: 227, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/0e/a6/38/1305149519.webp", 
     images: [
@@ -93,6 +101,8 @@ const HARDCODED_PROPERTIES = {
     price: 849000, 
     bedrooms: 3, 
     bathrooms: 3, 
+    lat: 36.5118884,
+    lng: -4.9380596,
     builtArea: 254, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/03/2e/95/1257669958.webp", 
     images: [
@@ -113,6 +123,8 @@ const HARDCODED_PROPERTIES = {
     price: 320000, 
     bedrooms: 1, 
     bathrooms: 1, 
+    lat: 40.4150,
+    lng: -3.6850,
     builtArea: 40, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/5a/c4/85/1347007848.webp", 
     images: [
@@ -133,6 +145,8 @@ const HARDCODED_PROPERTIES = {
     price: 550000, 
     bedrooms: 2, 
     bathrooms: 2, 
+    lat: 40.4250,
+    lng: -3.7050,
     builtArea: 80, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/3c/54/a2/1347007801.webp", 
     images: [
@@ -153,6 +167,8 @@ const HARDCODED_PROPERTIES = {
     price: 680000, 
     bedrooms: 2, 
     bathrooms: 2, 
+    lat: 40.4220,
+    lng: -3.6950,
     builtArea: 90, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/96/6b/9a/1347007850.webp", 
     images: [
@@ -173,6 +189,8 @@ const HARDCODED_PROPERTIES = {
     price: 395000, 
     bedrooms: 2, 
     bathrooms: 1, 
+    lat: 40.4080,
+    lng: -3.7000,
     builtArea: 70, 
     thumbnail: "https://img4.idealista.com/blur/480_360_mq/0/id.pro.es.image.master/77/54/29/1347007867.webp", 
     images: [
