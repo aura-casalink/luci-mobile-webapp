@@ -22,14 +22,29 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   }
 
   const exitTikTokToTop = () => {
+    // 1) Salir del modo TikTok
     setIsTikTokMode(false)
     setDiscoverCurrentIndex(0)
-    // Scroll suave a los carruseles
-    if (beforeDiscoverRef.current) {
-      beforeDiscoverRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    } else {
-      window.scrollBy({ top: -400, behavior: 'smooth' })
-    }
+
+    // 2) Forzar desbloqueo del scroll inmediatamente
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
+    document.documentElement.style.overscrollBehaviorY = ''
+    document.body.style.overscrollBehaviorY = ''
+
+    // 3) Esperar a que React actualice el DOM y luego hacer scroll
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const topNav = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--top-nav-height')) || 64
+        const el = beforeDiscoverRef.current
+        if (el) {
+          const y = el.getBoundingClientRect().bottom + window.scrollY - topNav - 100
+          window.scrollTo({ top: y, behavior: 'smooth' })
+        } else {
+          window.scrollBy({ top: -400, behavior: 'smooth' })
+        }
+      })
+    })
   }
 
   // Detectar cuando llegar a la sección con IntersectionObserver
@@ -133,8 +148,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
         <ServicesCarousel />
       </section>
 
-      {/* Ancla para volver a carruseles al salir del modo TikTok */}
-      <div ref={beforeDiscoverRef} />
+      {/* Ancla para volver a carruseles */}
+      <div id="before-discover" ref={beforeDiscoverRef} />
 
       <section className="py-6 scroll-mt-16 min-h-screen">
         {/* BLOQUE STICKY: título + viewport feed */}
@@ -145,9 +160,10 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
             isTikTokMode
               ? {
                   top: 'var(--top-nav-height)',
-                  height: 'calc(100dvh - var(--top-nav-height))',
+                  height: 'calc(100dvh - var(--top-nav-height) - var(--bottom-nav-height) - env(safe-area-inset-bottom))',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  overscrollBehaviorY: 'contain'
                 }
               : {}
           }
@@ -156,8 +172,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
           <div
             className="px-4 pb-3 pt-2"
             style={isTikTokMode ? { 
-              height: '60px', 
-              flex: '0 0 60px' 
+              height: 'var(--discover-title-height)', 
+              flex: '0 0 var(--discover-title-height)' 
             } : {}}
           >
             <h2 className="text-xl font-bold text-[#0A0A23] leading-none">Descubre Propiedades</h2>
@@ -168,8 +184,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
             </p>
           </div>
 
-          {/* Viewport del feed: ocupa el resto */}
-          <div style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0 } : {}}>
+          {/* Viewport del feed */}
+          <div style={isTikTokMode ? { flex: '1 1 auto', minHeight: 0, overflow: 'hidden' } : {}}>
             <DiscoverProperties
               sessionId={sessionId}
               savedProperties={savedProperties}
