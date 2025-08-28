@@ -83,7 +83,6 @@ export default function DiscoverProperties({
       if (currentIndex > 0) {
         onCurrentIndexChange && onCurrentIndexChange(currentIndex - 1)
       } else {
-        // Salir del modo TikTok
         onExitTop && onExitTop()
       }
     }
@@ -110,16 +109,20 @@ export default function DiscoverProperties({
   const property = properties[currentIndex % properties.length]
   const isLiked = savedProperties?.has(property.propertyCode || property.id)
   
-  // Padding para crear el efecto "peek"
-  const outerPadding = isFullscreen ? 8 : 0
+  // Padding reducido para maximizar el tamaño de la tarjeta
+  const outerPadding = isFullscreen ? 6 : 0
+  
+  // Altura calculada correctamente
   const cardHeight = isFullscreen
-    ? (fillParent ? `calc(100% - ${outerPadding * 2}px)` : 'calc(100dvh - var(--top-nav-height) - 16px)')
+    ? (fillParent 
+        ? `calc(100% - ${outerPadding * 2}px)` 
+        : `calc(100dvh - var(--top-nav-height) - var(--bottom-nav-height) - var(--discover-title-height) - env(safe-area-inset-bottom) - ${outerPadding * 2}px)`)
     : '420px'
 
   return (
     <div
       className="relative w-full h-full"
-      style={{ padding: isFullscreen ? `${outerPadding}px 12px` : '0px' }}
+      style={{ padding: isFullscreen ? `${outerPadding}px 8px` : '0px' }}
     >
       <div
         className="relative bg-black rounded-2xl overflow-hidden cursor-pointer"
