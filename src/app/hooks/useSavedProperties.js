@@ -84,8 +84,9 @@ export function useSavedProperties(sessionId) {
           session_id: sessionId,
           favorited_properties: newFavorites,
           updated_at: new Date().toISOString()
+        }, { 
+          onConflict: 'session_id' 
         })
-        .eq('session_id', sessionId)
       
       if (error) throw error
       
