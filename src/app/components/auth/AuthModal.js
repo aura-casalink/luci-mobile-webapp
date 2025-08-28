@@ -11,6 +11,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const makeRedirect = () => {
     const url = new URL('/auth/callback', window.location.origin);
     url.searchParams.set('redirectTo', window.location.pathname);
+    const sid = localStorage.getItem('luci_session_id');
+    if (sid) url.searchParams.set('sid', sid);
     return url.toString();
   };
   
