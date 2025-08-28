@@ -1,121 +1,143 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import OurProperties from './OurProperties'
-import OurServices from './OurServices'
+import PropertyCarousel from './PropertyCarousel'
+import ServicesCarousel from './ServicesCarousel'
+import PropertyDetailView from '../properties/PropertyDetailView'
+import { useExploreProperties } from '../../hooks/useExploreProperties'
 import DiscoverProperties from './DiscoverProperties'
 
-export default function ExploreContainer({ sessionId, savedProperties, onToggleSave, onPropertyClick }) {
-  const [currentDiscoverIndex, setCurrentDiscoverIndex] = useState(0)
-  const [isDiscoverLocked, setIsDiscoverLocked] = useState(false)
-  const discoverRef = useRef(null)
-  const containerRef = useRef(null)
+export default function ExploreContainer({ sessionId, savedProperties, onToggleSave, onSendMessage }) {
+  const [selectedProperty, setSelectedProperty] = useState(null)
+  const [isDiscoverFullscreen, setIsDiscoverFullscreen] = useState(false)
+  const [discoverCurrentIndex, setDiscoverCurrentIndex] = useState(0)
+  const scrollTimeoutRef = useRef(null)
+  const { getPropertyDetails } = useExploreProperties()
 
+  const handlePropertyClick = (property) => {
+    const fullProperty = getPropertyDetails(property.id)
+    if (fullProperty) {
+      setSelectedProperty(fullProperty)
+    }
+  }
+
+  // Manejar scroll para la sección de Discover Properties
   useEffect(() => {
+    let isScrolling = false
+    const discoverSectionRef = document.getElementById('discover-section')
+  
     const handleScroll = () => {
-      if (!discoverRef.current || !containerRef.current) return
+      if (!discoverSectionRef || isScrolling) return
       
-      const discoverRect = discoverRef.current.getBoundingClientRect()
-      const containerRect = containerRef.current.getBoundingClientRect()
+      const rect = discoverSectionRef.getBoundingClientRect()
+      const windowHeight = window.innerHeight
       
-      // Si el 25% superior de Descubre está visible
-      const triggerPoint = window.innerHeight * 0.75
-      
-      if (discoverRect.top < triggerPoint && discoverRect.top > 100 && !isDiscoverLocked) {
-        // Auto-scroll suave hasta fijar la sección
-        setIsDiscoverLocked(true)
-        discoverRef.current.scrollIntoView({ 
+      // Si el 25% superior de Discover está visible y no estamos en fullscreen
+      if (!isDiscoverFullscreen && rect.top < windowHeight * 0.75 && rect.top > 0) {
+        isScrolling = true
+        
+        // Auto-scroll suave hasta el inicio de la sección
+        discoverSectionRef.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'start' 
         })
-      }
-      
-      // Desbloquear si scrollea hacia arriba fuera de la zona
-      if (discoverRect.top > window.innerHeight && isDiscoverLocked) {
-        setIsDiscoverLocked(false)
+        
+        // Después del scroll, activar fullscreen
+        setTimeout(() => {
+          setIsDiscoverFullscreen(true)
+          isScrolling = false
+        }, 800)
       }
     }
-
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('scroll', handleScroll)
-      return () => container.removeEventListener('scroll', handleScroll)
-    }
-  }, [isDiscoverLocked])
-
-  // Manejar scroll dentro de Descubre cuando está bloqueado
-  useEffect(() => {
-    if (!isDiscoverLocked) return
-
+  
     const handleWheel = (e) => {
-      const discoverRect = discoverRef.current?.getBoundingClientRect()
-      
-      // Si Descubre está visible y bloqueado
-      if (discoverRect && discoverRect.top <= 80 && discoverRect.bottom >= window.innerHeight) {
+      if (isDiscoverFullscreen) {
         e.preventDefault()
         
-        // Cambiar índice con el scroll
         if (e.deltaY > 0) {
-          setCurrentDiscoverIndex(prev => prev + 1) // Siguiente propiedad
+          // Scroll down: siguiente propiedad
+          setDiscoverCurrentIndex(prev => prev + 1)
         } else {
-          setCurrentDiscoverIndex(prev => Math.max(0, prev - 1)) // Anterior
+          // Scroll up: anterior o salir
+          if (discoverCurrentIndex > 0) {
+            setDiscoverCurrentIndex(prev => prev - 1)
+          } else {
+            setIsDiscoverFullscreen(false)
+            // Scroll un poco hacia arriba para ver las secciones anteriores
+            window.scrollBy(0, -100)
+          }
         }
       }
     }
+  
+    window.addEventListener('scroll', handleScroll)
+    document.addEventListener('wheel', handleWheel, { passive: false })
+  
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('wheel', handleWheel)
+    }
+  }, [isDiscoverFullscreen, discoverCurrentIndex])
 
-    window.addEventListener('wheel', handleWheel, { passive: false })
-    return () => window.removeEventListener('wheel', handleWheel)
-  }, [isDiscoverLocked])
+  if (selectedProperty) {
+    return (
+      <PropertyDetailView
+        property={selectedProperty}
+        onClose={() => setSelectedProperty(null)}
+        onSendMessage={onSendMessage || (() => {})}
+        savedProperties={savedProperties}
+        onToggleSave={onToggleSave}
+      />
+    )
+  }
 
   return (
-    <div 
-      ref={containerRef}
-      className="h-full overflow-y-auto bg-gray-50"
-    >
-      {/* Sección Nuestras Propiedades */}
-      <div className="p-4">
-        <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestras propiedades</h2>
-        <OurProperties />
-      </div>
-
-      {/* Sección Nuestros Servicios */}
-      <div className="p-4 mt-6">
-        <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestros servicios</h2>
-        <OurServices />
-      </div>
-
-      {/* Sección Descubre Propiedades */}
-      <div 
-        ref={discoverRef}
-        className={`mt-6 transition-all duration-300 ${
-          isDiscoverLocked ? 'fixed top-16 left-0 right-0 bottom-0 z-40 bg-gray-50' : ''
-        }`}
-      >
-        <div className={`${isDiscoverLocked ? 'h-full flex flex-col' : ''}`}>
-          <div className="p-4 bg-gray-50">
-            <h2 className="text-xl font-bold text-[#0A0A23]">Descubre propiedades</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {isDiscoverLocked ? 'Desliza para explorar' : 'Scroll para ver más'}
-            </p>
-          </div>
-          
-          <div className={`${isDiscoverLocked ? 'flex-1 overflow-hidden' : 'h-[600px]'}`}>
-            <DiscoverProperties 
-              sessionId={sessionId}
-              savedProperties={savedProperties}
-              onToggleSave={onToggleSave}
-              onPropertyClick={onPropertyClick}
-              isFullscreen={isDiscoverLocked}
-              currentIndex={currentDiscoverIndex}
-              onCurrentIndexChange={setCurrentDiscoverIndex}
-            />
-          </div>
+    <div className="flex-1 overflow-y-auto bg-white">
+      <section className="py-6">
+        <div className="px-4">
+          <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestras Propiedades</h2>
         </div>
-      </div>
-
-      {/* Espaciador cuando Descubre está fijo */}
-      {isDiscoverLocked && (
-        <div style={{ height: 'calc(100vh - 64px)' }} />
-      )}
+        <PropertyCarousel 
+          savedProperties={savedProperties} 
+          onToggleSave={onToggleSave}
+          onPropertyClick={handlePropertyClick}
+        />
+      </section>
+  
+      <section className="py-6">
+        <div className="px-4">
+          <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Nuestros Servicios</h2>
+        </div>
+        <ServicesCarousel />
+      </section>
+  
+      <section id="discover-section" className={`py-6 ${
+        isDiscoverFullscreen ? 'fixed inset-0 z-50 bg-white flex flex-col' : ''
+      }`}>
+        <div className="px-4">
+          <h2 className="text-xl font-bold text-[#0A0A23] mb-4">
+            Descubre Propiedades
+            {isDiscoverFullscreen && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                Desliza para explorar
+              </span>
+            )}
+          </h2>
+        </div>
+        <div className={isDiscoverFullscreen ? 'flex-1' : ''}>
+          <DiscoverProperties 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={onToggleSave}
+            onPropertyClick={(property) => setSelectedProperty(property)}
+            isFullscreen={isDiscoverFullscreen}
+            currentIndex={discoverCurrentIndex}
+            onCurrentIndexChange={setDiscoverCurrentIndex}
+          />
+        </div>
+      </section>
+      
+      {/* Espaciador cuando está en fullscreen */}
+      {isDiscoverFullscreen && <div style={{ height: '100vh' }} />}
     </div>
   )
 }
