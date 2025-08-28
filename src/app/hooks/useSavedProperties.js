@@ -22,7 +22,7 @@ export function useSavedProperties(sessionId) {
         .from('chat_sessions')
         .select('favorited_properties, property_sets')
         .eq('session_id', sessionId)
-        .single()
+        .maybeSingle()
 
       if (error || !data) {
         console.log('No favorited properties found')
@@ -43,55 +43,64 @@ export function useSavedProperties(sessionId) {
 
   const toggleSaveProperty = async (propertyId) => {
     console.log('🔧 toggleSaveProperty called with:', propertyId)
-    console.log('🔧 Current sessionId:', sessionId)
-    console.log('🔧 Current savedProperties:', Array.from(savedProperties))
     if (!sessionId || !propertyId) return
-
+  
     const isSaved = savedProperties.has(propertyId)
     
+    // Actualizar estado local inmediatamente
+    if (isSaved) {
+      setSavedProperties(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(propertyId)
+        return newSet
+      })
+    } else {
+      setSavedProperties(prev => new Set([...prev, propertyId]))
+    }
+    
     try {
+      // Obtener favoritos actuales
+      const { data: currentData } = await supabase
+        .from('chat_sessions')
+        .select('favorited_properties')
+        .eq('session_id', sessionId)
+        .maybeSingle()
+      
+      const currentFavorites = currentData?.favorited_properties || []
+      
+      // Actualizar lista
       let newFavorites
       if (isSaved) {
-        // Quitar de favoritos
-        newFavorites = Array.from(savedProperties).filter(id => id !== propertyId)
+        newFavorites = currentFavorites.filter(id => id !== propertyId)
+      } else {
+        newFavorites = [...currentFavorites, propertyId]
+      }
+      
+      // Guardar en Supabase
+      const { error } = await supabase
+        .from('chat_sessions')
+        .upsert({
+          session_id: sessionId,
+          favorited_properties: newFavorites,
+          updated_at: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
+      
+      if (error) throw error
+      
+      console.log(isSaved ? `Removed ${propertyId}` : `Added ${propertyId}`)
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+      // Revertir cambio local si falla
+      if (isSaved) {
+        setSavedProperties(prev => new Set([...prev, propertyId]))
+      } else {
         setSavedProperties(prev => {
           const newSet = new Set(prev)
           newSet.delete(propertyId)
           return newSet
         })
-      } else {
-        // Agregar a favoritos
-        newFavorites = [...Array.from(savedProperties), propertyId]
-        setSavedProperties(prev => new Set([...prev, propertyId]))
       }
-
-      // Actualizar en Supabase
-      const { error } = await supabase
-        .from('chat_sessions')
-        .update({
-          favorited_properties: newFavorites,
-          updated_at: new Date().toISOString()
-        })
-        .eq('session_id', sessionId)
-
-      if (error) {
-        console.error('Error updating favorites:', error)
-        // Revertir cambio local en caso de error
-        if (isSaved) {
-          setSavedProperties(prev => new Set([...prev, propertyId]))
-        } else {
-          setSavedProperties(prev => {
-            const newSet = new Set(prev)
-            newSet.delete(propertyId)
-            return newSet
-          })
-        }
-        return
-      }
-
-      console.log(isSaved ? `Removed ${propertyId} from favorites` : `Added ${propertyId} to favorites`)
-    } catch (error) {
-      console.error('Error toggling favorite:', error)
     }
   }
 
