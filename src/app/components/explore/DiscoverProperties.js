@@ -77,7 +77,17 @@ export default function DiscoverProperties({
     
     if (delta < 0) {
       // Swipe up -> siguiente
-      onCurrentIndexChange && onCurrentIndexChange(currentIndex + 1)
+      const nextIndex = currentIndex + 1
+      
+      // Bloquear después de 3 (índice 0-3 = 4 propiedades)
+      if (nextIndex > 3 && !window.currentUser) {
+        window.requireAuth?.(
+          'Regístrate para ver todas las propiedades disponibles',
+          () => onCurrentIndexChange && onCurrentIndexChange(nextIndex)
+        )
+      } else {
+        onCurrentIndexChange && onCurrentIndexChange(nextIndex)
+      }
     } else {
       // Swipe down -> anterior o salir
       if (currentIndex > 0) {
