@@ -44,14 +44,6 @@ export function useSavedProperties(sessionId) {
   const toggleSaveProperty = async (propertyId) => {
     console.log('🔧 toggleSaveProperty called with:', propertyId)
 
-    // Verificar auth antes de guardar
-    if (!window.currentUser) {
-      window.requireAuth?.(
-        'Crea tu cuenta para guardar tus propiedades favoritas',
-        () => toggleSaveProperty(propertyId)
-      )
-      return
-    }
     if (!sessionId || !propertyId) return
   
     const isSaved = savedProperties.has(propertyId)
