@@ -102,6 +102,11 @@ export default function Home() {
   // Función para manejar cambio de pestañas
   const handleTabChange = (tabId) => {
     if (tabId === 'saved') {
+      // Solo pedir login si NO hay usuario Y hay guardados
+      if (!user && savedProperties && savedProperties.size > 0) {
+        window.requireAuth?.('Accede para ver tus Guardados', () => setActiveTab('saved'))
+        return
+      }
       setHasUnvisitedSaves(false)
     }
     setActiveTab(tabId)
