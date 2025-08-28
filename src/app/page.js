@@ -41,6 +41,14 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Ejecutar callback pendiente si el usuario se loguea
+  useEffect(() => {
+    if (user && window.pendingAuthCallback) {
+      window.pendingAuthCallback()
+      window.pendingAuthCallback = null
+    }
+  }, [user])
+
   // Función global para requerir auth
   useEffect(() => {
     window.requireAuth = (message = '', callback) => {
