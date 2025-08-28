@@ -158,8 +158,8 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
           setSelectedProperty(null)
           unlockScroll()
           ioCooldownRef.current = Date.now() + 200
-        }}
-        // Reactivar TikTok si estamos en la sección
+          
+          // Reactivar TikTok si estamos en la sección
           requestAnimationFrame(() => {
             const el = discoverRef.current
             if (!el) return
