@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { X, Heart, Share2, MapPin, Bed, Bath, Square, Layers, ChevronLeft, ChevronRight } from 'lucide-react'
+import { getStreetViewUrl } from '@/lib/maps'
 
 export default function PropertyDetailView({ property, onClose, onSendMessage, savedProperties, onToggleSave, onStreetViewChange }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -313,7 +314,10 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           <div className="flex-shrink-0 h-16 bg-black/90 flex items-center justify-between px-4">
             <div className="text-white font-medium">Street View</div>
             <button
-              onClick={() => setShowStreetView(false)}
+              onClick={() => {
+                const url = getStreetViewUrl(property)
+                window.open(url, '_blank')
+              }}
               className="w-10 h-10 rounded-full bg-white text-[#0A0A23] flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
               <X size={20} />
