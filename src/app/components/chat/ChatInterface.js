@@ -61,11 +61,98 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   // Cargar mensajes existentes de la sesión
   useEffect(() => {
     if (sessionId) {
-      loadExistingMessages()
-      // Verificar callbacks pendientes al cargar
-      setTimeout(checkPendingCallbacks, 1000)
+      initializeSessionWithIP()
     }
   }, [sessionId])
+  
+  // Nueva función para inicializar con IP
+  const initializeSessionWithIP = async () => {
+    try {
+      console.log('🌐 Initializing session with IP...')
+      
+      // Primero obtener la IP
+      const ipResponse = await fetch('https://api.ipify.org?format=json')
+      const ipData = await ipResponse.json()
+      const userIp = ipData.ip
+      
+      console.log('🌐 User IP obtained:', userIp)
+      
+      // Actualizar la sesión actual con la IP
+      await supabase
+        .from('chat_sessions')
+        .update({
+          ip: userIp,
+          updated_at: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
+      
+      // Ahora cargar TODAS las conversaciones y propiedades con esta IP
+      const { data: allSessions } = await supabase
+        .from('chat_sessions')
+        .select('conversations, property_sets, session_id, created_at')
+        .eq('ip', userIp)
+        .order('created_at', { ascending: true })
+      
+      if (allSessions && allSessions.length > 0) {
+        const allConversations = []
+        const allPropertySets = []
+        
+        // Combinar todos los datos de todas las sesiones con esta IP
+        allSessions.forEach(session => {
+          if (session.conversations && Array.isArray(session.conversations)) {
+            allConversations.push(...session.conversations)
+          }
+          
+          if (session.property_sets && Array.isArray(session.property_sets)) {
+            allPropertySets.push(...session.property_sets)
+          }
+        })
+        
+        // Ordenar cronológicamente
+        allConversations.sort((a, b) => 
+          new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
+        )
+        
+        allPropertySets.sort((a, b) => 
+          new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
+        )
+        
+        console.log(`📱 Loading from IP ${userIp}:`)
+        console.log(`   - ${allConversations.length} messages from ${allSessions.length} sessions`)
+        console.log(`   - ${allPropertySets.length} property sets`)
+        
+        // Actualizar estados
+        setMessages(allConversations)
+        setPropertySets(allPropertySets)
+        setShowWelcome(allConversations.length === 0)
+      } else {
+        console.log('📱 No previous sessions found for this IP')
+        setShowWelcome(true)
+      }
+      
+      // Verificar callbacks pendientes después de cargar todo
+      setTimeout(checkPendingCallbacks, 1000)
+      
+    } catch (error) {
+      console.error('Error initializing with IP:', error)
+      // Fallback: intentar cargar solo la sesión actual
+      try {
+        const { data: currentSession } = await supabase
+          .from('chat_sessions')
+          .select('conversations, property_sets')
+          .eq('session_id', sessionId)
+          .single()
+        
+        if (currentSession) {
+          setMessages(currentSession.conversations || [])
+          setPropertySets(currentSession.property_sets || [])
+          setShowWelcome(!currentSession.conversations || currentSession.conversations.length === 0)
+        }
+      } catch (fallbackError) {
+        console.error('Fallback también falló:', fallbackError)
+        setShowWelcome(true)
+      }
+    }
 
   // Procesar nuevos callbacks
   useEffect(() => {
@@ -74,90 +161,6 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       processCallback(latestCallback)
     }
   }, [callbacks])
-
-  const loadExistingMessages = async () => {
-    try {
-      console.log('📄 loadExistingMessages called for session:', sessionId)
-      
-      const { data: currentSession, error: sessionError } = await supabase
-        .from('chat_sessions')
-        .select('conversations, property_sets, last_properties, ip')
-        .eq('session_id', sessionId)
-        .single()
-      
-      console.log('📄 Current session data:', {
-        hasSession: !!currentSession,
-        ip: currentSession?.ip,
-        conversationsCount: currentSession?.conversations?.length || 0,
-        error: sessionError
-      })
-      
-      if (currentSession?.ip && currentSession.ip !== 'unknown' && currentSession.ip !== 'web-app') {
-        console.log('📄 Searching for sessions with IP:', currentSession.ip)
-        
-        const { data: allSessions, error: ipError } = await supabase
-          .from('chat_sessions')
-          .select('conversations, property_sets, session_id, created_at')
-          .eq('ip', currentSession.ip)
-          .order('created_at', { ascending: true })
-        
-        console.log('📄 IP search results:', {
-          foundSessions: allSessions?.length || 0,
-          error: ipError
-        })
-        
-        if (allSessions && allSessions.length > 0) {
-          const allConversations = []
-          const allPropertySets = []
-          
-          allSessions.forEach(session => {
-            if (session.conversations && Array.isArray(session.conversations)) {
-              allConversations.push(...session.conversations)
-            }
-            
-            if (session.property_sets && Array.isArray(session.property_sets)) {
-              allPropertySets.push(...session.property_sets)
-            }
-          })
-          
-          allConversations.sort((a, b) => 
-            new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
-          )
-          
-          allPropertySets.sort((a, b) => 
-            new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
-          )
-          
-          console.log(`📄 Loading from IP ${currentSession.ip}:`)
-          console.log(`   - ${allConversations.length} messages from ${allSessions.length} sessions`)
-          console.log(`   - ${allPropertySets.length} property sets`)
-          
-          setMessages(allConversations)
-          setPropertySets(allPropertySets)
-          setShowWelcome(allConversations.length === 0)
-        }
-      } else {
-        console.log('📄 Not loading by IP because:', {
-          hasIP: !!currentSession?.ip,
-          ipValue: currentSession?.ip,
-          reason: !currentSession?.ip ? 'no IP' : 
-                  currentSession.ip === 'unknown' ? 'IP is unknown' :
-                  currentSession.ip === 'web-app' ? 'IP is web-app' : 'other'
-        })
-        
-        if (currentSession?.conversations) {
-          setMessages(currentSession.conversations)
-          setShowWelcome(currentSession.conversations.length === 0)
-        }
-        
-        if (currentSession?.property_sets) {
-          setPropertySets(currentSession.property_sets)
-        }
-      }
-    } catch (error) {
-      console.log('📄 Error loading existing data:', error)
-    }
-  }
 
   const processCallback = (callback) => {
     // Desactivar estado de espera cuando llega cualquier callback
