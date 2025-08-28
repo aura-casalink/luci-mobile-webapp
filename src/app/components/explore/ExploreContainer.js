@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import PropertyCarousel from './PropertyCarousel'
 import ServicesCarousel from './ServicesCarousel'
 import PropertyDetailView from '../properties/PropertyDetailView'
@@ -31,7 +31,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white">
+    <div className="h-full overflow-y-auto bg-white">
       {/* Nuestras Propiedades */}
       <section className="py-6">
         <div className="px-4">
@@ -53,22 +53,27 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       </section>
 
       {/* Descubre Propiedades */}
-      <section className="py-6 pb-20">
+      <section className="py-6">
         <div className="px-4 pb-4">
-          <h2 className="text-xl font-bold text-[#0A0A23]">Descubre Propiedades</h2>
-          <p className="text-sm text-gray-500 mt-1">Continúa para explorar</p>
+          <h2 className="text-xl font-bold text-[#0A0A23] mb-4">Descubre Propiedades</h2>
+          <p className="text-sm text-gray-500">Continúa para explorar</p>
         </div>
         
-        <DiscoverProperties 
-          sessionId={sessionId}
-          savedProperties={savedProperties}
-          onToggleSave={onToggleSave}
-          onPropertyClick={(property) => setSelectedProperty(property)}
-          isFullscreen={false}
-          currentIndex={discoverCurrentIndex}
-          onCurrentIndexChange={setDiscoverCurrentIndex}
-        />
+        <div className="px-4">
+          <DiscoverProperties 
+            sessionId={sessionId}
+            savedProperties={savedProperties}
+            onToggleSave={onToggleSave}
+            onPropertyClick={handlePropertyClick}
+            isFullscreen={false}
+            currentIndex={discoverCurrentIndex}
+            onCurrentIndexChange={setDiscoverCurrentIndex}
+          />
+        </div>
       </section>
+      
+      {/* Espaciador para el tab bar */}
+      <div className="h-20"></div>
     </div>
   )
 }
