@@ -8,6 +8,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const [loading, setLoading] = useState(false)
   const supabase = createBrowserSupabaseClient()
 
+  const makeRedirect = () => {
+    const url = new URL('/auth/callback', window.location.origin);
+    url.searchParams.set('redirectTo', window.location.pathname);
+    return url.toString();
+  };
+  
   const signInWithGoogle = async () => {
     setLoading(true)
     await supabase.auth.signInWithOAuth({
