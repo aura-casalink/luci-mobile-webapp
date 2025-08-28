@@ -523,6 +523,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           const audioUrl = URL.createObjectURL(audioBlob)
           setRecordedAudio({ blob: audioBlob, url: audioUrl, duration: actualDuration })
           setShowAudioPreview(true)
+          setShowWelcome(false)
           
           setIsRecording(false)
           setIsPreparing(false)
@@ -654,7 +655,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     )
   }
 
-  if (showWelcome) {
+  if (showWelcome && !(showAudioPreview && recordedAudio)) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex-1 flex flex-col items-center justify-center p-8">
