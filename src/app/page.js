@@ -9,6 +9,7 @@ import NearbyContainer from './components/nearby/NearbyContainer'
 import ExploreContainer from './components/explore/ExploreContainer'
 import AuthModal from './components/auth/AuthModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+import LandingPage from '@/components/landing/LandingPage'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat')
@@ -16,6 +17,14 @@ export default function Home() {
   const [isStreetViewActive, setIsStreetViewActive] = useState(false)
   const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
   const [previousSavedCount, setPreviousSavedCount] = useState(0)
+  
+  // Estado para mostrar/ocultar landing con persistencia
+  const [showLanding, setShowLanding] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('landing_seen')
+    }
+    return true
+  })
   
   // Estados para auth
   const [user, setUser] = useState(null)
@@ -110,6 +119,12 @@ export default function Home() {
     setPreviousSavedCount(savedProperties.size)
   }, [savedProperties.size, previousSavedCount])
 
+  // Función para manejar inicio de la app desde landing
+  const handleStartApp = () => {
+    localStorage.setItem('landing_seen', 'true')
+    setShowLanding(false)
+  }
+
   // Función para manejar envío de mensajes
   const handleSendMessage = (message) => {
     console.log('Mensaje enviado:', message)
@@ -176,6 +191,12 @@ export default function Home() {
     }
   }
 
+  // Mostrar landing page si es la primera vez
+  if (showLanding) {
+    return <LandingPage onStart={handleStartApp} />
+  }
+
+  // Mostrar app principal
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <TopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
