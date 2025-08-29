@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { MapPin, Bed, Bath, Square, Home, ChevronLeft, ChevronRight, Layers, ExternalLink } from 'lucide-react'
+import { MapPin, Bed, Bath, Square, Layers, Home, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function SharePropertyView({ propertyCode }) {
@@ -9,6 +9,8 @@ export default function SharePropertyView({ propertyCode }) {
   const [error, setError] = useState(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showStreetView, setShowStreetView] = useState(false)
+  const [showImageOverlay, setShowImageOverlay] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
   const [images, setImages] = useState([])
 
   useEffect(() => {
@@ -19,7 +21,6 @@ export default function SharePropertyView({ propertyCode }) {
     try {
       setLoading(true)
       
-      // Buscar propiedad en Supabase
       const { data, error } = await supabase
         .from('properties_database')
         .select('*')
@@ -32,7 +33,6 @@ export default function SharePropertyView({ propertyCode }) {
       // Procesar imágenes
       let propertyImages = []
       
-      // Intentar obtener imágenes del campo multimedia
       if (data.multimedia) {
         try {
           const multimedia = typeof data.multimedia === 'string' 
@@ -51,12 +51,10 @@ export default function SharePropertyView({ propertyCode }) {
         }
       }
 
-      // Si no hay imágenes, usar thumbnail
       if (propertyImages.length === 0 && data.thumbnail) {
         propertyImages = [data.thumbnail]
       }
 
-      // Si aún no hay imágenes, placeholder
       if (propertyImages.length === 0) {
         propertyImages = ['https://via.placeholder.com/800x600/f0f0f0/666666?text=Sin+Imagen']
       }
@@ -89,9 +87,8 @@ export default function SharePropertyView({ propertyCode }) {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)
   }
 
-  const handleOpenInApp = () => {
-    // Redirigir a la app principal con el propertyCode
-    window.location.href = `/?propertyCode=${propertyCode}`
+  const handleImageClick = () => {
+    setShowImageOverlay(true)
   }
 
   if (loading) {
@@ -127,14 +124,18 @@ export default function SharePropertyView({ propertyCode }) {
     )
   }
 
-  const latitude = property.latitude || 40.4168
-  const longitude = property.longitude || -3.7038
+  const latitude = property.latitude || property.lat || 40.4168
+  const longitude = property.longitude || property.lng || -3.7038
+  const address = property.address || `${property.neighborhood || ''}, ${property.municipality || 'Madrid'}`.trim()
+  const description = property.description || 'No hay descripción disponible.'
+  const shortDescription = description.length > 150 ? description.substring(0, 150) + '...' : description
+  const mapSrc = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAf-L38UI3hGyYrMJjeFO0Ij2n1p1mCyMk&q=${latitude},${longitude}&zoom=16`
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="min-h-screen bg-white">
+      {/* Header fijo */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img src="/favicon.svg" alt="Luci" className="w-8 h-8" />
             <div>
@@ -143,118 +144,170 @@ export default function SharePropertyView({ propertyCode }) {
             </div>
           </div>
           <button
-            onClick={handleOpenInApp}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#0A0A23] text-white rounded-lg hover:bg-[#1A1A33] transition-colors"
+            onClick={() => window.location.href = '/?propertyCode=' + propertyCode}
+            className="px-4 py-2 bg-[#0A0A23] text-white rounded-lg hover:bg-[#1A1A33] transition-colors text-sm font-medium"
           >
-            <ExternalLink size={16} />
-            <span className="text-sm font-medium">Abrir en App</span>
+            Prueba la App
           </button>
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-4xl mx-auto p-4">
-        {/* Galería de imágenes */}
-        <div className="relative bg-black rounded-lg overflow-hidden mb-6" style={{ height: '400px' }}>
-          <img
-            src={images[currentImageIndex]}
-            alt={`${property.title} - Imagen ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
-          />
-          
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors"
-              >
-                <ChevronRight size={20} />
-              </button>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
-                {currentImageIndex + 1} / {images.length}
-              </div>
-            </>
-          )}
+      {/* Galería de imágenes a pantalla completa */}
+      <div className="relative h-72 bg-black">
+        <img
+          src={images[currentImageIndex]}
+          alt={`${property.title} - Imagen ${currentImageIndex + 1}`}
+          className="w-full h-full object-cover cursor-pointer"
+          onClick={handleImageClick}
+        />
+        
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); prevImage(); }}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); nextImage(); }}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+        
+        {/* Contador de imágenes */}
+        <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+          {currentImageIndex + 1}/{images.length}
         </div>
 
-        {/* Información de la propiedad */}
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
-          <h2 className="text-2xl font-bold text-[#0A0A23] mb-2">
+        {/* Indicadores (bolitas) */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Contenido */}
+      <div className="p-6 space-y-6">
+        {/* Título y precio */}
+        <div>
+          <h1 className="text-3xl font-bold text-[#0A0A23] mb-3 leading-tight">
             {property.title || property.address || 'Propiedad en Madrid'}
-          </h2>
-          
-          <p className="text-3xl font-bold text-[#0A0A23] mb-4">
+          </h1>
+          <p className="text-2xl font-bold text-[#0A0A23] mb-1">
             {formatPrice(property.price)}
           </p>
-
-          <div className="flex items-center text-gray-600 mb-4">
-            <MapPin size={18} className="mr-2" />
-            <span>
-              {property.neighborhood && `${property.neighborhood}, `}
-              {property.municipality || 'Madrid'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 py-4 border-t border-b">
-            <div className="text-center">
-              <Bed className="w-6 h-6 mx-auto mb-1 text-gray-500" />
-              <p className="text-lg font-semibold">{property.bedrooms || 0}</p>
-              <p className="text-sm text-gray-500">Habitaciones</p>
-            </div>
-            <div className="text-center">
-              <Bath className="w-6 h-6 mx-auto mb-1 text-gray-500" />
-              <p className="text-lg font-semibold">{property.bathrooms || 0}</p>
-              <p className="text-sm text-gray-500">Baños</p>
-            </div>
-            <div className="text-center">
-              <Square className="w-6 h-6 mx-auto mb-1 text-gray-500" />
-              <p className="text-lg font-semibold">{property.sqft || property.builtArea || 0}</p>
-              <p className="text-sm text-gray-500">m²</p>
-            </div>
-          </div>
-
-          {property.description && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-[#0A0A23] mb-3">Descripción</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {property.description}
-              </p>
-            </div>
+          {property.pricePerSqm && (
+            <p className="text-sm text-gray-500">
+              {property.pricePerSqm}€/m²
+            </p>
           )}
         </div>
 
-        {/* Street View */}
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[#0A0A23]">Vista de la calle</h3>
-            <button
-              onClick={() => setShowStreetView(!showStreetView)}
-              className="flex items-center space-x-2 text-[#0A0A23] hover:text-[#1A1A33]"
-            >
-              <Layers size={18} />
-              <span className="text-sm">{showStreetView ? 'Ocultar' : 'Mostrar'}</span>
-            </button>
+        {/* Features en grid */}
+        <div className="grid grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <Bed size={24} className="mx-auto text-gray-600 mb-1" />
+            <p className="text-sm font-medium text-gray-700">{property.bedrooms || 0}</p>
+            <p className="text-xs text-gray-500">hab</p>
           </div>
-          
-          {showStreetView && (
-            <div className="rounded-lg overflow-hidden" style={{ height: '300px' }}>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <Bath size={24} className="mx-auto text-gray-600 mb-1" />
+            <p className="text-sm font-medium text-gray-700">{property.bathrooms || 0}</p>
+            <p className="text-xs text-gray-500">baños</p>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <Square size={24} className="mx-auto text-gray-600 mb-1" />
+            <p className="text-sm font-medium text-gray-700">{property.sqft || property.builtArea || 0}</p>
+            <p className="text-xs text-gray-500">m²</p>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <Layers size={24} className="mx-auto text-gray-600 mb-1" />
+            <p className="text-sm font-medium text-gray-700">{property.height || property.floor || 'N/A'}</p>
+            <p className="text-xs text-gray-500">planta</p>
+          </div>
+        </div>
+
+        {/* Botón WhatsApp */}
+        
+          href={`https://wa.me/34910626648?text=${encodeURIComponent(
+            `Hola! Quiero más información sobre el piso ${propertyCode}, en ${address}.`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.570-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.891 3.426"/>
+          </svg>
+          Contacta con ventas
+        </a>
+
+        {/* Descripción con leer más */}
+        <div>
+          <h3 className="text-xl font-semibold text-[#0A0A23] mb-3">Descripción</h3>
+          <div className="text-gray-700 leading-relaxed">
+            <p>{showFullDescription ? description : shortDescription}</p>
+            {description.length > 150 && (
+              <button
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="text-[#0A0A23] font-bold mt-2 hover:text-gray-700 transition-colors underline"
+              >
+                {showFullDescription ? 'Leer menos' : 'Leer más'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Ubicación */}
+        <div>
+          <h3 className="text-xl font-semibold text-[#0A0A23] mb-3">Ubicación</h3>
+          <div className="space-y-3">
+            <div className="flex items-start space-x-2">
+              <MapPin size={20} className="text-gray-500 mt-1 flex-shrink-0" />
+              <p className="text-gray-700">{address}</p>
+            </div>
+            
+            <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden">
               <iframe
-                src={`https://www.google.com/maps/embed/v1/streetview?key=AIzaSyAf-L38UI3hGyYrMJjeFO0Ij2n1p1mCyMk&location=${latitude},${longitude}&heading=0&pitch=0&fov=90`}
+                src={mapSrc}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-              />
+              ></iframe>
             </div>
-          )}
+
+            <button
+              onClick={() => setShowStreetView(true)}
+              className="w-full flex items-center justify-center p-4 text-white rounded-lg hover:bg-opacity-90 transition-colors"
+              style={{ backgroundColor: '#0A0A23' }}
+            >
+              <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="4" r="2" fill="currentColor"/>
+                <path d="M12 6L12 14" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 9L9 11" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 11L15 9" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 14L9 20" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 14L15 20" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              Ver Street View
+            </button>
+          </div>
         </div>
 
         {/* CTA Final */}
@@ -264,13 +317,82 @@ export default function SharePropertyView({ propertyCode }) {
             Habla con Luci para obtener más información y encontrar tu hogar ideal
           </p>
           <button
-            onClick={handleOpenInApp}
+            onClick={() => window.location.href = '/?propertyCode=' + propertyCode}
             className="bg-white text-[#0A0A23] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
           >
             Chatear con Luci
           </button>
         </div>
       </div>
+
+      {/* Street View Modal */}
+      {showStreetView && (
+        <div className="fixed inset-0 z-[95] bg-black flex flex-col">
+          <div className="flex-shrink-0 h-16 bg-black/90 flex items-center justify-between px-4">
+            <div className="text-white font-medium">Street View</div>
+            <button
+              onClick={() => setShowStreetView(false)}
+              className="w-10 h-10 rounded-full bg-white text-[#0A0A23] flex items-center justify-center hover:bg-gray-200 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1">
+            <iframe
+              src={`https://www.google.com/maps/embed/v1/streetview?key=AIzaSyAf-L38UI3hGyYrMJjeFO0Ij2n1p1mCyMk&location=${latitude},${longitude}&heading=0&pitch=0&fov=90`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allow="accelerometer; gyroscope; web-share"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Image Overlay (Zoom) */}
+      {showImageOverlay && (
+        <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center">
+          <button
+            onClick={() => setShowImageOverlay(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors z-10"
+          >
+            <X size={24} />
+          </button>
+          
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={images[currentImageIndex]}
+              alt={`${property.title} - Imagen ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+            
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+            
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+              {currentImageIndex + 1}/{images.length}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
