@@ -153,6 +153,7 @@ export default function MapView({ properties, userLocation, savedProperties, onP
                 class="share-btn"
                 data-property-title="${property.title}"
                 data-property-price="${formatPrice(property.price)}"
+                data-property-code="${propertyId}"
                 style="
                   background: rgba(255,255,255,0.95);
                   border: none;
@@ -253,13 +254,15 @@ export default function MapView({ properties, userLocation, savedProperties, onP
               const btn = e.target.closest('.share-btn')
               const title = btn.getAttribute('data-property-title')
               const price = btn.getAttribute('data-property-price')
+              const propertyCode = btn.getAttribute('data-property-code')
+              const shareUrl = `${window.location.origin}/share/${propertyCode}`
               
               if (navigator.share) {
                 try {
                   await navigator.share({
                     title: title,
                     text: `${title} - ${price}`,
-                    url: window.location.href
+                    url: shareUrl
                   })
                 } catch (err) {
                   if (err.name !== "AbortError") {
@@ -267,7 +270,7 @@ export default function MapView({ properties, userLocation, savedProperties, onP
                   }
                 }
               } else {
-                navigator.clipboard.writeText(`${title} - ${price} - ${window.location.href}`)
+                navigator.clipboard.writeText(`${title} - ${price} - ${shareUrl}`)
                 alert('Enlace copiado al portapapeles')
               }
               return false
