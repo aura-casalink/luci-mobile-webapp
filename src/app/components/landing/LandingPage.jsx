@@ -103,7 +103,7 @@ export default function LandingPage({ onStart }) {
       </header>
 
       {/* Hero Section con video de fondo */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pb-20">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 md:px-6 pt-20 pb-20">
         {/* Video Background con doble capa para transición suave */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Video actual */}
@@ -158,12 +158,12 @@ export default function LandingPage({ onStart }) {
 
         {/* Hero Content - Alineado a la izquierda */}
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="text-left px-4 md:px-0">
-            <h2 className="text-5xl md:text-7xl font-bold mb-4 leading-tight" style={{ color: '#0A0A23' }}>
+          <div className="text-left">
+            <h2 className="text-4xl md:text-7xl font-bold mb-3 md:mb-4 leading-tight" style={{ color: '#0A0A23' }}>
               Encuentra tu casa
-              <span className="block mt-2" style={{ color: '#0A0A23' }}>
+              <span className="block mt-1 md:mt-2" style={{ color: '#0A0A23' }}>
                 <span 
-                  className="inline-block px-3 py-1 rounded-lg"
+                  className="inline-block px-2 md:px-3 py-1 rounded-lg text-3xl md:text-6xl"
                   style={{ 
                     backgroundColor: '#FFB300',
                     minHeight: '1.2em',
@@ -176,14 +176,14 @@ export default function LandingPage({ onStart }) {
               </span>
             </h2>
             
-            <p className="text-xl md:text-2xl mb-8 max-w-2xl" style={{ color: '#0A0A23' }}>
+            <p className="text-base md:text-2xl mb-6 md:mb-8 max-w-2xl" style={{ color: '#0A0A23' }}>
               Bienvenido al <span style={{ color: '#0A0A23' }} className="font-bold">Skyscanner de pisos</span> en España, 
               con filtros avanzados con IA que no existen en otras plataformas.
             </p>
 
             <button
               onClick={onStart}
-              className="group relative inline-flex items-center justify-center px-10 py-5 text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-12"
+              className="group relative inline-flex items-center justify-center px-8 md:px-10 py-4 md:py-5 text-lg md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-8 md:mb-12"
               style={{ 
                 backgroundColor: '#FFB300',
                 color: '#0A0A23',
@@ -202,14 +202,14 @@ export default function LandingPage({ onStart }) {
             </button>
 
             {/* Contenido adicional movido aquí */}
-            <div className="space-y-6 max-w-2xl">
-              <p className="text-lg" style={{ color: '#0A0A23', opacity: 0.9 }}>
+            <div className="space-y-4 md:space-y-6 max-w-2xl">
+              <p className="text-sm md:text-lg" style={{ color: '#0A0A23', opacity: 0.9 }}>
                 Sabemos qué zonas son mejores, qué terraza es la más grande, 
                 y te devolvemos tu tiempo para lo que importa.
               </p>
 
               <div 
-                className="backdrop-blur-sm p-6"
+                className="backdrop-blur-sm p-4 md:p-6"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
                   border: '2px solid #FFB300',
@@ -217,7 +217,7 @@ export default function LandingPage({ onStart }) {
                   boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <p className="text-lg" style={{ color: '#0A0A23' }}>
+                <p className="text-sm md:text-lg" style={{ color: '#0A0A23' }}>
                   <span style={{ color: '#0A0A23' }} className="font-bold">Una vez encontrada tu casa</span>, 
                   ofrecemos paquetes de servicios completos: 
                   <span style={{ color: '#0A0A23', fontWeight: '600' }}> reforma, revisión legal, financiación</span>. 
@@ -229,16 +229,16 @@ export default function LandingPage({ onStart }) {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-4 md:bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
           <button 
             onClick={scrollToFeatures}
-            className="flex flex-col items-center transition-colors"
+            className="flex flex-col items-center transition-colors p-2"
             style={{ color: '#0A0A23' }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#FFB300'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#0A0A23'}
           >
-            <span className="text-sm mb-2 font-semibold">Saber más</span>
-            <ChevronDown className="w-6 h-6" />
+            <span className="text-xs md:text-sm mb-1 md:mb-2 font-semibold">Saber más</span>
+            <ChevronDown className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
       </section>
