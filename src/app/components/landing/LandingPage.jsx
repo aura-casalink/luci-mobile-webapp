@@ -7,7 +7,11 @@ export default function LandingPage({ onStart }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+  const [nextVideoIndex, setNextVideoIndex] = useState(1)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [typingText, setTypingText] = useState('')
   const videoRef = useRef(null)
+  const nextVideoRef = useRef(null)
 
   // URLs de los videos
   const videoUrls = [
@@ -18,12 +22,31 @@ export default function LandingPage({ onStart }) {
 
   useEffect(() => {
     setIsVisible(true)
+    
+    // Efecto typing para "más rápido"
+    const text = 'más rápido'
+    let index = 0
+    const timer = setInterval(() => {
+      if (index <= text.length) {
+        setTypingText(text.slice(0, index))
+        index++
+      } else {
+        clearInterval(timer)
+      }
+    }, 100)
+    
+    return () => clearInterval(timer)
   }, [])
 
-  // Manejar la rotación de videos
+  // Manejar la rotación de videos con transición suave
   useEffect(() => {
     const handleVideoEnd = () => {
-      setCurrentVideoIndex((prev) => (prev + 1) % videoUrls.length)
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentVideoIndex((prev) => (prev + 1) % videoUrls.length)
+        setNextVideoIndex((prev) => (prev + 1) % videoUrls.length)
+        setIsTransitioning(false)
+      }, 500)
     }
 
     const video = videoRef.current
@@ -81,28 +104,45 @@ export default function LandingPage({ onStart }) {
 
       {/* Hero Section con video de fondo */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pb-20">
-        {/* Video Background */}
+        {/* Video Background con doble capa para transición suave */}
         <div className="absolute inset-0 overflow-hidden">
+          {/* Video actual */}
           <video
             ref={videoRef}
-            key={currentVideoIndex}
+            key={`current-${currentVideoIndex}`}
+            autoPlay
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+            style={{ 
+              filter: 'brightness(0.7) contrast(0.9)',
+              opacity: isTransitioning ? 0 : 0.9
+            }}
+          >
+            <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
+          </video>
+          
+          {/* Video siguiente (precargado) */}
+          <video
+            ref={nextVideoRef}
+            key={`next-${nextVideoIndex}`}
             autoPlay
             muted
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
             style={{ 
               filter: 'brightness(0.7) contrast(0.9)',
-              opacity: 0.9
+              opacity: isTransitioning ? 0.9 : 0
             }}
           >
-            <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
+            <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
           </video>
           
           {/* Overlay gradiente sutil */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.75) 0%, rgba(250, 250, 250, 0.6) 50%, rgba(250, 250, 250, 0.75) 100%)'
+              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.85) 0%, rgba(250, 250, 250, 0.7) 50%, rgba(250, 250, 250, 0.85) 100%)'
             }}
           ></div>
           
@@ -116,59 +156,76 @@ export default function LandingPage({ onStart }) {
           ></div>
         </div>
 
-        {/* Hero Content */}
-        <div className={`relative z-10 text-center max-w-3xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: '#0A0A23' }}>
-            Encuentra tu casa
-            <span className="block" style={{ color: '#FFB300' }}>
-              más rápido
-            </span>
-          </h2>
-          
-          <p className="text-xl md:text-2xl mb-8 leading-relaxed" style={{ color: '#0A0A23' }}>
-            Somos el <span style={{ color: '#FFB300' }} className="font-semibold">primer buscador en España</span> con filtros avanzados por IA.
-            <br className="hidden md:block" />
-            <span className="text-lg block mt-2" style={{ color: '#0A0A23', opacity: 0.8 }}>
-              Sabemos qué zonas son mejores, qué terraza es la más grande, 
-              y te devolvemos tu tiempo para lo que importa.
-            </span>
-          </p>
-
-          <div 
-            className="backdrop-blur-sm p-6 mb-8"
-            style={{ 
-              backgroundColor: 'rgba(255, 179, 0, 0.08)',
-              border: '1px solid rgba(255, 179, 0, 0.3)',
-              borderRadius: '24px 24px 32px 32px'
-            }}
-          >
-            <p className="text-lg" style={{ color: '#0A0A23' }}>
-              <span style={{ color: '#FFB300' }} className="font-semibold">Una vez encontrada tu casa</span>, 
-              ofrecemos paquetes de servicios completos: 
-              <span style={{ color: '#FFB300' }}> reforma, revisión legal, financiación</span>. 
-              Todo en un único lugar.
+        {/* Hero Content - Alineado a la izquierda */}
+        <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="text-left px-4 md:px-0">
+            <h2 className="text-5xl md:text-7xl font-bold mb-4 leading-tight" style={{ color: '#0A0A23' }}>
+              Encuentra tu casa
+              <span className="block mt-2" style={{ color: '#0A0A23' }}>
+                <span 
+                  className="inline-block px-3 py-1 rounded-lg"
+                  style={{ 
+                    backgroundColor: '#FFB300',
+                    minHeight: '1.2em',
+                    minWidth: '200px'
+                  }}
+                >
+                  {typingText}
+                  <span className="animate-pulse">|</span>
+                </span>
+              </span>
+            </h2>
+            
+            <p className="text-xl md:text-2xl mb-8 max-w-2xl" style={{ color: '#0A0A23' }}>
+              Bienvenido al <span style={{ color: '#0A0A23' }} className="font-bold">Skyscanner de pisos</span> en España, 
+              con filtros avanzados con IA que no existen en otras plataformas.
             </p>
-          </div>
 
-          <button
-            onClick={onStart}
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
-            style={{ 
-              backgroundColor: '#FFB300',
-              color: '#0A0A23',
-              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
-              e.currentTarget.style.transform = 'scale(1.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
-              e.currentTarget.style.transform = 'scale(1)'
-            }}
-          >
-            <span className="relative z-10 font-semibold">Comenzar a buscar</span>
-          </button>
+            <button
+              onClick={onStart}
+              className="group relative inline-flex items-center justify-center px-10 py-5 text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-12"
+              style={{ 
+                backgroundColor: '#FFB300',
+                color: '#0A0A23',
+                boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
+                e.currentTarget.style.transform = 'scale(1.05)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
+                e.currentTarget.style.transform = 'scale(1)'
+              }}
+            >
+              <span className="relative z-10">Comenzar a buscar</span>
+            </button>
+
+            {/* Contenido adicional movido aquí */}
+            <div className="space-y-6 max-w-2xl">
+              <p className="text-lg" style={{ color: '#0A0A23', opacity: 0.9 }}>
+                Sabemos qué zonas son mejores, qué terraza es la más grande, 
+                y te devolvemos tu tiempo para lo que importa.
+              </p>
+
+              <div 
+                className="backdrop-blur-sm p-6"
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '2px solid #FFB300',
+                  borderRadius: '24px 24px 32px 32px',
+                  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <p className="text-lg" style={{ color: '#0A0A23' }}>
+                  <span style={{ color: '#0A0A23' }} className="font-bold">Una vez encontrada tu casa</span>, 
+                  ofrecemos paquetes de servicios completos: 
+                  <span style={{ color: '#0A0A23', fontWeight: '600' }}> reforma, revisión legal, financiación</span>. 
+                  Todo en un único lugar.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Scroll indicator */}
@@ -180,7 +237,7 @@ export default function LandingPage({ onStart }) {
             onMouseEnter={(e) => e.currentTarget.style.color = '#FFB300'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#0A0A23'}
           >
-            <span className="text-sm mb-2">Saber más</span>
+            <span className="text-sm mb-2 font-semibold">Saber más</span>
             <ChevronDown className="w-6 h-6" />
           </button>
         </div>
@@ -189,7 +246,7 @@ export default function LandingPage({ onStart }) {
       {/* Features Section */}
       <section id="features-section" className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#FFB300' }}>
+          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#0A0A23' }}>
             ¿Cómo funciona?
           </h3>
 
@@ -198,8 +255,8 @@ export default function LandingPage({ onStart }) {
             <div 
               className="backdrop-blur-sm p-8 shadow-lg"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                border: '1px solid rgba(255, 179, 0, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '2px solid #FFB300',
                 borderRadius: '20px 20px 28px 28px'
               }}
             >
@@ -268,17 +325,17 @@ export default function LandingPage({ onStart }) {
                 className="backdrop-blur-sm p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid rgba(255, 179, 0, 0.2)',
+                  border: '2px solid #FFB300',
                   borderRadius: '20px 20px 28px 28px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.4)'
+                  e.currentTarget.style.borderColor = '#FFB300'
                   e.currentTarget.style.transform = 'scale(1.05) translateY(-4px)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.2)'
+                  e.currentTarget.style.borderColor = '#FFB300'
                   e.currentTarget.style.transform = 'scale(1) translateY(0)'
                 }}
               >
@@ -302,7 +359,7 @@ export default function LandingPage({ onStart }) {
       {/* Bottom CTA */}
       <section className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-3xl font-bold mb-4" style={{ color: '#FFB300' }}>
+          <h3 className="text-3xl font-bold mb-4" style={{ color: '#0A0A23' }}>
             ¿Listo para encontrar tu hogar?
           </h3>
           <p className="mb-8 text-lg" style={{ color: '#0A0A23', opacity: 0.8 }}>
