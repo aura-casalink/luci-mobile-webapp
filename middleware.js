@@ -1,67 +1,40 @@
+// middleware.js
 import { NextResponse, userAgent } from 'next/server';
 
-// Configuración de dominios
 const MOBILE_HOST = 'luci.aura-app.es';
 const DESKTOP_HOST = 'desktop-luci.aura-app.es';
 
-/**
- * Middleware para redirección automática desktop/mobile
- * - Redirige usuarios de desktop desde el dominio móvil al dominio desktop
- * - Preserva rutas y query params
- * - Ignora bots para SEO
- */
-export function middleware(request) {
-  const url = request.nextUrl;
-  
-  // Solo actuar cuando el host es el dominio móvil
-  // Esto previene bucles de redirección y efectos no deseados en el dominio desktop
-  if (url.hostname !== MOBILE_HOST) {
-    return NextResponse.next();
+export function middleware(req) {
+  const url = req.nextUrl;
+
+  // Solo actuamos cuando el host es el MOBILE para evitar bucles.
+  if (url.hostname !== MOBILE_HOST) return NextResponse.next();
+
+  const { device, isBot } = userAgent(req);
+  if (isBot) return NextResponse.next(); // deja pasar a bots/SEO
+
+  // Overrides opcionales por cookie (útil para QA):
+  // set-cookie "view=desktop" o "view=mobile"
+  const pref = req.cookies.get('view')?.value;
+  if (pref === 'desktop') {
+    const dest = new URL(url.href);
+    dest.hostname = DESKTOP_HOST;        // conserva path y query
+    return NextResponse.redirect(dest, 307);
   }
-  
-  // Obtener información del user agent
-  const { device, isBot } = userAgent(request);
-  
-  // Permitir bots para SEO (Google, Bing, etc.)
-  if (isBot) {
-    return NextResponse.next();
-  }
-  
-  // Detectar si es desktop
-  // En Next.js, device.type será 'mobile' o 'tablet' para dispositivos móviles
-  // Para desktop, device.type será undefined
-  const isMobileDevice = device.type === 'mobile' || device.type === 'tablet';
-  const isDesktop = !isMobileDevice;
-  
-  // Si es desktop, redirigir al dominio desktop
+  if (pref === 'mobile') return NextResponse.next();
+
+  // En Next, device.type = 'mobile' | 'tablet' en móviles/tablets; undefined en desktop
+  const isDesktop = !device?.type;
   if (isDesktop) {
-    // Clonar la URL actual
-    const destinationUrl = new URL(url.href);
-    
-    // Cambiar solo el hostname, preservando ruta y query params
-    destinationUrl.hostname = DESKTOP_HOST;
-    
-    // Log para debugging (puedes comentar en producción)
-    console.log(`[Middleware] Redirigiendo desktop user de ${url.href} a ${destinationUrl.href}`);
-    
-    // Usar 307 Temporary Redirect para mantener el método HTTP
-    return NextResponse.redirect(destinationUrl, 307);
+    const dest = new URL(url.href);
+    dest.hostname = DESKTOP_HOST;
+    return NextResponse.redirect(dest, 307); // usa 308 si quieres permanente
   }
-  
-  // Si es móvil, continuar normalmente
+
   return NextResponse.next();
 }
 
-// Configuración del matcher - define qué rutas procesa el middleware
+// Aplica a todo menos estáticos comunes
 export const config = {
-  matcher: [
-    /*
-     * Aplicar a todas las rutas excepto:
-     * - _next/static (archivos estáticos)
-     * - _next/image (optimización de imágenes)
-     * - favicon.ico, robots.txt, sitemap.xml (archivos públicos comunes)
-     * - Archivos con extensión (ej: .png, .jpg, .css, .js)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
