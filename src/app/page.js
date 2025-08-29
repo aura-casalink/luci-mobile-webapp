@@ -9,7 +9,7 @@ import NearbyContainer from './components/nearby/NearbyContainer'
 import ExploreContainer from './components/explore/ExploreContainer'
 import AuthModal from './components/auth/AuthModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
-import LandingPage from '@/components/landing/LandingPage'
+import LandingPage from './components/landing/LandingPage'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat')
