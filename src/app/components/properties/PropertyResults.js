@@ -13,7 +13,7 @@ export default function PropertyResults({ properties, onPropertyClick, savedProp
   const handleShare = async (property, e) => {
     e.stopPropagation()
     const propertyCode = property.propertyCode || property.property_id || property.id
-    const shareUrl = `${window.location.origin}/share/${propertyCode}`
+    const shareUrl = `https://luci.aura-app.es/share/${propertyCode}`
     const text = `${property.title} - ${formatPrice(property.price)}`
     
     if (navigator.share) {
