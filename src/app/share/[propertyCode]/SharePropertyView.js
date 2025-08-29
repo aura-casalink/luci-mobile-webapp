@@ -241,17 +241,17 @@ export default function SharePropertyView({ propertyCode }) {
         </div>
 
         {/* Botón WhatsApp */}
-        
-          href={`https://wa.me/34910626648?text=${encodeURIComponent(
-            `Hola! Quiero más información sobre el piso ${propertyCode}, en ${address}.`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => {
+            const message = `Hola! Quiero más información sobre el piso ${propertyCode}, en ${address}.`;
+            const whatsappUrl = `https://wa.me/34910626648?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+          }}
           className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
         >
-          <span style={{ fontSize: '20px' }}>📱</span>
-          Contacta con ventas
-        </a>
+          <span>📱</span>
+          <span>Contacta con ventas</span>
+        </button>
 
         {/* Descripción con leer más */}
         <div>
