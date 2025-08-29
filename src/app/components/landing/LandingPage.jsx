@@ -1,4 +1,4 @@
-// src/components/landing/LandingPage.jsx (o src/app/components/landing/LandingPage.jsx según tu estructura)
+// src/components/landing/LandingPage.jsx
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles } from 'lucide-react'
@@ -58,24 +58,24 @@ export default function LandingPage({ onStart }) {
 
   const slides = [
     {
-      icon: <MessageCircle className="w-8 h-8" style={{ color: '#FFB300' }} />,
+      icon: <MessageCircle className="w-6 h-6 md:w-8 md:h-8" style={{ color: '#FFB300' }} />,
       title: "Chatea con AURA",
-      description: "Habla con nuestra IA y te traeremos resultados personalizados directamente en la conversación. Sin formularios, sin complicaciones."
+      description: "Habla con nuestra IA y te traeremos resultados personalizados directamente en la conversación."
     },
     {
-      icon: <Sparkles className="w-8 h-8" style={{ color: '#FFB300' }} />,
+      icon: <Sparkles className="w-6 h-6 md:w-8 md:h-8" style={{ color: '#FFB300' }} />,
       title: "Insights inteligentes",
-      description: "Pulsa en los resultados para obtener análisis profundos y ajustar tus criterios de búsqueda en tiempo real."
+      description: "Pulsa en los resultados para obtener análisis profundos y ajustar tus criterios de búsqueda."
     },
     {
-      icon: <Heart className="w-8 h-8" style={{ color: '#FFB300' }} />,
+      icon: <Heart className="w-6 h-6 md:w-8 md:h-8" style={{ color: '#FFB300' }} />,
       title: "Guarda tus favoritos",
-      description: "Marca las propiedades que más te gusten y accede a ellas cuando quieras. Tu lista personal siempre a mano."
+      description: "Marca las propiedades que más te gusten y accede a ellas cuando quieras."
     },
     {
-      icon: <MapPin className="w-8 h-8" style={{ color: '#FFB300' }} />,
+      icon: <MapPin className="w-6 h-6 md:w-8 md:h-8" style={{ color: '#FFB300' }} />,
       title: "Explora el mapa",
-      description: "Descubre propiedades exclusivas, nuestras sugerencias personalizadas y navega por el mapa interactivo."
+      description: "Descubre propiedades exclusivas y navega por el mapa interactivo."
     }
   ]
 
@@ -94,19 +94,18 @@ export default function LandingPage({ onStart }) {
   return (
     <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#FAFAFA' }}>
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-20 p-6">
+      <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
         <div className="flex items-center">
-          <h1 className="text-2xl font-bold" style={{ color: '#FFB300' }}>
+          <h1 className="text-xl md:text-2xl font-bold" style={{ color: '#FFB300' }}>
             AURA
           </h1>
         </div>
       </header>
 
-      {/* Hero Section con video de fondo */}
-      <section className="relative h-screen flex flex-col justify-center px-4 md:px-6 pt-14 md:pt-20">
-        {/* Video Background con doble capa para transición suave */}
+      {/* Hero Section - ULTRA COMPACTO PARA MÓVIL */}
+      <section className="relative h-screen flex flex-col justify-center px-4 md:px-6">
+        {/* Video Background - SIN FILTROS PARA MÁXIMA VISIBILIDAD */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Video actual */}
           <video
             ref={videoRef}
             key={`current-${currentVideoIndex}`}
@@ -121,7 +120,6 @@ export default function LandingPage({ onStart }) {
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
           </video>
           
-          {/* Video siguiente (precargado) */}
           <video
             ref={nextVideoRef}
             key={`next-${nextVideoIndex}`}
@@ -136,79 +134,71 @@ export default function LandingPage({ onStart }) {
             <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
           </video>
           
-          {/* Overlay muy sutil - solo para mejorar legibilidad */}
+          {/* Overlay mínimo solo para legibilidad */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'rgba(250, 250, 250, 0.2)'
-            }}
-          ></div>
-          
-          {/* Grid pattern overlay sutil */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(to right, #0A0A23 1px, transparent 1px), linear-gradient(to bottom, #0A0A23 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
+              background: 'rgba(250, 250, 250, 0.15)'
             }}
           ></div>
         </div>
 
-        {/* Hero Content - Alineado a la izquierda - MÁS COMPACTO */}
+        {/* Hero Content - SUPER COMPACTO */}
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="text-left">
-            <h2 className="text-3xl md:text-7xl font-bold mb-1 md:mb-4 leading-none" style={{ color: '#0A0A23' }}>
+            {/* Título más pequeño en móvil */}
+            <h2 className="text-3xl md:text-6xl font-bold mb-1 md:mb-3 leading-none" style={{ color: '#0A0A23' }}>
               Encuentra tu casa
               <span className="block" style={{ color: '#0A0A23' }}>
                 <span 
-                  className="inline-block px-2 md:px-3 py-0 md:py-1 rounded-md text-2xl md:text-6xl"
+                  className="inline-block px-2 md:px-3 rounded-md text-2xl md:text-5xl"
                   style={{ 
-                    backgroundColor: '#FFB300'
+                    backgroundColor: '#FFB300',
+                    padding: '2px 8px'
                   }}
                 >
-                  {typingText}
-                  <span className="animate-pulse">|</span>
+                  {typingText}!
                 </span>
               </span>
             </h2>
             
-            <p className="text-sm md:text-2xl mb-3 md:mb-8 max-w-2xl leading-tight" style={{ color: '#0A0A23' }}>
-              Bienvenido al <span style={{ color: '#0A0A23' }} className="font-bold">Skyscanner de pisos</span> en España, 
-              con filtros avanzados con IA que no existen en otras plataformas.
+            {/* Subtítulo más pequeño */}
+            <p className="text-sm md:text-xl mb-3 md:mb-6 max-w-2xl leading-tight" style={{ color: '#0A0A23' }}>
+              Bienvenido al <span className="font-bold">Skyscanner de pisos</span> en España, 
+              con IA que no existe en otras plataformas.
             </p>
 
+            {/* Botón más compacto */}
             <button
               onClick={onStart}
-              className="group relative inline-flex items-center justify-center px-6 md:px-10 py-3 md:py-5 text-base md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-4 md:mb-12"
+              className="inline-flex items-center justify-center px-6 md:px-8 py-2.5 md:py-4 text-base md:text-lg font-bold rounded-full mb-3 md:mb-8"
               style={{ 
                 backgroundColor: '#FFB300',
                 color: '#0A0A23',
-                boxShadow: '0 8px 20px rgba(255, 179, 0, 0.2)'
+                boxShadow: '0 4px 12px rgba(255, 179, 0, 0.2)'
               }}
             >
-              <span className="relative z-10">Comenzar a buscar</span>
+              Comenzar a buscar
             </button>
 
-            {/* Contenido adicional - MÁS COMPACTO */}
-            <div className="space-y-2 md:space-y-6 max-w-2xl">
-              <p className="text-xs md:text-lg leading-tight" style={{ color: '#0A0A23', opacity: 0.9 }}>
-                Sabemos qué zonas son mejores, qué terraza es la más grande, 
-                y te devolvemos tu tiempo para lo que importa.
+            {/* Contenido adicional ultra compacto */}
+            <div className="space-y-2 md:space-y-4 max-w-2xl">
+              <p className="text-xs md:text-base leading-tight" style={{ color: '#0A0A23', opacity: 0.85 }}>
+                Sabemos qué zonas son mejores y te devolvemos tu tiempo.
               </p>
 
               <div 
-                className="backdrop-blur-sm p-3 md:p-6"
+                className="p-2.5 md:p-5"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
                   border: '2px solid #FFB300',
-                  borderRadius: '20px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                 }}
               >
-                <p className="text-xs md:text-lg leading-tight" style={{ color: '#0A0A23' }}>
-                  <span style={{ color: '#0A0A23' }} className="font-bold">Una vez encontrada tu casa</span>, 
-                  ofrecemos paquetes de servicios completos: 
-                  <span style={{ color: '#0A0A23', fontWeight: '600' }}> reforma, revisión legal, financiación</span>. 
+                <p className="text-xs md:text-base leading-tight" style={{ color: '#0A0A23' }}>
+                  <span className="font-bold">Una vez encontrada tu casa</span>: 
+                  reforma, revisión legal, financiación.
                   Todo en un único lugar.
                 </p>
               </div>
@@ -216,43 +206,43 @@ export default function LandingPage({ onStart }) {
           </div>
         </div>
 
-        {/* Scroll indicator - MÁS ARRIBA */}
-        <div className="absolute bottom-2 md:bottom-10 left-1/2 transform -translate-x-1/2">
+        {/* Scroll indicator más pequeño y arriba */}
+        <div className="absolute bottom-2 md:bottom-8 left-1/2 transform -translate-x-1/2">
           <button 
             onClick={scrollToFeatures}
-            className="flex flex-col items-center transition-colors p-1"
+            className="flex flex-col items-center p-1"
             style={{ color: '#0A0A23' }}
           >
             <span className="text-xs md:text-sm font-semibold">Saber más</span>
-            <ChevronDown className="w-4 h-4 md:w-6 md:h-6" />
+            <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features-section" className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
+      {/* Features Section - También más compacta */}
+      <section id="features-section" className="relative py-12 md:py-20 px-4 md:px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#0A0A23' }}>
+          <h3 className="text-2xl md:text-4xl font-bold text-center mb-8 md:mb-12" style={{ color: '#0A0A23' }}>
             ¿Cómo funciona?
           </h3>
 
           {/* Mobile Carousel */}
           <div className="md:hidden relative">
             <div 
-              className="backdrop-blur-sm p-8 shadow-lg"
+              className="p-6 shadow-lg"
               style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 border: '2px solid #FFB300',
-                borderRadius: '20px 20px 28px 28px'
+                borderRadius: '16px'
               }}
             >
-              <div className="flex items-start space-x-4 mb-4">
+              <div className="flex items-start space-x-3">
                 {slides[currentSlide].icon}
                 <div className="flex-1">
-                  <h4 className="text-xl font-semibold mb-2" style={{ color: '#0A0A23' }}>
+                  <h4 className="text-base font-semibold mb-1" style={{ color: '#0A0A23' }}>
                     {currentSlide + 1}. {slides[currentSlide].title}
                   </h4>
-                  <p style={{ color: '#0A0A23', opacity: 0.7 }}>
+                  <p className="text-xs leading-tight" style={{ color: '#0A0A23', opacity: 0.7 }}>
                     {slides[currentSlide].description}
                   </p>
                 </div>
@@ -260,18 +250,16 @@ export default function LandingPage({ onStart }) {
             </div>
 
             {/* Carousel Controls */}
-            <div className="flex justify-between items-center mt-6">
+            <div className="flex justify-between items-center mt-4">
               <button
                 onClick={prevSlide}
-                className="p-2 rounded-full transition-all"
+                className="p-2 rounded-full"
                 style={{ 
                   backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
 
               <div className="flex space-x-2">
@@ -279,9 +267,9 @@ export default function LandingPage({ onStart }) {
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className="h-2 rounded-full transition-all"
+                    className="h-1.5 rounded-full transition-all"
                     style={{
-                      width: index === currentSlide ? '32px' : '8px',
+                      width: index === currentSlide ? '24px' : '6px',
                       backgroundColor: index === currentSlide ? '#FFB300' : 'rgba(10, 10, 35, 0.2)'
                     }}
                   />
@@ -290,15 +278,13 @@ export default function LandingPage({ onStart }) {
 
               <button
                 onClick={nextSlide}
-                className="p-2 rounded-full transition-all"
+                className="p-2 rounded-full"
                 style={{ 
                   backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -308,21 +294,11 @@ export default function LandingPage({ onStart }) {
             {slides.map((slide, index) => (
               <div 
                 key={index}
-                className="backdrop-blur-sm p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                className="p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
                   border: '2px solid #FFB300',
-                  borderRadius: '20px 20px 28px 28px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)'
-                  e.currentTarget.style.borderColor = '#FFB300'
-                  e.currentTarget.style.transform = 'scale(1.05) translateY(-4px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'
-                  e.currentTarget.style.borderColor = '#FFB300'
-                  e.currentTarget.style.transform = 'scale(1) translateY(0)'
+                  borderRadius: '20px'
                 }}
               >
                 <div className="flex flex-col items-center text-center">
@@ -343,32 +319,24 @@ export default function LandingPage({ onStart }) {
       </section>
 
       {/* Bottom CTA */}
-      <section className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
+      <section className="relative py-12 md:py-20 px-4 md:px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-3xl font-bold mb-4" style={{ color: '#0A0A23' }}>
+          <h3 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4" style={{ color: '#0A0A23' }}>
             ¿Listo para encontrar tu hogar?
           </h3>
-          <p className="mb-8 text-lg" style={{ color: '#0A0A23', opacity: 0.8 }}>
+          <p className="mb-6 md:mb-8 text-sm md:text-lg" style={{ color: '#0A0A23', opacity: 0.8 }}>
             Únete a miles de personas que ya encontraron su casa ideal con AURA
           </p>
           <button
             onClick={onStart}
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full overflow-hidden transition-all duration-300"
+            className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-full"
             style={{ 
               backgroundColor: '#FFB300',
               color: '#0A0A23',
-              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
-              e.currentTarget.style.transform = 'scale(1.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
-              e.currentTarget.style.transform = 'scale(1)'
+              boxShadow: '0 8px 20px rgba(255, 179, 0, 0.25)'
             }}
           >
-            <span className="relative z-10 font-semibold">Empezar ahora</span>
+            Empezar ahora
           </button>
         </div>
       </section>
