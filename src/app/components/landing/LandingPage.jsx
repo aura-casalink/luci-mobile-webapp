@@ -1,7 +1,7 @@
 // src/components/landing/LandingPage.jsx
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles, Clock, Shield } from 'lucide-react'
 
 export default function LandingPage({ onStart }) {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -91,6 +91,10 @@ export default function LandingPage({ onStart }) {
     document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })
   }
 
+  const scrollToDifference = () => {
+    document.getElementById('difference-section').scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#FAFAFA' }}>
       {/* Header */}
@@ -104,7 +108,7 @@ export default function LandingPage({ onStart }) {
 
       {/* Hero Section - PADDING TOP REDUCIDO para móvil */}
       <section className="relative min-h-screen flex flex-col justify-center px-4 md:px-6 pt-12 md:pt-20 pb-20">
-        {/* Video Background - SIN OVERLAY O OVERLAY OSCURO PARA CONTRASTE */}
+        {/* Video Background con overlay aumentado */}
         <div className="absolute inset-0 overflow-hidden">
           <video
             ref={videoRef}
@@ -134,23 +138,24 @@ export default function LandingPage({ onStart }) {
             <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
           </video>
           
-          {/* Overlay OSCURO semi-transparente para mejor contraste con texto */}
+          {/* Overlay aumentado para mejor contraste */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'rgba(0, 0, 0, 0.3)' // Overlay oscuro en lugar de blanco
+              background: 'rgba(0, 0, 0, 0.45)' // Aumentado de 0.3 a 0.45
             }}
           ></div>
         </div>
 
-        {/* Hero Content - Espacios normales */}
+        {/* Hero Content */}
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="text-left">
-            <h2 className="text-4xl md:text-7xl font-bold mb-4 leading-tight" style={{ color: '#FAFAFA' }}>
+            {/* HERO TITLE MÁS GRANDE */}
+            <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 leading-none" style={{ color: '#FAFAFA' }}>
               Encuentra tu casa
               <span className="block mt-2" style={{ color: '#FAFAFA' }}>
                 <span 
-                  className="inline-block px-3 py-1 rounded-lg text-3xl md:text-6xl"
+                  className="inline-block px-3 py-2 rounded-lg text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
                   style={{ 
                     backgroundColor: '#FFB300',
                     color: '#0A0A23'
@@ -162,10 +167,12 @@ export default function LandingPage({ onStart }) {
               </span>
             </h2>
             
-            <p className="text-base md:text-2xl mb-6 md:mb-8 max-w-2xl" style={{ color: '#FAFAFA' }}>
-              Bienvenido al <span style={{ color: '#FFB300' }} className="font-bold">Skyscanner de pisos</span> en España, 
-              con filtros avanzados con IA que no existen en otras plataformas.
-            </p>
+            {/* NUEVO SUBTÍTULO DE 3 LÍNEAS */}
+            <div className="text-lg md:text-2xl mb-8 md:mb-10 max-w-3xl space-y-2" style={{ color: '#FAFAFA' }}>
+              <p>Busca a la vez en todos los portales inmobiliarios.</p>
+              <p>La IA filtra por ti características que no están en otras plataformas.</p>
+              <p className="font-bold">Bienvenido al Skyscanner inmobiliario.</p>
+            </div>
 
             <button
               onClick={onStart}
@@ -179,7 +186,7 @@ export default function LandingPage({ onStart }) {
               <span className="relative z-10">Comenzar a buscar</span>
             </button>
 
-            {/* Contenido adicional */}
+            {/* Contenido adicional movido abajo del botón */}
             <div className="space-y-4 md:space-y-6 max-w-2xl">
               <p className="text-sm md:text-lg" style={{ color: '#FAFAFA', opacity: 0.9 }}>
                 Sabemos qué zonas son mejores, qué terraza es la más grande, 
@@ -316,6 +323,67 @@ export default function LandingPage({ onStart }) {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Botón para siguiente sección */}
+          <div className="text-center mt-12">
+            <button 
+              onClick={scrollToDifference}
+              className="inline-flex items-center transition-colors hover:scale-105"
+              style={{ color: '#0A0A23' }}
+            >
+              <span className="text-lg font-semibold mr-2">Qué nos diferencia</span>
+              <ChevronDown className="w-5 h-5 animate-bounce" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* NUEVA SECCIÓN: Qué nos diferencia */}
+      <section id="difference-section" className="relative py-20 px-6" style={{ backgroundColor: '#f8f8f8' }}>
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-3xl md:text-4xl font-bold text-center mb-16" style={{ color: '#0A0A23' }}>
+            Qué nos diferencia
+          </h3>
+
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+            {/* Primera diferencia */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <div className="flex items-center mb-4">
+                <Clock className="w-10 h-10 mr-3" style={{ color: '#FFB300' }} />
+                <h4 className="text-2xl font-bold" style={{ color: '#0A0A23' }}>
+                  Nos ocupamos de todo por ti
+                </h4>
+              </div>
+              <p className="text-lg mb-4" style={{ color: '#FFB300', fontWeight: '600' }}>
+                Te devolvemos tiempo.
+              </p>
+              <p style={{ color: '#0A0A23', opacity: 0.8 }}>
+                Desde la búsqueda de piso, hasta el día que entras, pasando por financiación, 
+                reformas, gestión de suministros, auditorías legales. Olvídate de todo, 
+                nosotros gestionamos por ti.
+              </p>
+            </div>
+
+            {/* Segunda diferencia */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <div className="flex items-center mb-4">
+                <Shield className="w-10 h-10 mr-3" style={{ color: '#FFB300' }} />
+                <h4 className="text-2xl font-bold" style={{ color: '#0A0A23' }}>
+                  Encuentra mucho más rápido
+                </h4>
+              </div>
+              <p className="text-lg mb-4" style={{ color: '#FFB300', fontWeight: '600' }}>
+                Filtros inteligentes con IA.
+              </p>
+              <p style={{ color: '#0A0A23', opacity: 0.8 }}>
+                Usamos filtros más naturales que ir marcando ticks. Llegamos a comprobar esas 
+                características críticas, como si la terraza es suficientemente grande, o si el 
+                barrio donde quieres comprar es seguro. Nuestra IA es un consultor inmobiliario 
+                experto que te trae lo que necesitas, para que no tengas que estar horas revisando 
+                miles de resultados de diferentes plataformas.
+              </p>
+            </div>
           </div>
         </div>
       </section>
