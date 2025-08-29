@@ -40,17 +40,19 @@ export default function DiscoverProperties({
 
   const handleShare = async (property) => {
     const text = `${property.title || 'Propiedad'} - ${formatPrice(property.price)}`
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    const shareUrl = `${window.location.origin}/share/${propertyCode}`
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: property.title || 'Propiedad',
           text: text,
-          url: window.location.href
+          url: shareUrl
         })
       } catch (err) {}
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${text} - ${window.location.href}`)
+      navigator.clipboard.writeText(`${text} - ${shareUrl}`)
     }
   }
 
