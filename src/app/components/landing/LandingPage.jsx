@@ -92,7 +92,7 @@ export default function LandingPage({ onStart }) {
             className="absolute inset-0 w-full h-full object-cover"
             style={{ 
               filter: 'brightness(0.7) contrast(0.9)',
-              opacity: 0.4
+              opacity: 0.9
             }}
           >
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
@@ -102,7 +102,7 @@ export default function LandingPage({ onStart }) {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.85) 0%, rgba(250, 250, 250, 0.7) 50%, rgba(250, 250, 250, 0.85) 100%)'
+              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.75) 0%, rgba(250, 250, 250, 0.6) 50%, rgba(250, 250, 250, 0.75) 100%)'
             }}
           ></div>
           
