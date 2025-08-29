@@ -26,13 +26,15 @@ export default function PropertyCarousel({ savedProperties, onToggleSave, onProp
   const handleShare = async (property, e) => {
     e.stopPropagation()
     const text = `${property.title} - ${formatPrice(property.price)}`
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    const shareUrl = `${window.location.origin}/share/${propertyCode}`
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: property.title,
           text: text,
-          url: window.location.href
+          url: shareUrl
         })
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -40,7 +42,7 @@ export default function PropertyCarousel({ savedProperties, onToggleSave, onProp
         }
       }
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${text} - ${window.location.href}`)
+      navigator.clipboard.writeText(`${text} - ${shareUrl}`)
       alert('Enlace copiado al portapapeles')
     }
   }
