@@ -17,7 +17,7 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
   const handleShare = async (property) => {
     const text = `${property.title} - ${formatPrice(property.price)}`
     const propertyCode = property.propertyCode || property.property_id || property.id
-    const shareUrl = `${window.location.origin}/share/${propertyCode}`
+    const shareUrl = `https://luci.aura-app.es/share/${propertyCode}`
     
     if (navigator.share) {
       try {
