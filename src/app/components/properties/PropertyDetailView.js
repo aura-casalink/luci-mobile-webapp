@@ -54,8 +54,21 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
 
   const handleShare = () => {
     const text = `${property.title} - ${formatPrice(property.price)}`
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text)
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    const shareUrl = `${window.location.origin}/share/${propertyCode}`
+  
+    if (navigator.share) {
+      navigator.share({
+        title: property.title,
+        text: text,
+        url: shareUrl
+      }).catch(err => {
+        if (err.name !== "AbortError") {
+          console.error("Error sharing:", err)
+        }
+      })
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(`${text} - ${shareUrl}`)
       alert('Enlace copiado al portapapeles')
     }
   }
