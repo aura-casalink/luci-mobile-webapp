@@ -103,7 +103,7 @@ export default function LandingPage({ onStart }) {
       </header>
 
       {/* Hero Section con video de fondo */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 md:px-6 pt-20 pb-20">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 md:px-6 pt-16 md:pt-20 pb-12 md:pb-20">
         {/* Video Background con doble capa para transición suave */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Video actual */}
@@ -115,8 +115,8 @@ export default function LandingPage({ onStart }) {
             playsInline
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
             style={{ 
-              filter: 'brightness(0.7) contrast(0.9)',
-              opacity: isTransitioning ? 0 : 0.9
+              filter: 'brightness(0.85) contrast(1.1)',
+              opacity: isTransitioning ? 0 : 1
             }}
           >
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
@@ -131,8 +131,8 @@ export default function LandingPage({ onStart }) {
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
             style={{ 
-              filter: 'brightness(0.7) contrast(0.9)',
-              opacity: isTransitioning ? 0.9 : 0
+              filter: 'brightness(0.85) contrast(1.1)',
+              opacity: isTransitioning ? 1 : 0
             }}
           >
             <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
@@ -142,7 +142,7 @@ export default function LandingPage({ onStart }) {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.85) 0%, rgba(250, 250, 250, 0.7) 50%, rgba(250, 250, 250, 0.85) 100%)'
+              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.5) 0%, rgba(250, 250, 250, 0.3) 50%, rgba(250, 250, 250, 0.5) 100%)'
             }}
           ></div>
           
@@ -159,15 +159,14 @@ export default function LandingPage({ onStart }) {
         {/* Hero Content - Alineado a la izquierda */}
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="text-left">
-            <h2 className="text-4xl md:text-7xl font-bold mb-3 md:mb-4 leading-tight" style={{ color: '#0A0A23' }}>
+            <h2 className="text-4xl md:text-7xl font-bold mb-2 md:mb-4 leading-tight" style={{ color: '#0A0A23' }}>
               Encuentra tu casa
               <span className="block mt-1 md:mt-2" style={{ color: '#0A0A23' }}>
                 <span 
-                  className="inline-block px-2 md:px-3 py-1 rounded-lg text-3xl md:text-6xl"
+                  className="inline-block px-2 md:px-3 py-0.5 md:py-1 rounded-lg text-3xl md:text-6xl"
                   style={{ 
                     backgroundColor: '#FFB300',
-                    minHeight: '1.2em',
-                    minWidth: '200px'
+                    minHeight: '1.1em'
                   }}
                 >
                   {typingText}
@@ -176,14 +175,14 @@ export default function LandingPage({ onStart }) {
               </span>
             </h2>
             
-            <p className="text-base md:text-2xl mb-6 md:mb-8 max-w-2xl" style={{ color: '#0A0A23' }}>
+            <p className="text-base md:text-2xl mb-4 md:mb-8 max-w-2xl" style={{ color: '#0A0A23' }}>
               Bienvenido al <span style={{ color: '#0A0A23' }} className="font-bold">Skyscanner de pisos</span> en España, 
               con filtros avanzados con IA que no existen en otras plataformas.
             </p>
 
             <button
               onClick={onStart}
-              className="group relative inline-flex items-center justify-center px-8 md:px-10 py-4 md:py-5 text-lg md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-8 md:mb-12"
+              className="group relative inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-5 text-lg md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-6 md:mb-12"
               style={{ 
                 backgroundColor: '#FFB300',
                 color: '#0A0A23',
@@ -202,14 +201,14 @@ export default function LandingPage({ onStart }) {
             </button>
 
             {/* Contenido adicional movido aquí */}
-            <div className="space-y-4 md:space-y-6 max-w-2xl">
+            <div className="space-y-3 md:space-y-6 max-w-2xl">
               <p className="text-sm md:text-lg" style={{ color: '#0A0A23', opacity: 0.9 }}>
                 Sabemos qué zonas son mejores, qué terraza es la más grande, 
                 y te devolvemos tu tiempo para lo que importa.
               </p>
 
               <div 
-                className="backdrop-blur-sm p-4 md:p-6"
+                className="backdrop-blur-sm p-3.5 md:p-6"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
                   border: '2px solid #FFB300',
