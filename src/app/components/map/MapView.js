@@ -255,7 +255,7 @@ export default function MapView({ properties, userLocation, savedProperties, onP
               const title = btn.getAttribute('data-property-title')
               const price = btn.getAttribute('data-property-price')
               const propertyCode = btn.getAttribute('data-property-code')
-              const shareUrl = `${window.location.origin}/share/${propertyCode}`
+              const shareUrl = `https://luci.aura-app.es/share/${propertyCode}`
               
               if (navigator.share) {
                 try {
