@@ -235,7 +235,7 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           {/* Botón WhatsApp */}
           <a
             href={`https://wa.me/34910626648?text=${encodeURIComponent(
-              `Hola! Quiero más información sobre el piso ${property.propertyCode || property.property_id || 'ref. ' + property.id}, en ${property.address || property.neighborhood || property.municipality || 'esta ubicación'}.`
+              `Hola! Estoy interesado en esta propiedad: https://luci.aura-app.es/share/${property.propertyCode || property.property_id || property.id}. ¿Me podrías dar más información?`
             )}`}
             target="_blank"
             rel="noopener noreferrer"
