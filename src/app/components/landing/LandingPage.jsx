@@ -91,8 +91,8 @@ export default function LandingPage({ onStart }) {
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
             style={{ 
-              filter: 'brightness(0.3) contrast(0.8) saturate(0.8)',
-              opacity: 0.15
+              filter: 'brightness(0.7) contrast(0.9)',
+              opacity: 0.4
             }}
           >
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
@@ -102,7 +102,7 @@ export default function LandingPage({ onStart }) {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.95) 0%, rgba(250, 250, 250, 0.85) 50%, rgba(250, 250, 250, 0.95) 100%)'
+              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.85) 0%, rgba(250, 250, 250, 0.7) 50%, rgba(250, 250, 250, 0.85) 100%)'
             }}
           ></div>
           
@@ -135,10 +135,11 @@ export default function LandingPage({ onStart }) {
           </p>
 
           <div 
-            className="backdrop-blur-sm rounded-2xl p-6 mb-8"
+            className="backdrop-blur-sm p-6 mb-8"
             style={{ 
               backgroundColor: 'rgba(255, 179, 0, 0.08)',
-              border: '1px solid rgba(255, 179, 0, 0.3)'
+              border: '1px solid rgba(255, 179, 0, 0.3)',
+              borderRadius: '24px 24px 32px 32px'
             }}
           >
             <p className="text-lg" style={{ color: '#0A0A23' }}>
@@ -195,10 +196,11 @@ export default function LandingPage({ onStart }) {
           {/* Mobile Carousel */}
           <div className="md:hidden relative">
             <div 
-              className="backdrop-blur-sm rounded-2xl p-8 shadow-lg"
+              className="backdrop-blur-sm p-8 shadow-lg"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                border: '1px solid rgba(255, 179, 0, 0.2)'
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid rgba(255, 179, 0, 0.2)',
+                borderRadius: '20px 20px 28px 28px'
               }}
             >
               <div className="flex items-start space-x-4 mb-4">
@@ -263,18 +265,21 @@ export default function LandingPage({ onStart }) {
             {slides.map((slide, index) => (
               <div 
                 key={index}
-                className="backdrop-blur-sm rounded-2xl p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                className="backdrop-blur-sm p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  border: '1px solid rgba(255, 179, 0, 0.2)'
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid rgba(255, 179, 0, 0.2)',
+                  borderRadius: '20px 20px 28px 28px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)'
                   e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.4)'
+                  e.currentTarget.style.transform = 'scale(1.05) translateY(-4px)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'
                   e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.2)'
+                  e.currentTarget.style.transform = 'scale(1) translateY(0)'
                 }}
               >
                 <div className="flex flex-col items-center text-center">
