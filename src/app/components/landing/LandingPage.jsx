@@ -69,7 +69,7 @@ export default function LandingPage({ onStart }) {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#0A0A23' }}>
+    <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#FAFAFA' }}>
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-20 p-6">
         <div className="flex items-center">
@@ -90,7 +90,10 @@ export default function LandingPage({ onStart }) {
             muted
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: 'brightness(0.4)' }}
+            style={{ 
+              filter: 'brightness(0.3) contrast(0.8) saturate(0.8)',
+              opacity: 0.15
+            }}
           >
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
           </video>
@@ -99,15 +102,15 @@ export default function LandingPage({ onStart }) {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(10, 10, 35, 0.7) 0%, rgba(10, 10, 35, 0.4) 50%, rgba(10, 10, 35, 0.8) 100%)'
+              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.95) 0%, rgba(250, 250, 250, 0.85) 50%, rgba(250, 250, 250, 0.95) 100%)'
             }}
           ></div>
           
           {/* Grid pattern overlay sutil */}
           <div 
-            className="absolute inset-0 opacity-5"
+            className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: `linear-gradient(to right, #FFB300 1px, transparent 1px), linear-gradient(to bottom, #FFB300 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(to right, #0A0A23 1px, transparent 1px), linear-gradient(to bottom, #0A0A23 1px, transparent 1px)`,
               backgroundSize: '50px 50px'
             }}
           ></div>
@@ -115,17 +118,17 @@ export default function LandingPage({ onStart }) {
 
         {/* Hero Content */}
         <div className={`relative z-10 text-center max-w-3xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: '#FAFAFA' }}>
+          <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: '#0A0A23' }}>
             Encuentra tu casa
             <span className="block" style={{ color: '#FFB300' }}>
               más rápido
             </span>
           </h2>
           
-          <p className="text-xl md:text-2xl mb-8 leading-relaxed" style={{ color: '#FAFAFA' }}>
+          <p className="text-xl md:text-2xl mb-8 leading-relaxed" style={{ color: '#0A0A23' }}>
             Somos el <span style={{ color: '#FFB300' }} className="font-semibold">primer buscador en España</span> con filtros avanzados por IA.
             <br className="hidden md:block" />
-            <span className="text-lg block mt-2 opacity-90">
+            <span className="text-lg block mt-2" style={{ color: '#0A0A23', opacity: 0.8 }}>
               Sabemos qué zonas son mejores, qué terraza es la más grande, 
               y te devolvemos tu tiempo para lo que importa.
             </span>
@@ -134,11 +137,11 @@ export default function LandingPage({ onStart }) {
           <div 
             className="backdrop-blur-sm rounded-2xl p-6 mb-8"
             style={{ 
-              backgroundColor: 'rgba(255, 179, 0, 0.1)',
+              backgroundColor: 'rgba(255, 179, 0, 0.08)',
               border: '1px solid rgba(255, 179, 0, 0.3)'
             }}
           >
-            <p className="text-lg" style={{ color: '#FAFAFA' }}>
+            <p className="text-lg" style={{ color: '#0A0A23' }}>
               <span style={{ color: '#FFB300' }} className="font-semibold">Una vez encontrada tu casa</span>, 
               ofrecemos paquetes de servicios completos: 
               <span style={{ color: '#FFB300' }}> reforma, revisión legal, financiación</span>. 
@@ -152,16 +155,18 @@ export default function LandingPage({ onStart }) {
             style={{ 
               backgroundColor: '#FFB300',
               color: '#0A0A23',
-              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.3)'
+              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.5)'
+              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
+              e.currentTarget.style.transform = 'scale(1.05)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.3)'
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
+              e.currentTarget.style.transform = 'scale(1)'
             }}
           >
-            <span className="relative z-10">Comenzar a buscar</span>
+            <span className="relative z-10 font-semibold">Comenzar a buscar</span>
           </button>
         </div>
 
@@ -170,9 +175,9 @@ export default function LandingPage({ onStart }) {
           <button 
             onClick={scrollToFeatures}
             className="flex flex-col items-center transition-colors"
-            style={{ color: '#FAFAFA' }}
+            style={{ color: '#0A0A23' }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#FFB300'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#FAFAFA'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#0A0A23'}
           >
             <span className="text-sm mb-2">Saber más</span>
             <ChevronDown className="w-6 h-6" />
@@ -181,7 +186,7 @@ export default function LandingPage({ onStart }) {
       </section>
 
       {/* Features Section */}
-      <section id="features-section" className="relative py-20 px-6" style={{ backgroundColor: '#0A0A23' }}>
+      <section id="features-section" className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-6xl mx-auto">
           <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#FFB300' }}>
             ¿Cómo funciona?
@@ -190,19 +195,19 @@ export default function LandingPage({ onStart }) {
           {/* Mobile Carousel */}
           <div className="md:hidden relative">
             <div 
-              className="backdrop-blur-sm rounded-2xl p-8"
+              className="backdrop-blur-sm rounded-2xl p-8 shadow-lg"
               style={{ 
-                backgroundColor: 'rgba(255, 179, 0, 0.05)',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
                 border: '1px solid rgba(255, 179, 0, 0.2)'
               }}
             >
               <div className="flex items-start space-x-4 mb-4">
                 {slides[currentSlide].icon}
                 <div className="flex-1">
-                  <h4 className="text-xl font-semibold mb-2" style={{ color: '#FAFAFA' }}>
+                  <h4 className="text-xl font-semibold mb-2" style={{ color: '#0A0A23' }}>
                     {currentSlide + 1}. {slides[currentSlide].title}
                   </h4>
-                  <p style={{ color: '#FAFAFA', opacity: 0.8 }}>
+                  <p style={{ color: '#0A0A23', opacity: 0.7 }}>
                     {slides[currentSlide].description}
                   </p>
                 </div>
@@ -213,13 +218,13 @@ export default function LandingPage({ onStart }) {
             <div className="flex justify-between items-center mt-6">
               <button
                 onClick={prevSlide}
-                className="p-2 rounded-full transition-colors"
+                className="p-2 rounded-full transition-all"
                 style={{ 
-                  backgroundColor: 'rgba(255, 179, 0, 0.2)',
+                  backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.3)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.2)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -232,7 +237,7 @@ export default function LandingPage({ onStart }) {
                     className="h-2 rounded-full transition-all"
                     style={{
                       width: index === currentSlide ? '32px' : '8px',
-                      backgroundColor: index === currentSlide ? '#FFB300' : 'rgba(250, 250, 250, 0.3)'
+                      backgroundColor: index === currentSlide ? '#FFB300' : 'rgba(10, 10, 35, 0.2)'
                     }}
                   />
                 ))}
@@ -240,13 +245,13 @@ export default function LandingPage({ onStart }) {
 
               <button
                 onClick={nextSlide}
-                className="p-2 rounded-full transition-colors"
+                className="p-2 rounded-full transition-all"
                 style={{ 
-                  backgroundColor: 'rgba(255, 179, 0, 0.2)',
+                  backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.3)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.2)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -258,17 +263,17 @@ export default function LandingPage({ onStart }) {
             {slides.map((slide, index) => (
               <div 
                 key={index}
-                className="backdrop-blur-sm rounded-2xl p-6 transition-all hover:scale-105"
+                className="backdrop-blur-sm rounded-2xl p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ 
-                  backgroundColor: 'rgba(255, 179, 0, 0.05)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   border: '1px solid rgba(255, 179, 0, 0.2)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.1)'
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)'
                   e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.4)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.05)'
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'
                   e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.2)'
                 }}
               >
@@ -276,10 +281,10 @@ export default function LandingPage({ onStart }) {
                   <div className="mb-4">
                     {slide.icon}
                   </div>
-                  <h4 className="text-lg font-semibold mb-2" style={{ color: '#FAFAFA' }}>
+                  <h4 className="text-lg font-semibold mb-2" style={{ color: '#0A0A23' }}>
                     {index + 1}. {slide.title}
                   </h4>
-                  <p className="text-sm" style={{ color: '#FAFAFA', opacity: 0.8 }}>
+                  <p className="text-sm" style={{ color: '#0A0A23', opacity: 0.7 }}>
                     {slide.description}
                   </p>
                 </div>
@@ -290,30 +295,32 @@ export default function LandingPage({ onStart }) {
       </section>
 
       {/* Bottom CTA */}
-      <section className="relative py-20 px-6" style={{ backgroundColor: '#0A0A23' }}>
+      <section className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-3xl font-bold mb-4" style={{ color: '#FFB300' }}>
             ¿Listo para encontrar tu hogar?
           </h3>
-          <p className="mb-8 text-lg" style={{ color: '#FAFAFA', opacity: 0.9 }}>
+          <p className="mb-8 text-lg" style={{ color: '#0A0A23', opacity: 0.8 }}>
             Únete a miles de personas que ya encontraron su casa ideal con AURA
           </p>
           <button
             onClick={onStart}
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full overflow-hidden transition-all duration-300"
             style={{ 
               backgroundColor: '#FFB300',
               color: '#0A0A23',
-              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.3)'
+              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.5)'
+              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
+              e.currentTarget.style.transform = 'scale(1.05)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.3)'
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
+              e.currentTarget.style.transform = 'scale(1)'
             }}
           >
-            <span className="relative z-10">Empezar ahora</span>
+            <span className="relative z-10 font-semibold">Empezar ahora</span>
           </button>
         </div>
       </section>
