@@ -7,23 +7,23 @@ export default function SearchingAnimation() {
   const logos = [
     {
       name: 'idealista',
-      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1154154b098fe610_d20250827_m223950_c003_v0312030_t0027_u01756334390521'
+      url: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1756468194/unnamed_1_vcgy2s.png'
     },
     {
       name: 'fotocasa',
-      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1128682f1d191f53_d20250827_m223948_c003_v0312030_t0059_u01756334388927'
+      url: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1756468194/images_yumis2.png'
     },
     {
       name: 'habitaclia',
-      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f1017b698c5209bad_d20250827_m223947_c003_v0312028_t0002_u01756334387564'
+      url: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1756468194/unnamed_2_sioeox.png'
     },
     {
       name: 'pisos.com',
-      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f11409ae20b84d572_d20250827_m223945_c003_v0312030_t0032_u01756334385521'
+      url: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1756468194/images_1_sgxdrp.jpg'
     },
     {
       name: 'yaencontre',
-      url: 'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f10185d237c9eac9a_d20250827_m223943_c003_v0312030_t0057_u01756334383566'
+      url: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1756468194/images_1_gg887e.png'
     }
   ]
   
