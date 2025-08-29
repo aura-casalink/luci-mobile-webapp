@@ -12,6 +12,8 @@ export default function PropertyResults({ properties, onPropertyClick, savedProp
 
   const handleShare = async (property, e) => {
     e.stopPropagation()
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    const shareUrl = `${window.location.origin}/share/${propertyCode}`
     const text = `${property.title} - ${formatPrice(property.price)}`
     
     if (navigator.share) {
@@ -19,7 +21,7 @@ export default function PropertyResults({ properties, onPropertyClick, savedProp
         await navigator.share({
           title: property.title,
           text: text,
-          url: window.location.href
+          url: shareUrl
         })
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -27,7 +29,7 @@ export default function PropertyResults({ properties, onPropertyClick, savedProp
         }
       }
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${text} - ${window.location.href}`)
+      navigator.clipboard.writeText(`${text} - ${shareUrl}`)
       alert('Enlace copiado al portapapeles')
     }
   }
