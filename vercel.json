@@ -1,0 +1,13 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://desktop-luci.aura-app.es/:path*",
+      "has": [
+        { "type": "host", "value": "luci.aura-app.es" },
+        { "type": "header", "key": "user-agent", "value": "(Windows NT|Macintosh|X11;|Linux x86_64|CrOS)" }
+      ],
+      "statusCode": 308
+    }
+  ]
+}
