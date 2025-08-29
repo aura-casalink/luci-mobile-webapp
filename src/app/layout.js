@@ -1,6 +1,7 @@
+// src/app/layout.js
 import { Poppins } from 'next/font/google'
 import './globals.css'
-import Script from 'next/script';
+import Script from 'next/script'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -15,23 +16,14 @@ export const metadata = {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
-  }
+  },
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${poppins.variable} font-sans antialiased`}>
-        {children}
-      </body>
-    </html>
-  )
-}
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="es">
-      <head>
+        {/* Redirect desktop → site de escritorio, antes de hidratar */}
         <Script id="device-redirect" strategy="beforeInteractive">
           {`
             (function() {
@@ -46,8 +38,9 @@ export default function RootLayout({ children }) {
             })();
           `}
         </Script>
-      </head>
-      <body>{children}</body>
+
+        {children}
+      </body>
     </html>
-  );
+  )
 }
