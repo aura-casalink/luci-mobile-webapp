@@ -10,6 +10,15 @@ import ExploreContainer from './components/explore/ExploreContainer'
 import AuthModal from './components/auth/AuthModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
 import LandingPage from './components/landing/LandingPage'
+import { useRouter } from 'next/navigation'
+
+export default function Page() {
+  const router = useRouter()
+  // Cambia la ruta si quieres ir a /explorar o /chat
+  const handleStart = () => router.push('/')
+
+  return <LandingPage onStart={handleStart} />
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat')
