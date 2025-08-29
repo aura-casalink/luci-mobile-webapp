@@ -242,11 +242,13 @@ export default function SharePropertyView({ propertyCode }) {
 
         {/* Botón WhatsApp */}
         <button
-          onClick={() => {
-            const message = `Hola! Quiero más información sobre el piso ${propertyCode}, en ${address}.`;
-            const whatsappUrl = `https://wa.me/34910626648?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-          }}
+          <button
+            onClick={() => {
+              const shareUrl = `https://luci.aura-app.es/share/${propertyCode}`;
+              const message = `Hola! Estoy interesado en esta propiedad: ${shareUrl}. ¿Me podrías dar más información?`;
+              const whatsappUrl = `https://wa.me/34910626648?text=${encodeURIComponent(message)}`;
+              window.open(whatsappUrl, '_blank');
+            }}
           className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
