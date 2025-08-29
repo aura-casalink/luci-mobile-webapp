@@ -16,13 +16,15 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
 
   const handleShare = async (property) => {
     const text = `${property.title} - ${formatPrice(property.price)}`
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    const shareUrl = `${window.location.origin}/share/${propertyCode}`
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: property.title,
           text: text,
-          url: window.location.href
+          url: shareUrl
         })
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -30,7 +32,7 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
         }
       }
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${text} - ${window.location.href}`)
+      navigator.clipboard.writeText(`${text} - ${shareUrl}`)
       alert("Enlace copiado al portapapeles")
     }
   }
