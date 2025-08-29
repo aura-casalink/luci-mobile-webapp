@@ -105,8 +105,21 @@ export default function Home() {
       
       // Limpiar URL
       urlParams.delete('sid');
+      urlParams.delete('propertyCode');
       const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
       window.history.replaceState({}, '', newUrl);
+    }
+    // Si viene de un link compartido con propertyCode
+    if (propertyCodeFromUrl) {
+      // Guardar el propertyCode para cuando el componente de chat esté listo
+      window.sharedPropertyCode = propertyCodeFromUrl;
+      
+      // Limpiar la URL también
+      if (!sidFromUrl) {
+        urlParams.delete('propertyCode');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, '', newUrl);
+      }
     }
   }, [])
   
