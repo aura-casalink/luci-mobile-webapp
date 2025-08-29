@@ -1,5 +1,6 @@
 import { Poppins } from 'next/font/google'
 import './globals.css'
+import Script from 'next/script';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -25,4 +26,28 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   )
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="es">
+      <head>
+        <Script id="device-redirect" strategy="beforeInteractive">
+          {`
+            (function() {
+              try {
+                var ua = navigator.userAgent || '';
+                var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+                if (!isMobile && location.hostname === 'luci.aura-app.es') {
+                  var dest = 'https://desktop-luci.aura-app.es' + location.pathname + location.search + location.hash;
+                  location.replace(dest);
+                }
+              } catch (e) {}
+            })();
+          `}
+        </Script>
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
