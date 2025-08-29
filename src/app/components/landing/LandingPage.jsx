@@ -1,4 +1,4 @@
-// src/components/landing/LandingPage.jsx (o src/app/components/landing/LandingPage.jsx según tu estructura)
+// src/components/landing/LandingPage.jsx
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles } from 'lucide-react'
@@ -7,23 +7,46 @@ export default function LandingPage({ onStart }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+  const [nextVideoIndex, setNextVideoIndex] = useState(1)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [typingText, setTypingText] = useState('')
   const videoRef = useRef(null)
+  const nextVideoRef = useRef(null)
 
-  // URLs de los videos
+  // URLs de los videos en Cloudinary
   const videoUrls = [
-    'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f11505e1bf52ca8bf_d20250829_m101203_c003_v0312011_t0001_u01756462323449',
-    'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f10786c5589addc06_d20250829_m101202_c003_v0312023_t0017_u01756462322190',
-    'https://f003.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=4_zfdde9dc5a5fcebd59d8b0816_f113c8b81c434542a_d20250829_m101158_c003_v0312013_t0004_u01756462318863'
+    'https://res.cloudinary.com/dr3mimpok/video/upload/v1756467936/14214170_2160_3840_30fps_1_qeyxsm.mp4',
+    'https://res.cloudinary.com/dr3mimpok/video/upload/v1756468041/13657669_1080_1920_30fps_1_lbpwji.mp4',
+    'https://res.cloudinary.com/dr3mimpok/video/upload/v1756468039/13622414_1080_1920_30fps_sfhqcc.mov'
   ]
 
   useEffect(() => {
     setIsVisible(true)
+    
+    // Efecto typing para "más rápido"
+    const text = 'más rápido'
+    let index = 0
+    const timer = setInterval(() => {
+      if (index <= text.length) {
+        setTypingText(text.slice(0, index))
+        index++
+      } else {
+        clearInterval(timer)
+      }
+    }, 100)
+    
+    return () => clearInterval(timer)
   }, [])
 
-  // Manejar la rotación de videos
+  // Manejar la rotación de videos con transición suave
   useEffect(() => {
     const handleVideoEnd = () => {
-      setCurrentVideoIndex((prev) => (prev + 1) % videoUrls.length)
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentVideoIndex((prev) => (prev + 1) % videoUrls.length)
+        setNextVideoIndex((prev) => (prev + 1) % videoUrls.length)
+        setIsTransitioning(false)
+      }, 500)
     }
 
     const video = videoRef.current
@@ -71,116 +94,128 @@ export default function LandingPage({ onStart }) {
   return (
     <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#FAFAFA' }}>
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-20 p-6">
+      <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
         <div className="flex items-center">
-          <h1 className="text-2xl font-bold" style={{ color: '#FFB300' }}>
+          <h1 className="text-xl md:text-2xl font-bold" style={{ color: '#FFB300' }}>
             AURA
           </h1>
         </div>
       </header>
 
-      {/* Hero Section con video de fondo */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pb-20">
-        {/* Video Background */}
+      {/* Hero Section - PADDING TOP REDUCIDO para móvil */}
+      <section className="relative min-h-screen flex flex-col justify-center px-4 md:px-6 pt-12 md:pt-20 pb-20">
+        {/* Video Background - SIN OVERLAY O OVERLAY OSCURO PARA CONTRASTE */}
         <div className="absolute inset-0 overflow-hidden">
           <video
             ref={videoRef}
-            key={currentVideoIndex}
+            key={`current-${currentVideoIndex}`}
             autoPlay
             muted
             playsInline
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
             style={{ 
-              filter: 'brightness(0.7) contrast(0.9)',
-              opacity: 0.4
+              opacity: isTransitioning ? 0 : 1
             }}
           >
             <source src={videoUrls[currentVideoIndex]} type="video/mp4" />
           </video>
           
-          {/* Overlay gradiente sutil */}
+          <video
+            ref={nextVideoRef}
+            key={`next-${nextVideoIndex}`}
+            autoPlay
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ 
+              opacity: isTransitioning ? 1 : 0
+            }}
+          >
+            <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
+          </video>
+          
+          {/* Overlay OSCURO semi-transparente para mejor contraste con texto */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to bottom, rgba(250, 250, 250, 0.85) 0%, rgba(250, 250, 250, 0.7) 50%, rgba(250, 250, 250, 0.85) 100%)'
-            }}
-          ></div>
-          
-          {/* Grid pattern overlay sutil */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(to right, #0A0A23 1px, transparent 1px), linear-gradient(to bottom, #0A0A23 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
+              background: 'rgba(0, 0, 0, 0.3)' // Overlay oscuro en lugar de blanco
             }}
           ></div>
         </div>
 
-        {/* Hero Content */}
-        <div className={`relative z-10 text-center max-w-3xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: '#0A0A23' }}>
-            Encuentra tu casa
-            <span className="block" style={{ color: '#FFB300' }}>
-              más rápido
-            </span>
-          </h2>
-          
-          <p className="text-xl md:text-2xl mb-8 leading-relaxed" style={{ color: '#0A0A23' }}>
-            Somos el <span style={{ color: '#FFB300' }} className="font-semibold">primer buscador en España</span> con filtros avanzados por IA.
-            <br className="hidden md:block" />
-            <span className="text-lg block mt-2" style={{ color: '#0A0A23', opacity: 0.8 }}>
-              Sabemos qué zonas son mejores, qué terraza es la más grande, 
-              y te devolvemos tu tiempo para lo que importa.
-            </span>
-          </p>
-
-          <div 
-            className="backdrop-blur-sm p-6 mb-8"
-            style={{ 
-              backgroundColor: 'rgba(255, 179, 0, 0.08)',
-              border: '1px solid rgba(255, 179, 0, 0.3)',
-              borderRadius: '24px 24px 32px 32px'
-            }}
-          >
-            <p className="text-lg" style={{ color: '#0A0A23' }}>
-              <span style={{ color: '#FFB300' }} className="font-semibold">Una vez encontrada tu casa</span>, 
-              ofrecemos paquetes de servicios completos: 
-              <span style={{ color: '#FFB300' }}> reforma, revisión legal, financiación</span>. 
-              Todo en un único lugar.
+        {/* Hero Content - Espacios normales */}
+        <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="text-left">
+            <h2 className="text-4xl md:text-7xl font-bold mb-4 leading-tight" style={{ color: '#FAFAFA' }}>
+              Encuentra tu casa
+              <span className="block mt-2" style={{ color: '#FAFAFA' }}>
+                <span 
+                  className="inline-block px-3 py-1 rounded-lg text-3xl md:text-6xl"
+                  style={{ 
+                    backgroundColor: '#FFB300',
+                    color: '#0A0A23'
+                  }}
+                >
+                  {typingText}
+                  <span className="animate-pulse">|</span>
+                </span>
+              </span>
+            </h2>
+            
+            <p className="text-base md:text-2xl mb-6 md:mb-8 max-w-2xl" style={{ color: '#FAFAFA' }}>
+              Bienvenido al <span style={{ color: '#FFB300' }} className="font-bold">Skyscanner de pisos</span> en España, 
+              con filtros avanzados con IA que no existen en otras plataformas.
             </p>
-          </div>
 
-          <button
-            onClick={onStart}
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
-            style={{ 
-              backgroundColor: '#FFB300',
-              color: '#0A0A23',
-              boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
-              e.currentTarget.style.transform = 'scale(1.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
-              e.currentTarget.style.transform = 'scale(1)'
-            }}
-          >
-            <span className="relative z-10 font-semibold">Comenzar a buscar</span>
-          </button>
+            <button
+              onClick={onStart}
+              className="group relative inline-flex items-center justify-center px-8 md:px-10 py-4 md:py-5 text-lg md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-8 md:mb-12"
+              style={{ 
+                backgroundColor: '#FFB300',
+                color: '#0A0A23',
+                boxShadow: '0 10px 30px rgba(255, 179, 0, 0.3)'
+              }}
+            >
+              <span className="relative z-10">Comenzar a buscar</span>
+            </button>
+
+            {/* Contenido adicional */}
+            <div className="space-y-4 md:space-y-6 max-w-2xl">
+              <p className="text-sm md:text-lg" style={{ color: '#FAFAFA', opacity: 0.9 }}>
+                Sabemos qué zonas son mejores, qué terraza es la más grande, 
+                y te devolvemos tu tiempo para lo que importa.
+              </p>
+
+              <div 
+                className="backdrop-blur-sm p-4 md:p-6"
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '2px solid #FFB300',
+                  borderRadius: '24px 24px 32px 32px',
+                  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <p className="text-sm md:text-lg" style={{ color: '#0A0A23' }}>
+                  <span style={{ color: '#0A0A23' }} className="font-bold">Una vez encontrada tu casa</span>, 
+                  ofrecemos paquetes de servicios completos: 
+                  <span style={{ color: '#0A0A23', fontWeight: '600' }}> reforma, revisión legal, financiación</span>. 
+                  Todo en un único lugar.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-8 md:bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
           <button 
             onClick={scrollToFeatures}
             className="flex flex-col items-center transition-colors"
-            style={{ color: '#0A0A23' }}
+            style={{ color: '#FAFAFA' }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#FFB300'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#0A0A23'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#FAFAFA'}
           >
-            <span className="text-sm mb-2">Saber más</span>
+            <span className="text-sm mb-2 font-semibold">Saber más</span>
             <ChevronDown className="w-6 h-6" />
           </button>
         </div>
@@ -189,7 +224,7 @@ export default function LandingPage({ onStart }) {
       {/* Features Section */}
       <section id="features-section" className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-6xl mx-auto">
-          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#FFB300' }}>
+          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: '#0A0A23' }}>
             ¿Cómo funciona?
           </h3>
 
@@ -198,8 +233,8 @@ export default function LandingPage({ onStart }) {
             <div 
               className="backdrop-blur-sm p-8 shadow-lg"
               style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                border: '1px solid rgba(255, 179, 0, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '2px solid #FFB300',
                 borderRadius: '20px 20px 28px 28px'
               }}
             >
@@ -225,8 +260,6 @@ export default function LandingPage({ onStart }) {
                   backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -252,8 +285,6 @@ export default function LandingPage({ onStart }) {
                   backgroundColor: 'rgba(255, 179, 0, 0.15)',
                   color: '#FFB300'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.25)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 179, 0, 0.15)'}
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -268,18 +299,8 @@ export default function LandingPage({ onStart }) {
                 className="backdrop-blur-sm p-6 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid rgba(255, 179, 0, 0.2)',
+                  border: '2px solid #FFB300',
                   borderRadius: '20px 20px 28px 28px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.4)'
-                  e.currentTarget.style.transform = 'scale(1.05) translateY(-4px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'
-                  e.currentTarget.style.borderColor = 'rgba(255, 179, 0, 0.2)'
-                  e.currentTarget.style.transform = 'scale(1) translateY(0)'
                 }}
               >
                 <div className="flex flex-col items-center text-center">
@@ -302,7 +323,7 @@ export default function LandingPage({ onStart }) {
       {/* Bottom CTA */}
       <section className="relative py-20 px-6" style={{ backgroundColor: '#FAFAFA' }}>
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-3xl font-bold mb-4" style={{ color: '#FFB300' }}>
+          <h3 className="text-3xl font-bold mb-4" style={{ color: '#0A0A23' }}>
             ¿Listo para encontrar tu hogar?
           </h3>
           <p className="mb-8 text-lg" style={{ color: '#0A0A23', opacity: 0.8 }}>
@@ -315,14 +336,6 @@ export default function LandingPage({ onStart }) {
               backgroundColor: '#FFB300',
               color: '#0A0A23',
               boxShadow: '0 10px 30px rgba(255, 179, 0, 0.25)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 179, 0, 0.4)'
-              e.currentTarget.style.transform = 'scale(1.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 179, 0, 0.25)'
-              e.currentTarget.style.transform = 'scale(1)'
             }}
           >
             <span className="relative z-10 font-semibold">Empezar ahora</span>
