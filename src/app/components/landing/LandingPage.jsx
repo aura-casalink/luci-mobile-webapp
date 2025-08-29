@@ -91,10 +91,6 @@ export default function LandingPage({ onStart }) {
     document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' })
   }
 
-  const scrollToDifference = () => {
-    document.getElementById('difference-section').scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
     <div className="min-h-screen overflow-hidden" style={{ backgroundColor: '#FAFAFA' }}>
       {/* Header */}
@@ -151,11 +147,11 @@ export default function LandingPage({ onStart }) {
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="text-left">
             {/* HERO TITLE MÁS GRANDE */}
-            <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 leading-none" style={{ color: '#FAFAFA' }}>
+            <h2 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold mb-8 md:mb-10 leading-none" style={{ color: '#FAFAFA' }}>
               Encuentra tu casa
-              <span className="block mt-2" style={{ color: '#FAFAFA' }}>
+              <span className="block mt-3" style={{ color: '#FAFAFA' }}>
                 <span 
-                  className="inline-block px-3 py-2 rounded-lg text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
+                  className="inline-block px-4 py-2 rounded-lg text-6xl sm:text-7xl md:text-8xl lg:text-9xl"
                   style={{ 
                     backgroundColor: '#FFB300',
                     color: '#0A0A23'
@@ -168,7 +164,7 @@ export default function LandingPage({ onStart }) {
             </h2>
             
             {/* NUEVO SUBTÍTULO DE 3 LÍNEAS */}
-            <div className="text-lg md:text-2xl mb-8 md:mb-10 max-w-3xl space-y-2" style={{ color: '#FAFAFA' }}>
+            <div className="text-xl md:text-2xl lg:text-3xl mb-10 md:mb-12 max-w-3xl space-y-2" style={{ color: '#FAFAFA' }}>
               <p>Busca a la vez en todos los portales inmobiliarios.</p>
               <p>La IA filtra por ti características que no están en otras plataformas.</p>
               <p className="font-bold">Bienvenido al Skyscanner inmobiliario.</p>
@@ -176,7 +172,7 @@ export default function LandingPage({ onStart }) {
 
             <button
               onClick={onStart}
-              className="group relative inline-flex items-center justify-center px-8 md:px-10 py-4 md:py-5 text-lg md:text-xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 mb-8 md:mb-12"
+              className="group relative inline-flex items-center justify-center px-10 md:px-12 py-5 md:py-6 text-xl md:text-2xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
               style={{ 
                 backgroundColor: '#FFB300',
                 color: '#0A0A23',
@@ -185,31 +181,6 @@ export default function LandingPage({ onStart }) {
             >
               <span className="relative z-10">Comenzar a buscar</span>
             </button>
-
-            {/* Contenido adicional movido abajo del botón */}
-            <div className="space-y-4 md:space-y-6 max-w-2xl">
-              <p className="text-sm md:text-lg" style={{ color: '#FAFAFA', opacity: 0.9 }}>
-                Sabemos qué zonas son mejores, qué terraza es la más grande, 
-                y te devolvemos tu tiempo para lo que importa.
-              </p>
-
-              <div 
-                className="backdrop-blur-sm p-4 md:p-6"
-                style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '2px solid #FFB300',
-                  borderRadius: '24px 24px 32px 32px',
-                  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                <p className="text-sm md:text-lg" style={{ color: '#0A0A23' }}>
-                  <span style={{ color: '#0A0A23' }} className="font-bold">Una vez encontrada tu casa</span>, 
-                  ofrecemos paquetes de servicios completos: 
-                  <span style={{ color: '#0A0A23', fontWeight: '600' }}> reforma, revisión legal, financiación</span>. 
-                  Todo en un único lugar.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -323,18 +294,6 @@ export default function LandingPage({ onStart }) {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Botón para siguiente sección */}
-          <div className="text-center mt-12">
-            <button 
-              onClick={scrollToDifference}
-              className="inline-flex items-center transition-colors hover:scale-105"
-              style={{ color: '#0A0A23' }}
-            >
-              <span className="text-lg font-semibold mr-2">Qué nos diferencia</span>
-              <ChevronDown className="w-5 h-5 animate-bounce" />
-            </button>
           </div>
         </div>
       </section>
