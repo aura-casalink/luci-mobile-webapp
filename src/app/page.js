@@ -97,6 +97,7 @@ export default function Home() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const sidFromUrl = urlParams.get('sid');
+    const propertyCodeFromUrl = urlParams.get('propertyCode');
     
     if (sidFromUrl) {
       localStorage.setItem('luci_session_id', sidFromUrl);
