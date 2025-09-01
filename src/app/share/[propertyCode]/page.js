@@ -12,7 +12,7 @@ export async function generateMetadata({ params }) {
     title: `Propiedad ${propertyCode} - Luci`,
     description: 'Descubre esta increíble propiedad seleccionada por Luci',
     openGraph: {
-      title: `Propiedad en Madrid`,
+      title: `Echa un vistazo a esta propiedad`,
       description: 'Ver detalles de esta propiedad',
       type: 'website',
     }
