@@ -20,19 +20,29 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // PROD: si llegan a luci.aura-app.es desde ESCRITORIO → redirige a desktop-luci.aura-app.es
+      // EXCLUIR /share/* del redirect a desktop
       {
-        source: '/:path*',
+        source: '/',
+        has: [
+          { type: 'host', value: 'luci.aura-app.es' },
+          { type: 'header', key: 'user-agent', value: DESKTOP_UA },
+        ],
+        destination: 'https://desktop-luci.aura-app.es/',
+        permanent: false,
+      },
+      // Para todas las demás rutas EXCEPTO /share/*
+      {
+        source: '/:path((?!share).*)',
         has: [
           { type: 'host', value: 'luci.aura-app.es' },
           { type: 'header', key: 'user-agent', value: DESKTOP_UA },
         ],
         destination: 'https://desktop-luci.aura-app.es/:path*',
-        permanent: false, // pon true cuando lo valides (308)
+        permanent: false,
       },
-      // (Opcional) PREVIEW: si navegas a la preview de Vercel desde ESCRITORIO → redirige igual
+      // Preview environment (también excluir /share/*)
       {
-        source: '/:path*',
+        source: '/:path((?!share).*)',
         has: [
           { type: 'host', value: 'luci-mobile-webapp.vercel.app' },
           { type: 'header', key: 'user-agent', value: DESKTOP_UA },
@@ -42,6 +52,5 @@ const nextConfig = {
       },
     ];
   },
-};
 
 export default nextConfig;
