@@ -1,4 +1,3 @@
-// next.config.mjs
 /** @type {import('next').NextConfig} */
 
 const DESKTOP_UA = '(Windows NT|Macintosh|X11;|Linux x86_64|CrOS)';
@@ -52,5 +51,6 @@ const nextConfig = {
       },
     ];
   },
+};
 
 export default nextConfig;
