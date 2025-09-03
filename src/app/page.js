@@ -132,29 +132,6 @@ export default function Home() {
     console.log('📱 Device ID:', did)
   }, [])
   
-  // Limpiar errores de auth de la URL
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    const url = new URL(window.location.href)
-    if (url.searchParams.has('error')) {
-      url.searchParams.delete('error')
-      url.searchParams.delete('error_description')
-      window.history.replaceState({}, '', url.pathname + url.search)
-      
-      // Intentar recuperar sesión
-      const supabase = getSupabase()
-      if (supabase) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session?.user) {
-            setUser(session.user)
-            window.currentUser = session.user
-          }
-        })
-      }
-    }
-  }, [])
-  
   // Recuperar sessionId de URL si viene del callback
   useEffect(() => {
     if (typeof window === 'undefined') return
