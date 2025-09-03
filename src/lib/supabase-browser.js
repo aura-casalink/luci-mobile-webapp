@@ -8,7 +8,16 @@ export function getSupabase() {
   if (!supabaseInstance) {
     supabaseInstance = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          // evita colisiones si hay más apps en el mismo dominio
+          storageKey: 'luci-webapp-auth',
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+      }
     )
   }
   return supabaseInstance
@@ -20,3 +29,5 @@ export function useSupabase() {
   }
   return getSupabase()
 }
+
+export const supabase = typeof window !== 'undefined' ? getSupabase() : null
