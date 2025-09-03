@@ -1,20 +1,27 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+import { getSupabase } from '@/lib/supabase-browser'
 import { Send, Mic, MicOff, Play, Pause, X, Check } from 'lucide-react'
 import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import SearchingAnimation from './SearchingAnimation'
 
-const supabase = createBrowserSupabaseClient()
-
 export default function ChatInterface({ sessionId, savedProperties, onToggleSave }) {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [supabase, setSupabase] = useState(null)
   
-  // Nuevo estado para esperar callbacks
+  // Inicializar supabase solo en el cliente
+  useEffect(() => {
+    const sb = getSupabase()
+    if (sb) {
+      setSupabase(sb)
+    }
+  }, [])
+  
+  // Estado para esperar callbacks
   const [isWaitingForCallback, setIsWaitingForCallbackState] = useState(() => {
     if (typeof window !== 'undefined' && sessionId) {
       return sessionStorage.getItem(`waiting_callback_${sessionId}`) === 'true'
@@ -60,15 +67,17 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     scrollToBottom()
   }, [messages, propertySets])
 
-  // Cargar mensajes existentes de la sesión
+  // Cargar mensajes existentes de la sesión - ahora con guard para supabase
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && supabase) {
       initializeSessionWithIP()
     }
-  }, [sessionId])
+  }, [sessionId, supabase])
   
-  // Nueva función para inicializar con IP
+  // Función para inicializar con IP - actualizada con guards
   const initializeSessionWithIP = async () => {
+    if (!supabase) return // Guard adicional
+    
     try {
       console.log('🌐 Initializing session with IP...')
       
@@ -259,6 +268,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   }
 
   const saveConversation = async (updatedMessages) => {
+    if (!supabase) return // Guard
+    
     try {
       console.log('💾 Saving conversation with', updatedMessages.length, 'messages')
       console.log('💾 Messages to save:', updatedMessages)
@@ -295,7 +306,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   }
 
   const savePropertySetToCurrentSession = async (newPropertySet) => {
-    if (!sessionId || !newPropertySet) return
+    if (!sessionId || !newPropertySet || !supabase) return // Guard
     
     try {
       // Primero obtener los property_sets actuales de SOLO esta sesión
@@ -324,7 +335,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   }
 
   const savePropertySetsToSession = async (propertySets) => {
-    if (!sessionId || !propertySets || propertySets.length === 0) return
+    if (!sessionId || !propertySets || propertySets.length === 0 || !supabase) return // Guard
     
     try {
       console.log('💾 Saving property sets to session:', propertySets.length)
@@ -407,19 +418,22 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     if (!inputText.trim() || isLoading) return
 
     // Verificar si hay user DESPUÉS de que se haya cargado
-    const hasUser = window.currentUser || false
+    const hasUser = typeof window !== 'undefined' ? window.currentUser : false
     
-     // Si ya hubo búsquedas y no hay usuario, pedir login
+    // Si ya hubo búsquedas y no hay usuario, pedir login
     if (propertySets.length > 0 && !hasUser) {
       // Usar setTimeout para dar tiempo a que window.requireAuth esté definido
       setTimeout(() => {
-        window.requireAuth?.(
-          'Inicia sesión para continuar la conversación',
-          () => sendMessage()
-        )
+        if (typeof window !== 'undefined' && window.requireAuth) {
+          window.requireAuth(
+            'Inicia sesión para continuar la conversación',
+            () => sendMessage()
+          )
+        }
       }, 100)
       return
     }
+    
     const message = inputText.trim()
     setInputText('')
     
@@ -725,6 +739,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     )
   }
 
+  // Render principal del chat
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <div className="flex-1 overflow-y-auto">
@@ -863,4 +878,4 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       </div>
     </div>
   )
-} 
+}
