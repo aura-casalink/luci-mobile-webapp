@@ -31,4 +31,3 @@ export function useSupabase() {
 }
 
 export const supabase = typeof window !== 'undefined' ? getSupabase() : null
-()
