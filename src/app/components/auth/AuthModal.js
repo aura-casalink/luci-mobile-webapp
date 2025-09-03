@@ -1,12 +1,11 @@
 'use client'
 import { useState } from 'react'
-import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+import { supabase } from '@/lib/supabase-browser'
 import { X } from 'lucide-react'
 
 export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const supabase = createBrowserSupabaseClient()
 
   const makeRedirect = () => {
     const url = new URL('/auth/callback', window.location.origin)
