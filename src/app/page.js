@@ -85,6 +85,16 @@ export default function Home() {
     }
   }, [user])
   
+  // Cierra el modal automáticamente cuando haya usuario
+  useEffect(() => {
+    if (user) {
+      setShowAuthModal(false)
+      if (typeof window !== 'undefined') {
+        window.currentUser = user
+      }
+    }
+  }, [user])
+  
   // Generar/recuperar sessionId - EN CLIENTE SOLAMENTE
   useEffect(() => {
     const generateSessionId = () => {
