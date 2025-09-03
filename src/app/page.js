@@ -110,6 +110,18 @@ export default function Home() {
     generateSessionId()
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    let did = localStorage.getItem('luci_device_id')
+    if (!did) {
+      did = `dev_${Math.random().toString(36).slice(2,8)}_${Date.now().toString(36)}`
+      localStorage.setItem('luci_device_id', did)
+    }
+    window.deviceId = did
+    console.log('📱 Device ID:', did)
+  }, [])
+  
   // Recuperar sessionId de URL si viene del callback
   useEffect(() => {
     if (typeof window === 'undefined') return
