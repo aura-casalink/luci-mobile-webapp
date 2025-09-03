@@ -341,7 +341,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     }
   }, [callbacks])
 
-  const processCallback = (callback) => {
+  const processCallback = async (callback) => {
     // Desactivar estado de espera cuando llega cualquier callback
     setIsWaitingForCallback(false)
     
