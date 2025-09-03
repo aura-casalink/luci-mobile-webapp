@@ -56,7 +56,7 @@ export function useSavedProperties(sessionId) {
         return newSet
       })
     } else {
-      setSavedProperties(prev => new Set([.prev, propertyId]))
+      setSavedProperties(prev => new Set([...prev, propertyId]))
     }
     
     try {
