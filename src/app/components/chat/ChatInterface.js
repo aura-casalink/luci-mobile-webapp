@@ -91,11 +91,12 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       // Actualizar sesión actual con IP
       await supabase
         .from('chat_sessions')
-        .update({ 
+        .upsert({ 
+          session_id: sessionId,
           ip, 
           updated_at: new Date().toISOString() 
-        })
-        .eq('session_id', sessionId)
+        },
+        { onConflict: 'session_id' })
       
       // Cargar últimos 30 días de historiales con esta IP
       const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString()
