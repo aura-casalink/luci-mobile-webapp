@@ -88,12 +88,13 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       console.log('🌐 User IP:', ip)
       setUserIp(ip)
       
-      // MEJORA 1: Usar upsert en lugar de update para garantizar que existe
       await supabase
         .from('chat_sessions')
         .upsert(
           { 
             session_id: sessionId,
+            device_id: window?.deviceId || null,
+            topic: 'Buscar propiedades para comprar',
             ip, 
             updated_at: new Date().toISOString() 
           },
@@ -453,6 +454,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         .from('chat_sessions')
         .update({
           conversations: updatedMessages,
+          device_id: window?.deviceId || null,
+          topic: 'Buscar propiedades para comprar',
           updated_at: new Date().toISOString()
         })
         .eq('session_id', sessionId)
@@ -465,8 +468,9 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           .upsert({
             session_id: sessionId,
             conversations: updatedMessages,
-            updated_at: new Date().toISOString(),
-            device_id: sessionId,
+            device_id: window?.deviceId || null,
+            topic: 'Buscar propiedades para comprar',
+            updated_at: new Date().toISOString()
           })
         
         if (upsertError) {
@@ -510,6 +514,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         .update({
           property_sets: currentSets,
           last_properties: normalizedSet.properties,
+          device_id: window?.deviceId || null,
+          topic: 'Buscar propiedades para comprar',
           updated_at: new Date().toISOString()
         })
         .eq('session_id', sessionId)
@@ -567,6 +573,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
               audio_data: base64Audio,
               audio_duration: duration,
               session_id: sessionId,
+              device_id: window?.deviceId || null,
+              topic: 'Buscar propiedades para comprar',
               timestamp: new Date().toISOString(),
               source: "web"
             })
@@ -639,6 +647,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           message: message,
           message_type: "text",
           session_id: sessionId,
+          device_id: window?.deviceId || null,
+          topic: 'Buscar propiedades para comprar',
           timestamp: new Date().toISOString(),
           source: 'web'
         })
