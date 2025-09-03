@@ -138,21 +138,15 @@ export default function Home() {
     
     const url = new URL(window.location.href)
     if (url.searchParams.has('error')) {
-      console.log('[page.js] Cleaning auth error from URL')
       url.searchParams.delete('error')
       url.searchParams.delete('error_description')
-      url.searchParams.delete('error_code')
+      window.history.replaceState({}, '', url.pathname + url.search)
       
-      // Actualizar URL sin reload
-      const cleanUrl = url.pathname + (url.search ? url.search : '')
-      window.history.replaceState({}, '', cleanUrl)
-      
-      // Intentar recuperar sesión de todas formas
+      // Intentar recuperar sesión
       const supabase = getSupabase()
       if (supabase) {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session?.user) {
-            console.log('[page.js] Found session after error cleanup:', session.user.email)
             setUser(session.user)
             window.currentUser = session.user
           }
