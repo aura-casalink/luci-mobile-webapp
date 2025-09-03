@@ -1,11 +1,10 @@
 'use client'
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 
 let supabaseInstance
 
 export function getSupabase() {
   if (typeof window === 'undefined') return null
-  
   if (!supabaseInstance) {
     supabaseInstance = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
