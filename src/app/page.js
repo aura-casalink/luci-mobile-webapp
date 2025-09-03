@@ -132,6 +132,35 @@ export default function Home() {
     console.log('📱 Device ID:', did)
   }, [])
   
+  // Limpiar errores de auth de la URL
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('error')) {
+      console.log('[page.js] Cleaning auth error from URL')
+      url.searchParams.delete('error')
+      url.searchParams.delete('error_description')
+      url.searchParams.delete('error_code')
+      
+      // Actualizar URL sin reload
+      const cleanUrl = url.pathname + (url.search ? url.search : '')
+      window.history.replaceState({}, '', cleanUrl)
+      
+      // Intentar recuperar sesión de todas formas
+      const supabase = getSupabase()
+      if (supabase) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            console.log('[page.js] Found session after error cleanup:', session.user.email)
+            setUser(session.user)
+            window.currentUser = session.user
+          }
+        })
+      }
+    }
+  }, [])
+  
   // Recuperar sessionId de URL si viene del callback
   useEffect(() => {
     if (typeof window === 'undefined') return
