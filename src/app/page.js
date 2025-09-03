@@ -200,6 +200,7 @@ export default function Home() {
         return (
           <ChatInterface 
             sessionId={sessionId}
+            user={user}
             savedProperties={savedProperties}
             onToggleSave={toggleSaveProperty}
             onStreetViewChange={setIsStreetViewActive}
@@ -234,6 +235,7 @@ export default function Home() {
         return (
           <ChatInterface 
             sessionId={sessionId}
+            user={user}
             savedProperties={savedProperties}
             onToggleSave={toggleSaveProperty}
             onStreetViewChange={setIsStreetViewActive}
