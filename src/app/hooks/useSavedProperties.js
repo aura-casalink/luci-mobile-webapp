@@ -74,7 +74,7 @@ export function useSavedProperties(sessionId) {
       if (isSaved) {
         newFavorites = currentFavorites.filter(id => id !== propertyId)
       } else {
-        newFavorites = [.currentFavorites, propertyId]
+        newFavorites = [...currentFavorites, propertyId]
       }
       
       // Guardar en Supabase
@@ -95,7 +95,7 @@ export function useSavedProperties(sessionId) {
       console.error('Error toggling favorite:', error)
       // Revertir cambio local si falla
       if (isSaved) {
-        setSavedProperties(prev => new Set([.prev, propertyId]))
+        setSavedProperties(prev => new Set([...prev, propertyId]))
       } else {
         setSavedProperties(prev => {
           const newSet = new Set(prev)
