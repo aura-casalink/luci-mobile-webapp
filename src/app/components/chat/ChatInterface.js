@@ -623,7 +623,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (!inputText.trim() || isLoading) return
 
     // Verificar si hay user DESPUÉS de que se haya cargado
-    const hasUser = typeof window !== 'undefined' ? window.currentUser : false
+    const hasUser = !!user
     
     // Si ya hubo búsquedas y no hay usuario, pedir login
     if (propertySets.length > 0 && !hasUser) {
