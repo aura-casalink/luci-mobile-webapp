@@ -123,41 +123,47 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         return
       }
       
-      // SANITIZACIÓN ROBUSTA CON MEJORA 2: Deduplicación por firma
+      // SANITIZACIÓN ROBUSTA - Acepta esquemas antiguos y nuevos
       const allConversations = []
       const allPropertySets = []
       const seenIds = new Set()
-      const seenSignatures = new Set() // MEJORA 2: Para evitar duplicados por contenido
+      const seenSignatures = new Set()
+      let fallbackCounter = 0
       
       for (const session of allSessions) {
-        // Procesar mensajes
+        // Procesar mensajes con esquemas flexibles
         if (Array.isArray(session.conversations)) {
           for (const msg of session.conversations) {
-            // Validaciones estrictas
-            if (!msg || typeof msg !== 'object') continue
-            if (!msg.content || typeof msg.content !== 'string') continue
+            if (!msg) continue
             
-            const content = msg.content.trim()
-            if (!content) continue // Skip mensajes vacíos
+            // ACEPTA ESQUEMAS ANTIGUOS: text/sender o content/type
+            const rawContent = 
+              typeof msg === 'string' 
+                ? msg 
+                : msg.content || msg.text || msg.message || ''
             
-            // MEJORA 2: Crear firma única para evitar duplicados por contenido
-            const signature = `${content}|${msg.timestamp || ''}|${msg.type || 'assistant'}`
-            if (seenSignatures.has(signature)) continue
+            const content = String(rawContent).trim()
+            if (!content) continue
+            
+            // Mapear tipo/rol flexiblemente
+            const type = msg.type || msg.sender || msg.role || 'assistant'
+            
+            // Timestamp con fallbacks
+            const timestamp = msg.timestamp || msg.created_at || session.created_at || new Date().toISOString()
+            
+            // ID único y deduplicación que NO colapsa mensajes iguales de sesiones distintas
+            const msgId = msg.id || `msg_${session.session_id}_${Date.now()}_${++fallbackCounter}`
+            const signature = `${session.session_id}|${content}|${timestamp}|${type}`
+            
+            if (seenIds.has(msgId) || seenSignatures.has(signature)) continue
+            seenIds.add(msgId)
             seenSignatures.add(signature)
             
-            // Generar ID único si no existe
-            const msgId = msg.id || `msg_${session.session_id}_${Date.now()}_${Math.random()}`
-            
-            // Evitar duplicados por ID
-            if (seenIds.has(msgId)) continue
-            seenIds.add(msgId)
-            
-            // Normalizar estructura
             allConversations.push({
               id: msgId,
               content: content,
-              type: msg.type || 'assistant',
-              timestamp: msg.timestamp || msg.created_at || session.created_at,
+              type: type === 'user' || type === 'human' ? 'user' : 'assistant',
+              timestamp: timestamp,
               session_id: session.session_id
             })
           }
@@ -169,7 +175,8 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             if (!set || !Array.isArray(set.properties)) continue
             if (set.properties.length === 0) continue
             
-            const setId = set.id || `propset_${session.session_id}_${Date.now()}_${Math.random()}`
+            const setId = set.id || `propset_${session.session_id}_${Date.now()}_${++fallbackCounter}`
+            const timestamp = set.timestamp || set.created_at || session.created_at || new Date().toISOString()
             
             if (seenIds.has(setId)) continue
             seenIds.add(setId)
@@ -177,7 +184,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             allPropertySets.push({
               id: setId,
               properties: set.properties,
-              timestamp: set.timestamp || set.created_at || session.created_at,
+              timestamp: timestamp,
               session_id: session.session_id
             })
           }
@@ -289,23 +296,15 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           
           console.log(`🔄 Synced ${mergedMessages.length} messages from server`)
           
-          // Actualizar estado solo si hay cambios reales
           setMessages(prevMessages => {
-            // Comparar con mensajes actuales para evitar re-renders innecesarios
-            const currentIds = new Set(prevMessages.map(m => m.id))
-            const serverIds = new Set(mergedMessages.map(m => m.id))
-            
-            // Si los IDs son exactamente iguales, no actualizar
-            if (currentIds.size === serverIds.size && 
-                [...currentIds].every(id => serverIds.has(id))) {
-              console.log('🔄 No changes detected, keeping current messages')
-              return prevMessages
-            }
-            
-            console.log('🔄 Messages updated from server sync')
-            return mergedMessages
+            // Mantener mensajes de OTRAS sesiones, actualizar solo la actual
+            const otherSessionMessages = prevMessages.filter(m => m.session_id !== sessionId)
+            const merged = [...otherSessionMessages, ...mergedMessages]
+            merged.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
+            console.log(`🔄 Updated session ${sessionId}: ${mergedMessages.length} msgs, kept ${otherSessionMessages.length} from other sessions`)
+            return merged
           })
-          
+                    
           // También sincronizar property_sets si vienen
           if (payload.new?.property_sets && Array.isArray(payload.new.property_sets)) {
             const serverPropertySets = payload.new.property_sets
@@ -318,7 +317,14 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
               }))
               .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
             
-            setPropertySets(serverPropertySets)
+            setPropertySets(prevSets => {
+              // Mantener sets de OTRAS sesiones, actualizar solo la actual
+              const otherSessionSets = prevSets.filter(s => s.session_id !== sessionId)
+              const merged = [...otherSessionSets, ...serverPropertySets]
+              merged.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
+              console.log(`🔄 Updated property sets for session ${sessionId}`)
+              return merged
+            })
             console.log(`🔄 Synced ${serverPropertySets.length} property sets from server`)
           }
         }
@@ -817,7 +823,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     setSelectedProperty(null)
     setTimeout(() => {
       if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'instant' })
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
       }
     }, 50)
   }
