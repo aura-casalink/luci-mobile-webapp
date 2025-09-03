@@ -1,23 +1,15 @@
 'use client'
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 let supabaseInstance
 
 export function getSupabase() {
   if (typeof window === 'undefined') return null
+  
   if (!supabaseInstance) {
     supabaseInstance = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        auth: {
-          // evita colisiones si hay más apps en el mismo dominio
-          storageKey: 'luci-webapp-auth',
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true,
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     )
   }
   return supabaseInstance
@@ -29,5 +21,3 @@ export function useSupabase() {
   }
   return getSupabase()
 }
-
-export const supabase = typeof window !== 'undefined' ? getSupabase() : null
