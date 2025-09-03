@@ -227,6 +227,112 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     }
   }
 
+  // Suscripción a cambios en chat_sessions para sincronizar mensajes
+  useEffect(() => {
+    if (!sessionId || !supabase) return
+  
+    console.log('🔄 Setting up chat_sessions subscription for session:', sessionId)
+    
+    const channel = supabase
+      .channel(`chat_sessions:${sessionId}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'chat_sessions', 
+          filter: `session_id=eq.${sessionId}` 
+        },
+        (payload) => {
+          console.log('🔄 Chat session updated from server:', payload)
+          
+          // Obtener mensajes del servidor
+          const serverMessages = Array.isArray(payload.new?.conversations) 
+            ? payload.new.conversations 
+            : []
+          
+          // Sanitizar y deduplicar
+          const seenIds = new Set()
+          const seenSignatures = new Set()
+          
+          const mergedMessages = serverMessages
+            .filter(msg => {
+              // Validaciones básicas
+              if (!msg || typeof msg !== 'object') return false
+              if (!msg.content || typeof msg.content !== 'string') return false
+              
+              const content = msg.content.trim()
+              if (!content) return false
+              
+              // Deduplicación por firma
+              const signature = `${content}|${msg.timestamp || ''}|${msg.type || 'assistant'}`
+              if (seenSignatures.has(signature)) return false
+              seenSignatures.add(signature)
+              
+              return true
+            })
+            .map(msg => ({
+              id: msg.id || `msg_sync_${sessionId}_${Date.now()}_${Math.random()}`,
+              content: msg.content.trim(),
+              type: msg.type || 'assistant',
+              timestamp: msg.timestamp || payload.new.updated_at || new Date().toISOString(),
+              session_id: sessionId
+            }))
+            .filter(msg => {
+              // Deduplicación por ID
+              if (seenIds.has(msg.id)) return false
+              seenIds.add(msg.id)
+              return true
+            })
+            .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
+          
+          console.log(`🔄 Synced ${mergedMessages.length} messages from server`)
+          
+          // Actualizar estado solo si hay cambios reales
+          setMessages(prevMessages => {
+            // Comparar con mensajes actuales para evitar re-renders innecesarios
+            const currentIds = new Set(prevMessages.map(m => m.id))
+            const serverIds = new Set(mergedMessages.map(m => m.id))
+            
+            // Si los IDs son exactamente iguales, no actualizar
+            if (currentIds.size === serverIds.size && 
+                [...currentIds].every(id => serverIds.has(id))) {
+              console.log('🔄 No changes detected, keeping current messages')
+              return prevMessages
+            }
+            
+            console.log('🔄 Messages updated from server sync')
+            return mergedMessages
+          })
+          
+          // También sincronizar property_sets si vienen
+          if (payload.new?.property_sets && Array.isArray(payload.new.property_sets)) {
+            const serverPropertySets = payload.new.property_sets
+              .filter(set => set && Array.isArray(set.properties) && set.properties.length > 0)
+              .map(set => ({
+                id: set.id || `propset_sync_${sessionId}_${Date.now()}`,
+                properties: set.properties,
+                timestamp: set.timestamp || set.created_at || payload.new.updated_at,
+                session_id: sessionId
+              }))
+              .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
+            
+            setPropertySets(serverPropertySets)
+            console.log(`🔄 Synced ${serverPropertySets.length} property sets from server`)
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('🔄 Chat session subscription status:', status)
+      })
+  
+    // Cleanup
+    return () => {
+      console.log('🔄 Cleaning up chat_sessions subscription')
+      supabase.removeChannel(channel)
+    }
+  }, [sessionId, supabase])
+
   // Procesar nuevos callbacks
   useEffect(() => {
     if (callbacks.length > 0) {
