@@ -8,51 +8,63 @@ import { useSavedProperties } from './hooks/useSavedProperties'
 import NearbyContainer from './components/nearby/NearbyContainer'
 import ExploreContainer from './components/explore/ExploreContainer'
 import AuthModal from './components/auth/AuthModal'
-import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+import { getSupabase } from '@/lib/supabase-browser'
 import LandingPage from './components/landing/LandingPage'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat')
-  const [sessionId, setSessionId] = useState('')
+  const [sessionId, setSessionId] = useState('') // Vacío inicial para SSR
   const [isStreetViewActive, setIsStreetViewActive] = useState(false)
   const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
   const [previousSavedCount, setPreviousSavedCount] = useState(0)
   
-  // Estado para mostrar/ocultar landing con persistencia
-  const [showLanding, setShowLanding] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !localStorage.getItem('landing_seen')
-    }
-    return true
-  })
+  // Estado para mostrar/ocultar landing - sin acceso a localStorage en render inicial
+  const [showLanding, setShowLanding] = useState(true) // Default true para SSR
   
   // Estados para auth
   const [user, setUser] = useState(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
-  const supabaseAuth = createBrowserSupabaseClient()
   
   // UN SOLO HOOK CENTRAL - todos los componentes usarán estas props
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
   
-  // Verificar sesión al cargar
+  // Inicializar landing state del cliente
   useEffect(() => {
-    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      window.currentUser = session?.user ?? null
-    })
-
-    const { data: { subscription } } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      window.currentUser = session?.user ?? null
-    })
-
-    return () => subscription.unsubscribe()
+    const landingSeen = localStorage.getItem('landing_seen')
+    if (landingSeen) {
+      setShowLanding(false)
+    }
   }, [])
+  
+  // Verificar sesión al cargar - PATRÓN SEGURO
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return // Guard para SSR
+    
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+
+    // Suscribirse a cambios de auth (solo una vez)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+
+    // Cleanup
+    return () => subscription.unsubscribe()
+  }, []) // Deps vacías - solo ejecutar una vez
 
   // Ejecutar callback pendiente si el usuario se loguea
   useEffect(() => {
-    if (user && window.pendingAuthCallback) {
+    if (user && typeof window !== 'undefined' && window.pendingAuthCallback) {
       window.pendingAuthCallback()
       window.pendingAuthCallback = null
     }
@@ -60,6 +72,8 @@ export default function Home() {
 
   // Función global para requerir auth
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     window.requireAuth = (message = '', callback) => {
       if (user) {
         callback?.()
@@ -71,6 +85,7 @@ export default function Home() {
     }
   }, [user])
   
+  // Generar/recuperar sessionId - EN CLIENTE SOLAMENTE
   useEffect(() => {
     const generateSessionId = () => {
       const stored = localStorage.getItem('luci_session_id')
@@ -95,30 +110,33 @@ export default function Home() {
 
   // Recuperar sessionId de URL si viene del callback
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sidFromUrl = urlParams.get('sid');
-    const propertyCodeFromUrl = urlParams.get('propertyCode');
+    if (typeof window === 'undefined') return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const sidFromUrl = urlParams.get('sid')
+    const propertyCodeFromUrl = urlParams.get('propertyCode')
     
     if (sidFromUrl) {
-      localStorage.setItem('luci_session_id', sidFromUrl);
-      setSessionId(sidFromUrl);
+      localStorage.setItem('luci_session_id', sidFromUrl)
+      setSessionId(sidFromUrl)
       
       // Limpiar URL
-      urlParams.delete('sid');
-      urlParams.delete('propertyCode');
-      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-      window.history.replaceState({}, '', newUrl);
+      urlParams.delete('sid')
+      urlParams.delete('propertyCode')
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '')
+      window.history.replaceState({}, '', newUrl)
     }
+    
     // Si viene de un link compartido con propertyCode
     if (propertyCodeFromUrl) {
       // Guardar el propertyCode para cuando el componente de chat esté listo
-      window.sharedPropertyCode = propertyCodeFromUrl;
+      window.sharedPropertyCode = propertyCodeFromUrl
       
       // Limpiar la URL también
       if (!sidFromUrl) {
-        urlParams.delete('propertyCode');
-        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-        window.history.replaceState({}, '', newUrl);
+        urlParams.delete('propertyCode')
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '')
+        window.history.replaceState({}, '', newUrl)
       }
     }
   }, [])
@@ -135,7 +153,9 @@ export default function Home() {
 
   // Función para manejar inicio de la app desde landing
   const handleStartApp = () => {
-    localStorage.setItem('landing_seen', 'true')
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('landing_seen', 'true')
+    }
     setShowLanding(false)
   }
 
@@ -149,7 +169,9 @@ export default function Home() {
     if (tabId === 'saved') {
       // Solo pedir login si NO hay usuario Y hay guardados
       if (!user && savedProperties && savedProperties.size > 0) {
-        window.requireAuth?.('Accede para ver tus Guardados', () => setActiveTab('saved'))
+        if (typeof window !== 'undefined' && window.requireAuth) {
+          window.requireAuth('Accede para ver tus Guardados', () => setActiveTab('saved'))
+        }
         return
       }
       setHasUnvisitedSaves(false)
@@ -234,7 +256,9 @@ export default function Home() {
         onSuccess={(user) => {
           setUser(user)
           setShowAuthModal(false)
-          window.pendingAuthCallback?.()
+          if (typeof window !== 'undefined' && window.pendingAuthCallback) {
+            window.pendingAuthCallback()
+          }
         }}
         message={authMessage}
       />
