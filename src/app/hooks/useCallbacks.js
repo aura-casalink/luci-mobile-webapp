@@ -1,13 +1,23 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase-browser'
+import { getSupabase } from '@/lib/supabase-browser'
 
 export function useCallbacks(sessionId) {
   const [callbacks, setCallbacks] = useState([])
   const [isListening, setIsListening] = useState(false)
+  const [supabase, setSupabase] = useState(null)
 
+  // Inicializar supabase en el cliente
   useEffect(() => {
-    if (!sessionId) return
+    const sb = getSupabase()
+    if (sb) {
+      setSupabase(sb)
+    }
+  }, [])
+
+  // Suscripción a cambios en tiempo real
+  useEffect(() => {
+    if (!sessionId || !supabase) return
 
     // Suscribirse a cambios en tiempo real
     const subscription = supabase
@@ -39,7 +49,7 @@ export function useCallbacks(sessionId) {
 
     // Polling de respaldo cada 5 segundos
     const pollingInterval = setInterval(() => {
-      if (!isListening) {
+      if (!isListening && supabase) {
         checkPendingCallbacks()
       }
     }, 5000)
@@ -49,9 +59,11 @@ export function useCallbacks(sessionId) {
       subscription.unsubscribe()
       clearInterval(pollingInterval)
     }
-  }, [sessionId])
+  }, [sessionId, supabase]) // Deps controladas
 
   const enrichCallbackWithProperties = async (callback) => {
+    if (!supabase) return callback // Guard
+    
     try {
       const payload = callback.payload
       
@@ -108,6 +120,8 @@ export function useCallbacks(sessionId) {
   }
 
   const markCallbackAsProcessed = async (callbackId) => {
+    if (!supabase) return // Guard
+    
     try {
       await supabase
         .from('callbacks')
@@ -119,7 +133,7 @@ export function useCallbacks(sessionId) {
   }
 
   const checkPendingCallbacks = async () => {
-    if (!sessionId) return
+    if (!sessionId || !supabase) return // Guard
 
     try {
       const { data, error } = await supabase
