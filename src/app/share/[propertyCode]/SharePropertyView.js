@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { MapPin, Bed, Bath, Square, Layers, Home, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-browser'
 
 export default function SharePropertyView({ propertyCode }) {
   const [property, setProperty] = useState(null)
