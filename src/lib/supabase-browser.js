@@ -1,3 +1,4 @@
+'use client'
 import { createBrowserClient } from '@supabase/ssr'
 
 let supabaseInstance
@@ -20,6 +21,13 @@ export function getSupabase() {
     )
   }
   return supabaseInstance
+}
+
+export function useSupabase() {
+  if (typeof window === 'undefined') {
+    throw new Error('useSupabase solo puede ser usado en el cliente')
+  }
+  return getSupabase()
 }
 
 export const supabase = typeof window !== 'undefined' ? getSupabase() : null
