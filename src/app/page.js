@@ -95,6 +95,7 @@ export default function Home() {
       if (stored && storedTime && (Date.now() - parseInt(storedTime) < oneHour)) {
         // Usar sessionId existente si no ha pasado 1 hora
         setSessionId(stored)
+        if (typeof window !== 'undefined') window.sessionId = stored // AÑADIDO
         console.log('Using existing sessionId:', stored)
       } else {
         // Generar nuevo sessionId si es la primera vez o ha pasado 1 hora
@@ -102,6 +103,7 @@ export default function Home() {
         localStorage.setItem('luci_session_id', newId)
         localStorage.setItem('luci_session_time', Date.now().toString())
         setSessionId(newId)
+        if (typeof window !== 'undefined') window.sessionId = newId // AÑADIDO
         console.log('Generated new sessionId:', newId)
       }
     }
@@ -119,6 +121,7 @@ export default function Home() {
     if (sidFromUrl) {
       localStorage.setItem('luci_session_id', sidFromUrl)
       setSessionId(sidFromUrl)
+      if (typeof window !== 'undefined') window.sessionId = sidFromUrl // AÑADIDO para consistencia
       
       // Limpiar URL
       urlParams.delete('sid')
