@@ -771,12 +771,12 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
 
   const handlePropertyClick = (property) => {
     setSelectedProperty({
-      images_count: property.images?.length,
+      ...property,
+      images_count: property.images?.length ?? 0,
       images: property.images,
       thumbnail: property.thumbnail,
       full_property: property
     })
-    setSelectedProperty(property)
   }
 
   const handleClosePropertyDetail = () => {
