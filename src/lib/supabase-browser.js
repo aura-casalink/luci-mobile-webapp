@@ -1,17 +1,26 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// Singleton pattern: una sola instancia del cliente
-let supabaseInstance = null
+let supabaseInstance
 
-export function createBrowserSupabaseClient() {
+export function getSupabase() {
+  if (typeof window === 'undefined') return null
   if (!supabaseInstance) {
     supabaseInstance = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          // evita colisiones si hay más apps en el mismo dominio
+          storageKey: 'luci-webapp-auth',
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+      }
     )
   }
   return supabaseInstance
 }
 
-// Export directo para uso más sencillo
-export const supabase = createBrowserSupabaseClient()
+export const supabase = typeof window !== 'undefined' ? getSupabase() : null
+()
