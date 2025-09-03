@@ -423,20 +423,20 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       content: trimmed,
       type,                                     
       timestamp: new Date().toISOString(),
-      session_id: sessionId,                    
-      created_at: new Date().toISOString(),    
+      session_id: sessionId,                    // AÑADIDO
+      created_at: new Date().toISOString(),     // AÑADIDO
     }
   
-    setMessages(prev => {
-      const updated = [...prev, newMessage]
-      console.log(`📝 Previous length: ${prev.length}, New length: ${updated.length}`)
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages, newMessage]
+      console.log(`📝 Previous length: ${prevMessages.length}, New length: ${updatedMessages.length}`)
   
       clearTimeout(window.saveTimeout)
       window.saveTimeout = setTimeout(() => {
-        saveConversation(updated)
+        saveConversation(updatedMessages)
       }, 1000)
   
-      return updated
+      return updatedMessages
     })
   
     setShowWelcome(false)
@@ -484,7 +484,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     if (!sessionId || !incomingSet || !supabase) return null
   
     try {
-      // Normalizar el property set
+      // Normalizar completamente el set
       const normalizedSet = {
         id: incomingSet.id || `propset_${sessionId}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
         properties: Array.isArray(incomingSet.properties) ? incomingSet.properties : [],
@@ -494,7 +494,6 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         type: 'properties',
       }
   
-      // Leer sets actuales SOLO de esta sesión
       const { data: currentData } = await supabase
         .from('chat_sessions')
         .select('property_sets')
@@ -515,11 +514,10 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         })
         .eq('session_id', sessionId)
   
-      console.log('💾 Property set saved successfully')
-      
       // Actualizar estado local con el set normalizado
       setPropertySets(prev => [...prev, normalizedSet])
-  
+      console.log('💾 Property set saved and state updated')
+      
       return normalizedSet
     } catch (error) {
       console.error('💾 Error saving property set:', error)
