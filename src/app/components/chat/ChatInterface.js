@@ -7,7 +7,7 @@ import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import SearchingAnimation from './SearchingAnimation'
 
-export default function ChatInterface({ sessionId, savedProperties, onToggleSave }) {
+export default function ChatInterface({ sessionId, savedProperties, onToggleSave, onStreetViewChange }) {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
