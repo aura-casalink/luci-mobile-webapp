@@ -363,7 +363,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             properties: propertiesFound,
             timestamp: new Date().toISOString()
           }
-          setPropertySets(prev => [...prev, newPropertySet])
+          await savePropertySetToCurrentSession(newPropertySet)
           addMessage(`¡Perfecto! He encontrado ${propertiesFound.length} propiedades que coinciden con tus criterios:`, 'assistant')
         } else {
           addMessage('No he encontrado propiedades que coincidan exactamente con tus criterios. ¿Quieres que ajuste los filtros de búsqueda?', 'assistant')
@@ -381,15 +381,15 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           addMessage(payload.message, 'assistant')
         }
         
-        // Crear nuevo conjunto de propiedades con timestamp actual
+        // Crear y normalizar nuevo conjunto de propiedades
         const newPropertySet = {
           id: Date.now(),
           properties: payload.properties,
           timestamp: new Date().toISOString()
         }
         
-        setPropertySets(prev => [...prev, newPropertySet])
-        savePropertySetToCurrentSession(newPropertySet)
+        // La función ahora actualiza el estado local automáticamente
+        await savePropertySetToCurrentSession(newPropertySet)
         setIsLoading(false)
       }
       else {
@@ -410,27 +410,35 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   }
 
   const addMessage = async (content, type = 'user') => {
-    console.log(`📝 addMessage called: type="${type}", content="${content?.substring(0, 50)}..."`)
+    if (!content || !content.trim()) {
+      console.warn('Attempted to add empty message')
+      return
+    }
+  
+    const trimmed = content.trim()
+    console.log(`📝 addMessage called: type="${type}", content="${trimmed.substring(0, 50)}..."`)
     
     const newMessage = {
-      id: `msg_${Date.now()}_${messages.length}`,
-      content,
-      type,
-      timestamp: new Date().toISOString()
+      id: `msg_${sessionId || 'anon'}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      content: trimmed,
+      type,                                     
+      timestamp: new Date().toISOString(),
+      session_id: sessionId,                    
+      created_at: new Date().toISOString(),    
     }
-    
-    setMessages(prevMessages => {
-      const updatedMessages = [...prevMessages, newMessage]
-      console.log(`📝 Using updater function. Previous length: ${prevMessages.length}, New length: ${updatedMessages.length}`)
-      
+  
+    setMessages(prev => {
+      const updated = [...prev, newMessage]
+      console.log(`📝 Previous length: ${prev.length}, New length: ${updated.length}`)
+  
       clearTimeout(window.saveTimeout)
       window.saveTimeout = setTimeout(() => {
-        saveConversation(updatedMessages)
+        saveConversation(updated)
       }, 1000)
-      
-      return updatedMessages
+  
+      return updated
     })
-    
+  
     setShowWelcome(false)
   }
 
@@ -472,32 +480,50 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     }
   }
 
-  const savePropertySetToCurrentSession = async (newPropertySet) => {
-    if (!sessionId || !newPropertySet || !supabase) return // Guard
-    
+  const savePropertySetToCurrentSession = async (incomingSet) => {
+    if (!sessionId || !incomingSet || !supabase) return null
+  
     try {
-      // Primero obtener los property_sets actuales de SOLO esta sesión
+      // Normalizar el property set
+      const normalizedSet = {
+        id: incomingSet.id || `propset_${sessionId}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+        properties: Array.isArray(incomingSet.properties) ? incomingSet.properties : [],
+        timestamp: incomingSet.timestamp || new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        session_id: sessionId,
+        type: 'properties',
+      }
+  
+      // Leer sets actuales SOLO de esta sesión
       const { data: currentData } = await supabase
         .from('chat_sessions')
         .select('property_sets')
         .eq('session_id', sessionId)
         .single()
-      
-      const currentSessionSets = currentData?.property_sets || []
-      currentSessionSets.push(newPropertySet)
-      
-      console.log('💾 Saving new property set to current session only')
-      
+  
+      const currentSets = currentData?.property_sets || []
+      currentSets.push(normalizedSet)
+  
+      console.log('💾 Saving normalized property set to current session')
+  
       await supabase
         .from('chat_sessions')
         .update({
-          property_sets: currentSessionSets,
-          last_properties: newPropertySet.properties,
+          property_sets: currentSets,
+          last_properties: normalizedSet.properties,
           updated_at: new Date().toISOString()
         })
         .eq('session_id', sessionId)
+  
+      console.log('💾 Property set saved successfully')
+      
+      // Actualizar estado local con el set normalizado
+      setPropertySets(prev => [...prev, normalizedSet])
+  
+      return normalizedSet
     } catch (error) {
       console.error('💾 Error saving property set:', error)
+      return null
     }
   }
 
