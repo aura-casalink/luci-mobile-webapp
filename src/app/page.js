@@ -273,6 +273,9 @@ export default function Home() {
         onSuccess={(user) => {
           setUser(user)
           setShowAuthModal(false)
+          if (typeof window !== 'undefined') {
+            window.currentUser = user
+          }
           if (typeof window !== 'undefined' && window.pendingAuthCallback) {
             window.pendingAuthCallback()
           }
