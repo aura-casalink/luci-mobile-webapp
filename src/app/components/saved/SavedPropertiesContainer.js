@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import SavedProperties from './SavedProperties'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-browser'
 
 // Propiedades hardcodeadas con múltiples imágenes
 const HARDCODED_PROPERTIES = {
