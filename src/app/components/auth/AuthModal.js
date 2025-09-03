@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase-browser'
+import { getSupabase } from '@/lib/supabase-browser'
 import { X } from 'lucide-react'
 
 export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
@@ -17,6 +17,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
 
   const signInWithGoogle = async () => {
     setLoading(true)
+    const supabase = getSupabase()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: makeRedirect() }
@@ -26,6 +27,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const signInWithMagicLink = async (e) => {
     e.preventDefault()
     setLoading(true)
+    const supabase = getSupabase()
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: makeRedirect() }
