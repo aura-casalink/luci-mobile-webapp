@@ -12,7 +12,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [supabase, setSupabase] = useState(null)
-  const [userIp, setUserIp] = useState(null) // AÑADIDO: Estado para IP
+  const [userIp, setUserIp] = useState(null)
   
   // Inicializar supabase solo en el cliente
   useEffect(() => {
@@ -68,14 +68,14 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
     scrollToBottom()
   }, [messages, propertySets])
 
-  // ACTUALIZADO: Cargar historial de sesiones
+  // Cargar historial de sesiones
   useEffect(() => {
     if (sessionId && supabase) {
       loadSessionHistory()
     }
   }, [sessionId, supabase])
   
-  // NUEVA FUNCIÓN: Cargar historial con sanitización robusta
+  // Cargar historial con sanitización robusta
   const loadSessionHistory = async () => {
     if (!supabase || !sessionId) return
     
@@ -88,14 +88,17 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
       console.log('🌐 User IP:', ip)
       setUserIp(ip)
       
-      // Actualizar sesión actual con IP
+      // MEJORA 1: Usar upsert en lugar de update para garantizar que existe
       await supabase
         .from('chat_sessions')
-        .update({ 
-          ip, 
-          updated_at: new Date().toISOString() 
-        })
-        .eq('session_id', sessionId)
+        .upsert(
+          { 
+            session_id: sessionId,
+            ip, 
+            updated_at: new Date().toISOString() 
+          },
+          { onConflict: 'session_id' }
+        )
       
       // Cargar últimos 30 días de historiales con esta IP
       const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString()
@@ -104,7 +107,7 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         .from('chat_sessions')
         .select('conversations, property_sets, session_id, created_at')
         .eq('ip', ip)
-        .gte('created_at', thirtyDaysAgo) // Limitar a 30 días
+        .gte('created_at', thirtyDaysAgo)
         .order('created_at', { ascending: true })
       
       if (error) {
@@ -119,10 +122,11 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
         return
       }
       
-      // SANITIZACIÓN ROBUSTA
+      // SANITIZACIÓN ROBUSTA CON MEJORA 2: Deduplicación por firma
       const allConversations = []
       const allPropertySets = []
       const seenIds = new Set()
+      const seenSignatures = new Set() // MEJORA 2: Para evitar duplicados por contenido
       
       for (const session of allSessions) {
         // Procesar mensajes
@@ -135,10 +139,15 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
             const content = msg.content.trim()
             if (!content) continue // Skip mensajes vacíos
             
+            // MEJORA 2: Crear firma única para evitar duplicados por contenido
+            const signature = `${content}|${msg.timestamp || ''}|${msg.type || 'assistant'}`
+            if (seenSignatures.has(signature)) continue
+            seenSignatures.add(signature)
+            
             // Generar ID único si no existe
             const msgId = msg.id || `msg_${session.session_id}_${Date.now()}_${Math.random()}`
             
-            // Evitar duplicados
+            // Evitar duplicados por ID
             if (seenIds.has(msgId)) continue
             seenIds.add(msgId)
             
@@ -799,9 +808,13 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
           {getCombinedItems().map((item, index) => {
             if (item.type === 'message') {
               const message = item.data
+              // MEJORA 3: Guard para no renderizar mensajes vacíos
+              if (!message?.content?.trim()) return null
+              const key = message.id || `msg-${index}`
+              
               return (
                 <div
-                  key={message.id}
+                  key={key}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
@@ -818,6 +831,9 @@ export default function ChatInterface({ sessionId, savedProperties, onToggleSave
                 </div>
               )
             } else if (item.type === 'properties') {
+              // MEJORA 3: Guard para no renderizar si no hay propiedades
+              if (!Array.isArray(item.data) || item.data.length === 0) return null
+              
               return (
                 <div key={item.id} className="-mx-4">
                   <PropertyResults 
