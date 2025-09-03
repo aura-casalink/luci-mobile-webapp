@@ -90,6 +90,34 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     sessionStorage.setItem(`draft_${sessionId}`, inputText || '')
   }, [sessionId, inputText])
   
+  // Auto-enviar borrador después del login
+  useEffect(() => {
+    if (!sessionId || !user) return
+    
+    try {
+      const raw = sessionStorage.getItem('after_login_action')
+      if (!raw) return
+      
+      const action = JSON.parse(raw)
+      if (action?.type === 'send_draft' && action?.sessionId === sessionId) {
+        const draft = (sessionStorage.getItem(`draft_${sessionId}`) || '').trim()
+        if (draft) {
+          setInputText(draft)
+          // Esperar un tick para que setInputText se aplique
+          setTimeout(() => {
+            sendMessage()
+          }, 100)
+        }
+        // Limpiar las flags
+        sessionStorage.removeItem(`draft_${sessionId}`)
+        sessionStorage.removeItem('after_login_action')
+      }
+    } catch (e) {
+      // Ignorar errores de parsing
+    }
+  }, [user, sessionId])
+  
+  
   // Cargar historial con sanitización robusta
   const loadSessionHistory = async () => {
     if (!supabase || !sessionId) return
@@ -456,6 +484,12 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       clearTimeout(window.saveTimeout)
       window.saveTimeout = setTimeout(() => {
         saveConversation(updatedMessages)
+        // Limpiar el borrador si el mensaje se envió
+        if (type === 'user' && sessionId) {
+          try { 
+            sessionStorage.removeItem(`draft_${sessionId}`)  
+          } catch {}
+        }
       }, 1000)
   
       return updatedMessages
@@ -642,12 +676,18 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     
     // Si ya hubo búsquedas y no hay usuario, pedir login
     if (propertySets.length > 0 && !hasUser) {
+      // Guardar el borrador y la intención de envío
+      sessionStorage.setItem(`draft_${sessionId}`, inputText.trim())
+      sessionStorage.setItem('after_login_action', JSON.stringify({ 
+        type: 'send_draft',  
+        sessionId 
+      }))
       // Usar setTimeout para dar tiempo a que window.requireAuth esté definido
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.requireAuth) {
           window.requireAuth(
             'Inicia sesión para continuar la conversación',
-            () => sendMessage()
+            () => {}
           )
         }
       }, 100)
