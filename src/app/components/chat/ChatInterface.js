@@ -75,6 +75,21 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   }, [sessionId, supabase])
   
+  // Restaurar borrador al montar/cambiar sesión
+  useEffect(() => {
+    if (!sessionId) return
+    const draft = sessionStorage.getItem(`draft_${sessionId}`)
+    if (draft && !inputText) {
+      setInputText(draft)
+    }
+  }, [sessionId]) // Solo al montar o cambiar sesión
+  
+  // Guardar borrador en cada cambio
+  useEffect(() => {
+    if (!sessionId) return
+    sessionStorage.setItem(`draft_${sessionId}`, inputText || '')
+  }, [sessionId, inputText])
+  
   // Cargar historial con sanitización robusta
   const loadSessionHistory = async () => {
     if (!supabase || !sessionId) return
