@@ -92,29 +92,45 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   
   // Auto-enviar borrador después del login
   useEffect(() => {
-    if (!sessionId || !user) return
+    if (!sessionId) return
     
-    try {
-      const raw = sessionStorage.getItem('after_login_action')
-      if (!raw) return
-      
-      const action = JSON.parse(raw)
-      if (action?.type === 'send_draft' && action?.sessionId === sessionId) {
-        const draft = (sessionStorage.getItem(`draft_${sessionId}`) || '').trim()
-        if (draft) {
-          setInputText(draft)
-          // Esperar un tick para que setInputText se aplique
-          setTimeout(() => {
-            sendMessage()
-          }, 100)
-        }
-        // Limpiar las flags
-        sessionStorage.removeItem(`draft_${sessionId}`)
-        sessionStorage.removeItem('after_login_action')
+    const checkAndSend = async () => {
+      // Verificar si hay sesión (prop o Supabase)
+      let hasSession = !!user
+      if (!hasSession) {
+        try {
+          const sb = getSupabase()
+          const { data: { session } } = await sb.auth.getSession()
+          hasSession = !!session?.user
+        } catch {}
       }
-    } catch (e) {
-      // Ignorar errores de parsing
+      
+      if (!hasSession) return
+      
+      try {
+        const raw = sessionStorage.getItem('after_login_action')
+        if (!raw) return
+        
+        const action = JSON.parse(raw)
+        if (action?.type === 'send_draft' && action?.sessionId === sessionId) {
+          const draft = (sessionStorage.getItem(`draft_${sessionId}`) || '').trim()
+          if (draft) {
+            setInputText(draft)
+            // Esperar un tick para que setInputText se aplique
+            setTimeout(() => {
+              sendMessage()
+            }, 100)
+          }
+          // Limpiar las flags
+          sessionStorage.removeItem(`draft_${sessionId}`)
+          sessionStorage.removeItem('after_login_action')
+        }
+      } catch (e) {
+        // Ignorar errores de parsing
+      }
     }
+    
+    checkAndSend()
   }, [user, sessionId])
   
   
@@ -671,8 +687,15 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return
 
-    // Verificar si hay user DESPUÉS de que se haya cargado
-    const hasUser = !!user
+    // Verificar si hay user (prop) o sesión activa en Supabase
+    let hasUser = !!user
+      if (!hasUser) {
+        try {
+          const sb = getSupabase()
+          const { data: { session } } = await sb.auth.getSession()
+          if (session?.user) hasUser = true
+        } catch {}
+      }
     
     // Si ya hubo búsquedas y no hay usuario, pedir login
     if (propertySets.length > 0 && !hasUser) {
