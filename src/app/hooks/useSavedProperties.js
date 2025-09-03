@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-browser'
 
 export function useSavedProperties(sessionId) {
   const [savedProperties, setSavedProperties] = useState(new Set())
