@@ -13,7 +13,7 @@ export function getSupabase() {
       {
         auth: {
           flowType: 'pkce',
-          detectSessionInUrl: false, // CRÍTICO: false para evitar doble exchange
+          detectSessionInUrl: true,
           persistSession: true,
           autoRefreshToken: true,
           storageKey: 'luci-webapp-auth' // consistente con el actual
