@@ -16,47 +16,39 @@ export async function GET(request) {
   const isValidNext = next.startsWith('/') && !next.startsWith('//')
   const safeNext = isValidNext ? next : '/'
 
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value
-        },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          cookieStore.delete(name)
-        },
-      },
-    }
-  )
-
-  // Exchange del código OAuth
+  // Si viene "code" (OAuth), redirigir a página cliente para que haga el exchange
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    if (!error) {
-      // Éxito: redirigir al destino
-      const finalUrl = new URL(safeNext, requestUrl.origin)
-      if (sid) finalUrl.searchParams.set('sid', sid)
-      return NextResponse.redirect(finalUrl)
-    }
-    
-    // Error en exchange
-    console.error('Exchange error:', error.message)
-    return NextResponse.redirect(
-      new URL(`/?error=auth&reason=${encodeURIComponent(error.message)}`, requestUrl.origin)
-    )
+    const clientCallbackUrl = new URL('/auth/callback/client', requestUrl.origin)
+    // Preservar TODOS los params para el cliente
+    requestUrl.searchParams.forEach((value, key) => {
+      clientCallbackUrl.searchParams.set(key, value)
+    })
+    return NextResponse.redirect(clientCallbackUrl)
   }
 
-  // Magic link
+  // Magic link - esto SÍ lo maneja el servidor
   if (token_hash) {
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value
+          },
+          set(name, value, options) {
+            cookieStore.set({ name, value, ...options })
+          },
+          remove(name, options) {
+            cookieStore.delete(name)
+          },
+        },
+      }
+    )
+    
     const { error } = await supabase.auth.verifyOtp({ 
-      type: 'magiclink', // IMPORTANTE: usar 'magiclink' no 'email'
+      type: 'magiclink',
       token_hash 
     })
     
