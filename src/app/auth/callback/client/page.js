@@ -1,9 +1,9 @@
 'use client'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase-browser'
 
-export default function OAuthClientCallback() {
+function OAuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -20,7 +20,6 @@ export default function OAuthClientCallback() {
       }
 
       // Esperar un momento para que Supabase procese el code automáticamente
-      // (detectSessionInUrl: true hace el exchange automáticamente)
       const supabase = getSupabase()
       
       // Verificar si el auth fue exitoso
@@ -50,5 +49,20 @@ export default function OAuthClientCallback() {
         <p className="mt-4 text-gray-600">Iniciando sesión...</p>
       </div>
     </div>
+  )
+}
+
+export default function OAuthClientCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <OAuthCallbackContent />
+    </Suspense>
   )
 }
