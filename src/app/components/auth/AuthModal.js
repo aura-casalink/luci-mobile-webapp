@@ -7,11 +7,19 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // REEMPLAZAR TODA LA FUNCIÓN makeRedirect() con:
   const makeRedirect = () => {
+    // CRÍTICO: usar window.location.origin para mantener mismo dominio
     const url = new URL('/auth/callback', window.location.origin)
-    url.searchParams.set('redirectTo', window.location.pathname)
+    
+    // Guardar la ruta actual para volver después
+    const currentPath = window.location.pathname + window.location.search
+    url.searchParams.set('next', currentPath)
+    
+    // Mantener sessionId si existe
     const sid = window.sessionId || localStorage.getItem('luci_session_id')
     if (sid) url.searchParams.set('sid', sid)
+    
     return url.toString()
   }
 
