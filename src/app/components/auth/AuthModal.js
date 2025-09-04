@@ -25,20 +25,26 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
 
   const signInWithGoogle = async () => {
     setLoading(true)
-    const supabase = getSupabase()
+    const supabase = getSupabase() // obtener instancia
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: makeRedirect() }
+      options: { 
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}` 
+      }
     })
   }
 
   const signInWithMagicLink = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const supabase = getSupabase()
+    const supabase = getSupabase() // obtener instancia
+    const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}`
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: makeRedirect() }
+      options: { 
+        emailRedirectTo: redirectUrl 
+      }
     })
     if (!error) alert('Te hemos enviado un enlace. Revisa tu email.')
     setLoading(false)
