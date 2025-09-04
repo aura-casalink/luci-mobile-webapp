@@ -31,3 +31,6 @@ export function useSupabase() {
   }
   return getSupabase()
 }
+
+// Exportación temporal para compatibilidad - TODO: migrar todos los imports a getSupabase()
+export const supabase = typeof window !== 'undefined' ? getSupabase() : null
