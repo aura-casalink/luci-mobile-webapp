@@ -5,23 +5,40 @@ let supabaseInstance
 
 export function getSupabase() {
   if (typeof window === 'undefined') return null
+  
   if (!supabaseInstance) {
     supabaseInstance = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         auth: {
-          // evita colisiones si hay más apps en el mismo dominio
           storageKey: 'luci-webapp-auth',
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: true,
+          // CRÍTICO: configuración de cookies para PKCE
+          flowType: 'pkce',
+          storage: {
+            getItem: (key) => {
+              if (typeof window === 'undefined') return null;
+              return window.localStorage.getItem(key);
+            },
+            setItem: (key, value) => {
+              if (typeof window === 'undefined') return;
+              window.localStorage.setItem(key, value);
+            },
+            removeItem: (key) => {
+              if (typeof window === 'undefined') return;
+              window.localStorage.removeItem(key);
+            },
+          },
         },
       }
     )
   }
   return supabaseInstance
 }
+
 
 export function useSupabase() {
   if (typeof window === 'undefined') {
