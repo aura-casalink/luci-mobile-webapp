@@ -300,8 +300,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
             ? payload.new.conversations 
             : []
           
-          // Sanitizar y deduplicar
-          const seenIds = new Set()
+          // Sanitizar mensajes del servidor
           const seenSignatures = new Set()
           
           const mergedMessages = serverMessages
@@ -327,23 +326,32 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
               timestamp: msg.timestamp || payload.new.updated_at || new Date().toISOString(),
               session_id: sessionId
             }))
-            .filter(msg => {
-              // Deduplicación por ID
-              if (seenIds.has(msg.id)) return false
-              seenIds.add(msg.id)
-              return true
-            })
-            .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
           
           console.log(`🔄 Synced ${mergedMessages.length} messages from server`)
           
+          // CAMBIO: Usar Map para evitar duplicados
           setMessages(prevMessages => {
-            // Mantener mensajes de OTRAS sesiones, actualizar solo la actual
-            const otherSessionMessages = prevMessages.filter(m => m.session_id !== sessionId)
-            const merged = [...otherSessionMessages, ...mergedMessages]
-            merged.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
-            console.log(`🔄 Updated session ${sessionId}: ${mergedMessages.length} msgs, kept ${otherSessionMessages.length} from other sessions`)
-            return merged
+            // Crear un Map para deduplicar por ID
+            const messageMap = new Map()
+            
+            // Agregar mensajes anteriores al Map
+            prevMessages.forEach(msg => {
+              if (msg.id) messageMap.set(msg.id, msg)
+            })
+            
+            // Agregar/actualizar con mensajes del servidor (solo de esta sesión)
+            mergedMessages.forEach(msg => {
+              if (msg.session_id === sessionId) {
+                messageMap.set(msg.id, msg)
+              }
+            })
+            
+            // Convertir Map a array y ordenar
+            const dedupedMessages = Array.from(messageMap.values())
+              .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
+            
+            console.log(`🔄 Total unique messages: ${dedupedMessages.length}`)
+            return dedupedMessages
           })
                     
           // También sincronizar property_sets si vienen
@@ -471,8 +479,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       content: trimmed,
       type,                                     
       timestamp: new Date().toISOString(),
-      session_id: sessionId,                    // AÑADIDO
-      created_at: new Date().toISOString(),     // AÑADIDO
+      session_id: sessionId,                    
+      created_at: new Date().toISOString(),     
     }
   
     setMessages(prevMessages => {
@@ -537,9 +545,10 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   }
 
+  // CAMBIO: Mejorar savePropertySetToCurrentSession con verificación de duplicados
   const savePropertySetToCurrentSession = async (incomingSet) => {
     if (!sessionId || !incomingSet || !supabase) return null
-  
+
     try {
       // Normalizar completamente el set
       const normalizedSet = {
@@ -550,36 +559,65 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         session_id: sessionId,
         type: 'properties',
       }
-  
-      const { data: currentData } = await supabase
-        .from('chat_sessions')
-        .select('property_sets')
-        .eq('session_id', sessionId)
-        .single()
-  
-      const currentSets = currentData?.property_sets || []
-      currentSets.push(normalizedSet)
-  
-      console.log('💾 Saving normalized property set to current session')
-  
-      await supabase
-        .from('chat_sessions')
-        .update({
-          property_sets: currentSets,
-          last_properties: normalizedSet.properties,
-          device_id: window?.deviceId || null,
-          topic: 'Buscar propiedades para comprar',
-          updated_at: new Date().toISOString()
+
+      // Verificar si ya existe este set antes de agregarlo
+      setPropertySets(prev => {
+        // Verificar si ya existe por ID
+        if (prev.some(set => set.id === normalizedSet.id)) {
+          console.log('⚠️ Property set already exists, skipping:', normalizedSet.id)
+          return prev
+        }
+        
+        // Verificar si es un duplicado por timestamp cercano (dentro de 2 segundos)
+        const recentDuplicate = prev.find(set => {
+          const timeDiff = Math.abs(new Date(set.timestamp) - new Date(normalizedSet.timestamp))
+          return timeDiff < 2000 && set.session_id === sessionId
         })
-        .eq('session_id', sessionId)
-  
-      // Actualizar estado local con el set normalizado
-      setPropertySets(prev => [...prev, normalizedSet])
-      console.log('💾 Property set saved and state updated')
+        
+        if (recentDuplicate) {
+          console.log('⚠️ Recent duplicate property set detected, skipping')
+          return prev
+        }
+        
+        // Agregar el nuevo set
+        const updated = [...prev, normalizedSet]
+        
+        // Guardar en Supabase de forma asíncrona
+        supabase
+          .from('chat_sessions')
+          .select('property_sets')
+          .eq('session_id', sessionId)
+          .single()
+          .then(({ data: currentData }) => {
+            const currentSets = currentData?.property_sets || []
+            
+            // Verificar que no esté duplicado en DB
+            if (!currentSets.some(s => s.id === normalizedSet.id)) {
+              currentSets.push(normalizedSet)
+              
+              return supabase
+                .from('chat_sessions')
+                .update({
+                  property_sets: currentSets,
+                  last_properties: normalizedSet.properties,
+                  device_id: window?.deviceId || null,
+                  topic: 'Buscar propiedades para comprar',
+                  updated_at: new Date().toISOString()
+                })
+                .eq('session_id', sessionId)
+            }
+          })
+          .catch(error => {
+            console.error('💾 Error saving property set:', error)
+          })
+        
+        return updated
+      })
       
+      console.log('💾 Property set processed')
       return normalizedSet
     } catch (error) {
-      console.error('💾 Error saving property set:', error)
+      console.error('💾 Error in savePropertySetToCurrentSession:', error)
       return null
     }
   }
@@ -679,35 +717,78 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   }
   
+  // CAMBIO: Mejorar sendMessage para mostrar mensaje antes del auth
   const sendMessage = async (overrideText) => {
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
-  
+
+    // CAMBIO: Agregar el mensaje ANTES de verificar auth
+    setInputText('')
+    addMessage(text, 'user')
+    
     // Verificar sesión con el método más confiable
     const loggedIn = await getIsLoggedIn()
-  
-    // Si ya hubo búsquedas y NO hay login, guardamos borrador y pedimos auth
+
+    // Si ya hubo búsquedas y NO hay login, guardamos el texto y pedimos auth
     if (propertySets.length > 0 && !loggedIn) {
-      sessionStorage.setItem(`draft_${sessionId}`, text)
-      sessionStorage.setItem('after_login_action', JSON.stringify({ 
-        type: 'send_draft', 
-        sessionId 
-      }))
-      // Mantenemos el texto en el input para que el usuario lo vea
-      setInputText(text)
+      // Guardar el mensaje ya mostrado para enviarlo después
+      sessionStorage.setItem(`pending_message_${sessionId}`, text)
+      
+      // Mostrar typing mientras esperamos
+      setIsLoading(true)
+      
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.requireAuth) {
-          window.requireAuth('Inicia sesión para continuar la conversación', () => {})
+          setIsLoading(false) // Parar typing mientras auth
+          window.requireAuth('Inicia sesión para continuar la conversación', async () => {
+            // Callback cuando vuelve del auth
+            const pendingMsg = sessionStorage.getItem(`pending_message_${sessionId}`)
+            if (pendingMsg) {
+              sessionStorage.removeItem(`pending_message_${sessionId}`)
+              // Enviar el mensaje pendiente
+              setIsLoading(true)
+              try {
+                const result = await fetch('/api/chat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    message: pendingMsg,
+                    message_type: "text",
+                    session_id: sessionId,
+                    device_id: window?.deviceId || null,
+                    topic: 'Buscar propiedades para comprar',
+                    timestamp: new Date().toISOString(),
+                    source: 'web'
+                  })
+                })
+                
+                const data = await result.json()
+                
+                if (result.ok && data.assistant_reply) {
+                  setTimeout(() => {
+                    addMessage(data.assistant_reply, 'assistant')
+                    if (data.search_started) {
+                      setIsWaitingForCallback(true)
+                    }
+                    setIsLoading(false)
+                  }, 500)
+                } else {
+                  setIsLoading(false)
+                }
+              } catch (error) {
+                console.error('Error sending pending message:', error)
+                setIsLoading(false)
+              }
+            }
+          })
         }
       }, 0)
       return
     }
-  
-    // Listos para enviar
-    setInputText('')
-    addMessage(text, 'user')
+
+    // Si no necesita auth, enviar normalmente
     setIsLoading(true)
-  
+
     try {
       const result = await fetch('/api/chat', {
         method: 'POST',
@@ -1015,7 +1096,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
           {getCombinedItems().map((item, index) => {
             if (item.type === 'message') {
               const message = item.data
-              // MEJORA 3: Guard para no renderizar mensajes vacíos
+              // Guard para no renderizar mensajes vacíos
               if (!message?.content?.trim()) return null
               const key = message.id || `msg-${index}`
               
@@ -1038,7 +1119,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
                 </div>
               )
             } else if (item.type === 'properties') {
-              // MEJORA 3: Guard para no renderizar si no hay propiedades
+              // Guard para no renderizar si no hay propiedades
               if (!Array.isArray(item.data) || item.data.length === 0) return null
               
               return (
