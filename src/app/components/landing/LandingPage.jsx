@@ -1,7 +1,7 @@
-// src/components/landing/LandingPage.jsx
+// src/app/components/landing/LandingPage.jsx
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles, Clock, Shield } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles, Clock, Shield, X } from 'lucide-react'
 
 export default function LandingPage({ onStart }) {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -10,6 +10,7 @@ export default function LandingPage({ onStart }) {
   const [nextVideoIndex, setNextVideoIndex] = useState(1)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [typingText, setTypingText] = useState('')
+  const [showGeoConsent, setShowGeoConsent] = useState(false)
   const videoRef = useRef(null)
   const nextVideoRef = useRef(null)
 
@@ -36,6 +37,18 @@ export default function LandingPage({ onStart }) {
     }, 100)
     
     return () => clearInterval(timer)
+  }, [])
+
+  // Mostrar banner de consentimiento después de 2 segundos
+  useEffect(() => {
+    // Solo mostrar si no hay decisión previa guardada
+    const geoConsent = localStorage.getItem('geo_consent')
+    if (geoConsent === null) {
+      const timer = setTimeout(() => {
+        setShowGeoConsent(true)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
   }, [])
 
   // Manejar la rotación de videos con transición suave
@@ -102,9 +115,9 @@ export default function LandingPage({ onStart }) {
         </div>
       </header>
 
-      {/* Hero Section - PADDING TOP REDUCIDO para móvil */}
+      {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col justify-center px-4 md:px-6 pt-12 md:pt-20 pb-20">
-        {/* Video Background con overlay aumentado */}
+        {/* Video Background con overlay */}
         <div className="absolute inset-0 overflow-hidden">
           <video
             ref={videoRef}
@@ -134,11 +147,11 @@ export default function LandingPage({ onStart }) {
             <source src={videoUrls[nextVideoIndex]} type="video/mp4" />
           </video>
           
-          {/* Overlay aumentado para mejor contraste */}
+          {/* Overlay para mejor contraste */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'rgba(0, 0, 0, 0.45)' // Aumentado de 0.3 a 0.45
+              background: 'rgba(0, 0, 0, 0.45)'
             }}
           ></div>
         </div>
@@ -146,7 +159,7 @@ export default function LandingPage({ onStart }) {
         {/* Hero Content */}
         <div className={`relative z-10 w-full max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="text-left">
-            {/* HERO TITLE MÁS GRANDE */}
+            {/* HERO TITLE */}
             <h2 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold mb-8 md:mb-10 leading-none" style={{ color: '#FAFAFA' }}>
               Encuentra tu casa
               <span className="block mt-3" style={{ color: '#FAFAFA' }}>
@@ -163,7 +176,7 @@ export default function LandingPage({ onStart }) {
               </span>
             </h2>
             
-            {/* NUEVO SUBTÍTULO DE 3 LÍNEAS */}
+            {/* SUBTÍTULO */}
             <div className="text-xl md:text-2xl lg:text-3xl mb-10 md:mb-12 max-w-3xl space-y-2" style={{ color: '#FAFAFA' }}>
               <p>Busca a la vez en todos los portales inmobiliarios.</p>
               <p>La IA filtra por ti características que no están en otras plataformas.</p>
@@ -298,7 +311,7 @@ export default function LandingPage({ onStart }) {
         </div>
       </section>
 
-      {/* NUEVA SECCIÓN: Qué nos diferencia */}
+      {/* Sección: Qué nos diferencia */}
       <section id="difference-section" className="relative py-20 px-6" style={{ backgroundColor: '#f8f8f8' }}>
         <div className="max-w-6xl mx-auto">
           <h3 className="text-3xl md:text-4xl font-bold text-center mb-16" style={{ color: '#0A0A23' }}>
@@ -369,6 +382,69 @@ export default function LandingPage({ onStart }) {
           </button>
         </div>
       </section>
+
+      {/* BANNER DE CONSENTIMIENTO DE GEOLOCALIZACIÓN */}
+      {showGeoConsent && (
+        <div className="fixed bottom-4 left-4 right-4 md:bottom-8 md:left-auto md:right-8 md:max-w-sm 
+                      bg-white rounded-2xl shadow-2xl z-50 overflow-hidden
+                      animate-in slide-in-from-bottom duration-500">
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-white" />
+                <span className="text-white font-semibold text-sm">Mejora tu experiencia</span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowGeoConsent(false)
+                  localStorage.setItem('geo_consent', 'false')
+                }}
+                className="text-white/80 hover:text-white transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-4">
+            <p className="text-gray-700 text-sm mb-4">
+              Permite el acceso a tu ubicación para mostrarte propiedades cercanas 
+              y personalizar tus búsquedas. Tu privacidad es importante para nosotros.
+            </p>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  localStorage.setItem('geo_consent', 'true')
+                  setShowGeoConsent(false)
+                  // Disparar evento personalizado en lugar de reload
+                  window.dispatchEvent(new CustomEvent('geo-consent-granted'))
+                }}
+                className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white 
+                         px-4 py-2.5 rounded-lg text-sm font-medium
+                         hover:from-yellow-500 hover:to-yellow-600 transition-all"
+              >
+                Permitir ubicación
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('geo_consent', 'false')
+                  setShowGeoConsent(false)
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg text-sm
+                         hover:bg-gray-200 transition-colors"
+              >
+                Ahora no
+              </button>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              Puedes cambiar esto en cualquier momento desde Ajustes
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
