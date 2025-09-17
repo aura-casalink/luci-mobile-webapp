@@ -66,7 +66,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     console.log('📊 Messages state updated. Current length:', messages.length)
     console.log('📊 Current messages:', messages)
     scrollToBottom()
-  }, [messages, propertySets])
+  }, [messages, propertySets, isLoading])
 
   // Cargar historial de sesiones
   useEffect(() => {
@@ -722,25 +722,41 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
 
-    // CAMBIO: Agregar el mensaje ANTES de verificar auth
+    console.log('🚀 sendMessage called with:', text)
+    console.log('🚀 Current state:', {
+      propertySets: propertySets.length,
+      user: !!user,
+      sessionId
+    })
+
+    // Agregar el mensaje ANTES de verificar auth
     setInputText('')
     addMessage(text, 'user')
     
     // Verificar sesión con el método más confiable
     const loggedIn = await getIsLoggedIn()
+    console.log('🚀 Login status:', loggedIn)
+    console.log('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
+    console.log('🚀 window.requireAuth exists?', !!window.requireAuth)
 
     // Si ya hubo búsquedas y NO hay login, guardamos el texto y pedimos auth
     if (propertySets.length > 0 && !loggedIn) {
-      // Guardar el mensaje ya mostrado para enviarlo después
+      console.log('🚀 Triggering auth popup...')
+      
+      // Guardar el mensaje para enviarlo después
       sessionStorage.setItem(`pending_message_${sessionId}`, text)
       
       // Mostrar typing mientras esperamos
       setIsLoading(true)
       
+      // Usar setTimeout para asegurar que el DOM esté listo
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.requireAuth) {
+          console.log('🚀 Calling window.requireAuth')
           setIsLoading(false) // Parar typing mientras auth
+          
           window.requireAuth('Inicia sesión para continuar la conversación', async () => {
+            console.log('🚀 Auth callback triggered')
             // Callback cuando vuelve del auth
             const pendingMsg = sessionStorage.getItem(`pending_message_${sessionId}`)
             if (pendingMsg) {
@@ -763,6 +779,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
                 })
                 
                 const data = await result.json()
+                console.log('🚀 API Response after auth:', data)
                 
                 if (result.ok && data.assistant_reply) {
                   setTimeout(() => {
@@ -774,18 +791,26 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
                   }, 500)
                 } else {
                   setIsLoading(false)
+                  addMessage('Lo siento, hubo un problema. Intenta de nuevo.', 'assistant')
                 }
               } catch (error) {
-                console.error('Error sending pending message:', error)
+                console.error('🚀 Error sending pending message:', error)
                 setIsLoading(false)
+                addMessage('Error al enviar el mensaje. Por favor intenta de nuevo.', 'assistant')
               }
             }
           })
+        } else {
+          console.error('🚀 window.requireAuth not found!')
+          setIsLoading(false)
+          addMessage('Error: Sistema de autenticación no disponible. Recarga la página.', 'assistant')
         }
-      }, 0)
+      }, 100)
       return
     }
 
+    console.log('🚀 No auth needed, sending message directly...')
+    
     // Si no necesita auth, enviar normalmente
     setIsLoading(true)
 

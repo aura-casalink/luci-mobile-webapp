@@ -26,7 +26,7 @@ export default function HomeClient() {
   
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
   
-  // Generar sessionId
+  // Generar sessionId y deviceId
   useEffect(() => {
     const generateSessionId = () => {
       const stored = localStorage.getItem('luci_session_id')
@@ -44,7 +44,65 @@ export default function HomeClient() {
         if (typeof window !== 'undefined') window.sessionId = newId
       }
     }
+    
+    // Generar o recuperar deviceId único por dispositivo
+    const generateDeviceId = () => {
+      let deviceId = localStorage.getItem('luci_device_id')
+      
+      if (!deviceId) {
+        // Crear fingerprint básico del navegador
+        const nav = window.navigator
+        const screen = window.screen
+        
+        const fingerprint = [
+          nav.userAgent,
+          nav.language,
+          screen.height,
+          screen.width,
+          screen.pixelDepth,
+          new Date().getTimezoneOffset(),
+          nav.hardwareConcurrency || 0,
+          nav.maxTouchPoints || 0
+        ].join('|')
+        
+        // Generar hash simple del fingerprint
+        let hash = 0
+        for (let i = 0; i < fingerprint.length; i++) {
+          const char = fingerprint.charCodeAt(i)
+          hash = ((hash << 5) - hash) + char
+          hash = hash & hash // Convert to 32bit integer
+        }
+        
+        deviceId = `device_${Math.abs(hash)}_${Date.now().toString(36)}`
+        localStorage.setItem('luci_device_id', deviceId)
+        console.log('🔧 Generated new device ID:', deviceId)
+      } else {
+        console.log('🔧 Using existing device ID:', deviceId)
+      }
+      
+      if (typeof window !== 'undefined') {
+        window.deviceId = deviceId
+      }
+      
+      return deviceId
+    }
+    
+    // Llamar ambas funciones
     generateSessionId()
+    generateDeviceId()
+
+    if (localStorage.getItem('geo_consent') === 'true') {
+      console.log('🌍 Forcing geolocation tracking due to existing consent')
+      // Limpiar marca de sessionStorage para forzar nuevo tracking
+      if (typeof sessionStorage !== 'undefined') {
+        const keys = Object.keys(sessionStorage)
+        keys.forEach(key => {
+          if (key.startsWith('geo_tracked_')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+      }
+    }
     
     // Verificar consentimiento guardado
     setConsent(localStorage.getItem('geo_consent') === 'true')
@@ -92,7 +150,22 @@ export default function HomeClient() {
     return () => subscription.unsubscribe()
   }, [])
   
-  // Resto de tu lógica existente...
+  // Configurar función global de autenticación
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.requireAuth = (message, callback) => {
+        console.log('🔐 requireAuth called:', message)
+        setAuthMessage(message || 'Inicia sesión para continuar')
+        setShowAuthModal(true)
+        
+        // Guardar callback para ejecutar después del login
+        window.pendingAuthCallback = callback
+      }
+      
+      console.log('🔐 window.requireAuth configured')
+    }
+  }, [])
+
   const handleStartApp = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('landing_seen', 'true')
@@ -119,6 +192,7 @@ export default function HomeClient() {
         return (
           <ChatInterface 
             sessionId={sessionId}
+            user={user}
             savedProperties={savedProperties}
             onToggleSave={toggleSaveProperty}
             onStreetViewChange={setIsStreetViewActive}
@@ -152,6 +226,7 @@ export default function HomeClient() {
         return (
           <ChatInterface 
             sessionId={sessionId}
+            user={user}
             savedProperties={savedProperties}
             onToggleSave={toggleSaveProperty}
             onStreetViewChange={setIsStreetViewActive}

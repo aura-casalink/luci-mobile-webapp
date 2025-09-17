@@ -2,64 +2,97 @@
 import { useEffect, useRef } from 'react'
 
 export function useGeolocation({ sessionId, consent = false } = {}) {
-  const fired = useRef(false)
+  const attemptedRef = useRef(false)
 
   useEffect(() => {
-    if (fired.current || !sessionId || typeof window === 'undefined') return
-    fired.current = true
+    // Solo intentar una vez por montaje del componente
+    if (attemptedRef.current || !sessionId || typeof window === 'undefined') return
+    attemptedRef.current = true
+
+    console.log('🌍 useGeolocation starting for session:', sessionId)
 
     const savedConsent = localStorage.getItem('geo_consent') === 'true'
     const shouldTrack = consent || savedConsent
+    
+    console.log('🌍 Consent status:', { consent, savedConsent, shouldTrack })
 
-    const send = (browser_geo = null) => {
-      const data = JSON.stringify({ session_id: sessionId, browser_geo })
-      const blob = new Blob([data], { type: 'application/json' })
+    const send = async (browser_geo = null) => {
+      console.log('🌍 Sending location to server:', { session_id: sessionId, browser_geo })
       
-      if (!navigator.sendBeacon('/api/track-location', blob)) {
-        // Fallback a fetch si sendBeacon falla
-        fetch('/api/track-location', {
+      try {
+        const response = await fetch('/api/track-location', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: data,
-          keepalive: true,
-        }).catch(() => {})
+          body: JSON.stringify({ 
+            session_id: sessionId, 
+            browser_geo 
+          })
+        })
+        
+        const data = await response.json()
+        console.log('🌍 Server response:', data)
+        
+        if (data.tracked) {
+          console.log('✅ Location successfully tracked')
+        }
+      } catch (err) {
+        console.error('❌ Error sending location:', err)
       }
-      
-      sessionStorage.setItem(`geo_tracked_${sessionId}`, 'true')
     }
 
-    // Evitar duplicados por sesión
-    if (sessionStorage.getItem(`geo_tracked_${sessionId}`)) return
-
-    if (!shouldTrack || !('geolocation' in navigator)) {
-      send()
+    // Si no hay consentimiento, enviar solo datos básicos
+    if (!shouldTrack) {
+      console.log('🌍 No consent, sending basic data')
+      send(null)
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude, accuracy, altitude, speed } = pos.coords || {}
-        const browser_geo = {
-          latitude, 
-          longitude,
-          accuracy_meters: accuracy ?? null,
-          altitude, 
-          speed,
-          source: 'browser',
-          timestamp: new Date(pos.timestamp).toISOString(),
+    // Si hay consentimiento, obtener ubicación
+    if ('geolocation' in navigator) {
+      console.log('🌍 Requesting current position...')
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log('✅ Position obtained:', position.coords)
+          
+          const browser_geo = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy_meters: position.coords.accuracy,
+            altitude: position.coords.altitude,
+            altitude_accuracy: position.coords.altitudeAccuracy,
+            heading: position.coords.heading,
+            speed: position.coords.speed,
+            timestamp: new Date(position.timestamp).toISOString(),
+            source: 'browser'
+          }
+          
+          // Guardar en window para debug
+          if (typeof window !== 'undefined') {
+            window.userBrowserGeo = browser_geo
+          }
+          
+          send(browser_geo)
+        },
+        (error) => {
+          console.error('⚠️ Geolocation error:', error.message)
+          // Enviar sin ubicación si falla
+          send({
+            error: error.message,
+            error_code: error.code,
+            source: 'browser_error'
+          })
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutos de cache
         }
-        send(browser_geo)
-        if (typeof window !== 'undefined') {
-          window.userBrowserGeo = browser_geo
-        }
-      },
-      () => send(), // Si falla, enviar solo edge-geo
-      { 
-        enableHighAccuracy: false, 
-        timeout: 10000, 
-        maximumAge: 300000 
-      }
-    )
+      )
+    } else {
+      console.log('⚠️ Geolocation not supported')
+      send(null)
+    }
   }, [sessionId, consent])
   
   return null
