@@ -90,30 +90,53 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     sessionStorage.setItem(`draft_${sessionId}`, inputText || '')
   }, [sessionId, inputText])
   
-  // Auto-enviar borrador después del login
+  // Auto-enviar borrador después del login - MEJORADO
   useEffect(() => {
     if (!sessionId || !user) return
     
-    const raw = sessionStorage.getItem('after_login_action')
-    if (!raw) return
-  
-    try {
-      const action = JSON.parse(raw)
-      if (action?.type === 'send_draft' && action?.sessionId === sessionId) {
-        const draft = (sessionStorage.getItem(`draft_${sessionId}`) || '').trim()
-        if (draft) {
-          // Enviar directamente el draft sin depender del estado del input
-          sendMessage(draft)
+    // Pequeño delay para asegurar que todo esté inicializado
+    const timer = setTimeout(() => {
+      const raw = sessionStorage.getItem('after_login_action')
+      if (!raw) return
+      
+      try {
+        const action = JSON.parse(raw)
+        
+        // Verificar que la acción es para esta sesión y es reciente (menos de 5 minutos)
+        if (action?.type === 'send_draft' && 
+            action?.sessionId === sessionId &&
+            (Date.now() - action.timestamp < 5 * 60 * 1000)) {
+          
+          // Limpiar PRIMERO para evitar re-ejecución
+          sessionStorage.removeItem('after_login_action')
+          
+          // Obtener el draft guardado
+          const draft = (action.draft || sessionStorage.getItem(`draft_${sessionId}`) || '').trim()
+          
+          if (draft) {
+            // Limpiar el draft storage
+            sessionStorage.removeItem(`draft_${sessionId}`)
+            
+            // Actualizar el input con el draft (visual feedback)
+            setInputText(draft)
+            
+            // Enviar el mensaje después de un pequeño delay
+            setTimeout(() => {
+              sendMessage(draft)
+            }, 100)
+          }
+        } else if (action) {
+          // Acción expirada o para otra sesión, limpiar
+          sessionStorage.removeItem('after_login_action')
         }
+      } catch (e) {
+        console.error('Error processing after_login_action:', e)
+        sessionStorage.removeItem('after_login_action')
       }
-    } catch (e) {
-      // Ignorar errores
-    } finally {
-      // Limpiar siempre las flags
-      sessionStorage.removeItem(`draft_${sessionId}`)
-      sessionStorage.removeItem('after_login_action')
-    }
-  }, [user, sessionId])
+    }, 500) // Delay de 500ms para asegurar que todo esté listo
+    
+    return () => clearTimeout(timer)
+  }, [user, sessionId]) // NO incluir sendMessage en las dependencias
   
   
   // Cargar historial con sanitización robusta
@@ -717,7 +740,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   }
   
-  // CAMBIO: Mejorar sendMessage para mostrar mensaje antes del auth
+  // FUNCIÓN MEJORADA: sendMessage sin agregar mensaje prematuramente
   const sendMessage = async (overrideText) => {
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
@@ -729,89 +752,44 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       sessionId
     })
 
-    // Agregar el mensaje ANTES de verificar auth
-    setInputText('')
-    addMessage(text, 'user')
-    
-    // Verificar sesión con el método más confiable
+    // Verificar sesión PRIMERO, antes de agregar el mensaje
     const loggedIn = await getIsLoggedIn()
     console.log('🚀 Login status:', loggedIn)
     console.log('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
-    console.log('🚀 window.requireAuth exists?', !!window.requireAuth)
 
-    // Si ya hubo búsquedas y NO hay login, guardamos el texto y pedimos auth
+    // Si ya hubo búsquedas y NO hay login, guardamos para después del auth
     if (propertySets.length > 0 && !loggedIn) {
-      console.log('🚀 Triggering auth popup...')
+      console.log('🚀 Triggering auth flow...')
       
-      // Guardar el mensaje para enviarlo después
-      sessionStorage.setItem(`pending_message_${sessionId}`, text)
+      // Guardar el mensaje pendiente y el draft actual
+      const action = {
+        type: 'send_draft',
+        sessionId: sessionId,
+        draft: text,
+        timestamp: Date.now()
+      }
+      sessionStorage.setItem('after_login_action', JSON.stringify(action))
+      sessionStorage.setItem(`draft_${sessionId}`, text)
       
-      // Mostrar typing mientras esperamos
-      setIsLoading(true)
+      // NO limpiar el input todavía (para que el usuario vea su mensaje)
+      // NO agregar el mensaje todavía
       
-      // Usar setTimeout para asegurar que el DOM esté listo
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && window.requireAuth) {
-          console.log('🚀 Calling window.requireAuth')
-          setIsLoading(false) // Parar typing mientras auth
-          
-          window.requireAuth('Inicia sesión para continuar la conversación', async () => {
-            console.log('🚀 Auth callback triggered')
-            // Callback cuando vuelve del auth
-            const pendingMsg = sessionStorage.getItem(`pending_message_${sessionId}`)
-            if (pendingMsg) {
-              sessionStorage.removeItem(`pending_message_${sessionId}`)
-              // Enviar el mensaje pendiente
-              setIsLoading(true)
-              try {
-                const result = await fetch('/api/chat', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    message: pendingMsg,
-                    message_type: "text",
-                    session_id: sessionId,
-                    device_id: window?.deviceId || null,
-                    topic: 'Buscar propiedades para comprar',
-                    timestamp: new Date().toISOString(),
-                    source: 'web'
-                  })
-                })
-                
-                const data = await result.json()
-                console.log('🚀 API Response after auth:', data)
-                
-                if (result.ok && data.assistant_reply) {
-                  setTimeout(() => {
-                    addMessage(data.assistant_reply, 'assistant')
-                    if (data.search_started) {
-                      setIsWaitingForCallback(true)
-                    }
-                    setIsLoading(false)
-                  }, 500)
-                } else {
-                  setIsLoading(false)
-                  addMessage('Lo siento, hubo un problema. Intenta de nuevo.', 'assistant')
-                }
-              } catch (error) {
-                console.error('🚀 Error sending pending message:', error)
-                setIsLoading(false)
-                addMessage('Error al enviar el mensaje. Por favor intenta de nuevo.', 'assistant')
-              }
-            }
-          })
-        } else {
-          console.error('🚀 window.requireAuth not found!')
-          setIsLoading(false)
-          addMessage('Error: Sistema de autenticación no disponible. Recarga la página.', 'assistant')
-        }
-      }, 100)
+      // Mostrar auth modal
+      if (typeof window !== 'undefined' && window.requireAuth) {
+        console.log('🚀 Calling window.requireAuth')
+        window.requireAuth('Inicia sesión para continuar la conversación')
+      } else {
+        console.error('🚀 window.requireAuth not found!')
+        addMessage('Error: Sistema de autenticación no disponible. Recarga la página.', 'assistant')
+      }
       return
     }
 
     console.log('🚀 No auth needed, sending message directly...')
     
-    // Si no necesita auth, enviar normalmente
+    // Si llegamos aquí, podemos enviar el mensaje
+    setInputText('')
+    addMessage(text, 'user')
     setIsLoading(true)
 
     try {
@@ -849,10 +827,12 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         }
       } else {
         setIsLoading(false)
+        addMessage('Lo siento, hubo un problema. Intenta de nuevo.', 'assistant')
       }
     } catch (error) {
       console.error('Error sending message:', error)
       setIsLoading(false)
+      addMessage('Error al enviar el mensaje. Por favor intenta de nuevo.', 'assistant')
     }
   }
 
