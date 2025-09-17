@@ -31,6 +31,7 @@ export default function HomeClient() {
   const [previousSavedCount, setPreviousSavedCount] = useState(0)
   
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
+  const [justAuthedAt, setJustAuthedAt] = useState(0)
   
   // Generar sessionId y deviceId
   useEffect(() => {
@@ -114,6 +115,27 @@ export default function HomeClient() {
     setConsent(localStorage.getItem('geo_consent') === 'true')
   }, [])
   
+  // Restaurar pestaña después del login o desde URL
+  useEffect(() => {
+    // 1) Restaurar la pestaña elegida antes del login
+    const pending = localStorage.getItem('pending_tab')
+    if (pending) {
+      setActiveTab(pending)
+      localStorage.removeItem('pending_tab')
+    }
+    
+    // 2) Si vienes de /auth/callback con ?tab=... úsalo
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab && ['chat', 'explore', 'saved', 'nearby'].includes(tab)) {
+        setActiveTab(tab)
+        // Limpiar el parámetro de la URL sin recargar
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+    }
+  }, [])
+  
   // Escuchar evento de consentimiento
   useEffect(() => {
     const handleConsent = () => {
@@ -128,27 +150,40 @@ export default function HomeClient() {
   // Usar hook de geolocalización
   useGeolocation({ sessionId, consent })
   
-  // Auth setup (mantener tu código existente)
+  // Auth setup con tracking de tiempo de autenticación
   useEffect(() => {
     const supabase = getSupabase()
     if (!supabase) return
     
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      if (session) {
+        setJustAuthedAt(Date.now())
+      }
       if (typeof window !== 'undefined') {
         window.currentUser = session?.user ?? null
       }
     })
-
+  
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session) {
+        setJustAuthedAt(Date.now())
+      }
       if (typeof window !== 'undefined') {
         window.currentUser = session?.user ?? null
       }
     })
-
+  
     return () => subscription.unsubscribe()
   }, [])
+
+// Exponer justAuthedAt globalmente
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    window.justAuthedAt = justAuthedAt
+  }
+}, [justAuthedAt])
   
   useEffect(() => {
     // Restaurar tab pendiente después del login
