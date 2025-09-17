@@ -156,6 +156,20 @@ export default function HomeClient() {
     return () => subscription.unsubscribe()
   }, [])
   
+  useEffect(() => {
+    // Restaurar tab pendiente después del login
+    const pendingTab = localStorage.getItem('pending_tab')
+    if (pendingTab && user) {
+      setActiveTab(pendingTab)
+      localStorage.removeItem('pending_tab')
+    }
+    
+    // También exponer el tab actual para el modal
+    if (typeof window !== 'undefined') {
+      window.activeTab = activeTab
+    }
+  }, [user, activeTab])
+  
   // Configurar función global de autenticación
   useEffect(() => {
     if (typeof window !== 'undefined') {
