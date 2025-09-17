@@ -22,14 +22,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     setLoading(true)
     const supabase = getSupabase()
     
-    // Guardar el estado actual antes de redirigir
+    // Guardar el tab actual
     const currentTab = window.activeTab || 'chat'
     localStorage.setItem('pending_tab', currentTab)
+    
+    const params = new URLSearchParams({
+      next: window.location.pathname,
+      sid: window.sessionId || localStorage.getItem('luci_session_id'),
+      tab: currentTab
+    })
     
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}` 
+        redirectTo: `${window.location.origin}/auth/callback?${params.toString()}`
       }
     })
   }
@@ -39,11 +45,17 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     setLoading(true)
     const supabase = getSupabase()
     
-    // Guardar el estado actual antes de redirigir
+    // Guardar el tab actual
     const currentTab = window.activeTab || 'chat'
     localStorage.setItem('pending_tab', currentTab)
     
-    const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}`
+    const params = new URLSearchParams({
+      next: window.location.pathname,
+      sid: window.sessionId || localStorage.getItem('luci_session_id'),
+      tab: currentTab
+    })
+    
+    const redirectUrl = `${window.location.origin}/auth/callback?${params.toString()}`
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
