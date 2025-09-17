@@ -112,6 +112,7 @@ export default function HomeClient() {
     
     // Verificar consentimiento guardado
     setConsent(localStorage.getItem('geo_consent') === 'true')
+  }, [])
   
   // Escuchar evento de consentimiento
   useEffect(() => {
