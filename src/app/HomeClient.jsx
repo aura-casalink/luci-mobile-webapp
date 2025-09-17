@@ -112,13 +112,6 @@ export default function HomeClient() {
     
     // Verificar consentimiento guardado
     setConsent(localStorage.getItem('geo_consent') === 'true')
-    
-    // Verificar si ya vio landing
-    const landingSeen = localStorage.getItem('landing_seen')
-    if (landingSeen) {
-      setShowLanding(false)
-    }
-  }, [])
   
   // Escuchar evento de consentimiento
   useEffect(() => {
