@@ -744,21 +744,30 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   const sendMessage = async (overrideText) => {
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
-
+    
     console.log('🚀 sendMessage called with:', text)
     console.log('🚀 Current state:', {
       propertySets: propertySets.length,
       user: !!user,
       sessionId
     })
-
+    
     // Verificar sesión PRIMERO, antes de agregar el mensaje
     const loggedIn = await getIsLoggedIn()
     console.log('🚀 Login status:', loggedIn)
     console.log('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
-
+    
     // Si ya hubo búsquedas y NO hay login, guardamos para después del auth
     if (propertySets.length > 0 && !loggedIn) {
+      console.log('🚀 Checking auth requirements...')
+      
+      // NUEVO: Evitar pedir login si acabas de autenticarte hace < 3s (rehidratación lenta)
+      if (window.justAuthedAt && Date.now() - window.justAuthedAt < 3000) {
+        console.log('🚀 Just authenticated, retrying in a moment...')
+        setTimeout(() => sendMessage(text), 600)
+        return
+      }
+      
       console.log('🚀 Triggering auth flow...')
       
       // Guardar el mensaje pendiente y el draft actual
@@ -784,14 +793,14 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       }
       return
     }
-
+    
     console.log('🚀 No auth needed, sending message directly...')
     
     // Si llegamos aquí, podemos enviar el mensaje
     setInputText('')
     addMessage(text, 'user')
     setIsLoading(true)
-
+    
     try {
       const result = await fetch('/api/chat', {
         method: 'POST',
