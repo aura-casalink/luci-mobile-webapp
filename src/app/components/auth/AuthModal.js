@@ -20,11 +20,16 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
 
   const signInWithGoogle = async () => {
     setLoading(true)
-    const supabase = getSupabase() // obtener instancia
+    const supabase = getSupabase()
+    
+    // Guardar el estado actual antes de redirigir
+    const currentTab = window.activeTab || 'chat'
+    localStorage.setItem('pending_tab', currentTab)
+    
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}` 
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}` 
       }
     })
   }
@@ -32,8 +37,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const signInWithMagicLink = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const supabase = getSupabase() // obtener instancia
-    const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}`
+    const supabase = getSupabase()
+    
+    // Guardar el estado actual antes de redirigir
+    const currentTab = window.activeTab || 'chat'
+    localStorage.setItem('pending_tab', currentTab)
+    
+    const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}`
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
