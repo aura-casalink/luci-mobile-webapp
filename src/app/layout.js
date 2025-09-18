@@ -22,6 +22,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
+      <head>
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         {/* Redirect desktop → site de escritorio, antes de hidratar */}
         <Script id="device-redirect" strategy="beforeInteractive">
