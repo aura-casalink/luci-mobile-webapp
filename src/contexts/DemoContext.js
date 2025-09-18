@@ -5,10 +5,10 @@ const DemoContext = createContext()
 
 export const DEMO_STEPS = [
   'landing_welcome',
-  'landing_scroll',
-  'landing_click_start', 
+  'landing_scroll', 
+  'landing_click_start',
   'chat_type_message',
-  'chat_show_explanation',
+  'chat_show_explanation', 
   'properties_carousel'
 ]
 
@@ -18,7 +18,7 @@ export function DemoProvider({ children }) {
   const [highlightElement, setHighlightElement] = useState(null)
   const [tooltipText, setTooltipText] = useState('')
 
-  // Activación automática por URL o localStorage
+  // Activación por URL o localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return
     
@@ -29,8 +29,6 @@ export function DemoProvider({ children }) {
     if (fromQuery || fromStorage) {
       setIsDemoActive(true)
       setCurrentStepIndex(0)
-      
-      // Guardar en localStorage para persistir
       if (fromQuery) {
         window.localStorage.setItem('demoMode', '1')
       }
@@ -41,11 +39,8 @@ export function DemoProvider({ children }) {
     setIsDemoActive(true)
     setCurrentStepIndex(0)
     
-    // Persistir en localStorage
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('demoMode', '1')
-      
-      // Agregar param a URL sin recargar
       const url = new URL(window.location)
       url.searchParams.set('demo', '1')
       window.history.pushState({}, '', url)
@@ -60,8 +55,6 @@ export function DemoProvider({ children }) {
     
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('demoMode')
-      
-      // Remover param de URL
       const url = new URL(window.location)
       url.searchParams.delete('demo')
       window.history.pushState({}, '', url)
