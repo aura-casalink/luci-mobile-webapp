@@ -181,12 +181,12 @@ export default function HomeClient() {
     return () => subscription.unsubscribe()
   }, [])
 
-// Exponer justAuthedAt globalmente
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    window.justAuthedAt = justAuthedAt
-  }
-}, [justAuthedAt])
+  // Exponer justAuthedAt globalmente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.justAuthedAt = justAuthedAt
+    }
+  }, [justAuthedAt])
   
   useEffect(() => {
     // Restaurar tab pendiente después del login
@@ -287,41 +287,42 @@ useEffect(() => {
     }
   }
 
-  if (showLanding) {
-    return <LandingPage onStart={handleStartApp} />
-  }
-
   return (
     <DemoProvider>
-      <div className="flex flex-col h-screen bg-gray-50">
-        <TopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
-        
-        <main className={`flex-1 overflow-hidden ${activeTab === 'nearby' ? 'pt-0 pb-20' : 'pt-20 pb-20'}`}>
-          {renderContent()}
-        </main>
-        
-        {!isStreetViewActive && (
-          <BottomNavigation 
-            activeTab={activeTab} 
-            onTabChange={handleTabChange}
-            savedCount={savedProperties.size}
-            hasUnvisitedSaves={hasUnvisitedSaves}
+      {showLanding ? (
+        <LandingPage onStart={handleStartApp} />
+      ) : (
+        <div className="flex flex-col h-screen bg-gray-50">
+          <TopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+          
+          <main className={`flex-1 overflow-hidden ${activeTab === 'nearby' ? 'pt-0 pb-20' : 'pt-20 pb-20'}`}>
+            {renderContent()}
+          </main>
+          
+          {!isStreetViewActive && (
+            <BottomNavigation 
+              activeTab={activeTab} 
+              onTabChange={handleTabChange}
+              savedCount={savedProperties.size}
+              hasUnvisitedSaves={hasUnvisitedSaves}
+            />
+          )}
+          
+          <AuthModal 
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            onSuccess={(user) => {
+              setUser(user)
+              setShowAuthModal(false)
+              if (typeof window !== 'undefined' && window.pendingAuthCallback) {
+                window.pendingAuthCallback()
+              }
+            }}
+            message={authMessage}
           />
-        )}
-        
-        <AuthModal 
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onSuccess={(user) => {
-            setUser(user)
-            setShowAuthModal(false)
-            if (typeof window !== 'undefined' && window.pendingAuthCallback) {
-              window.pendingAuthCallback()
-            }
-          }}
-          message={authMessage}
-        />
-      </div>
+        </div>
+      )}
+      
       <DemoOverlay />
       <DemoController onStartApp={handleStartApp} />
     </DemoProvider>
