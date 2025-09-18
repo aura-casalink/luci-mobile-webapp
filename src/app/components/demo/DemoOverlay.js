@@ -91,19 +91,24 @@ export default function DemoOverlay() {
         />
       )}
 
-      {/* Tooltip handwritten */}
+      {/* Tooltip handwritten - TEXTO BLANCO SOBRE TRANSPARENTE */}
       {tooltipText && isVisible && (
         <div 
-          className="fixed z-[100002] max-w-2xl p-6 bg-white rounded-2xl shadow-2xl"
+          className="fixed z-[100002] max-w-2xl p-6"
           style={{
-            top: '50%',
+            top: '20%',  // Mitad superior de la pantalla
             left: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateX(-50%)',
             fontFamily: '"Caveat", cursive',
-            fontSize: '1.5rem',
+            fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem', // Más pequeño en móvil
             lineHeight: '1.4',
-            color: '#0A0A23',
-            whiteSpace: 'pre-wrap'
+            color: '#FFFFFF',  // TEXTO BLANCO
+            backgroundColor: 'transparent', // SIN FONDO
+            textShadow: '0 2px 10px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6)', // Sombra para legibilidad
+            whiteSpace: 'pre-wrap',
+            padding: window.innerWidth < 768 ? '1rem' : '1.5rem', // Menos padding en móvil
+            maxHeight: '40vh', // Limitar altura en móvil
+            overflowY: 'auto'
           }}
         >
           {tooltipText}
