@@ -20,7 +20,7 @@ export default function DemoController({ onStartApp }) {
     switch(currentStep) {
       case 'landing_welcome':
         setTimeout(() => {
-          setTooltipText('¡Bienvenido al tour de Luci! Usa las flechas del teclado (← →) o los botones para navegar.')
+          setTooltipText('¡Bienvenido al tour de Luci!\n\nUsa las flechas del teclado (← →) o los botones para navegar.')
         }, 300)
         break
 
@@ -46,52 +46,79 @@ export default function DemoController({ onStartApp }) {
 
       case 'landing_click_start':
         setHighlightElement('[data-demo="start-button"]')
-        setTooltipText('Pulsa aquí para empezar tu búsqueda personalizada')
+        setTooltipText('Pulsa el botón "Comenzar a buscar" para iniciar tu búsqueda personalizada')
         
-        // Click inmediato al llegar a este paso
+        // NO AUTO-CLICK - El usuario debe pulsar manualmente
+        // Escuchar el click del usuario
         const button = document.querySelector('[data-demo="start-button"]')
         if (button) {
-          setTimeout(() => {
-            button.click()
-            if (onStartApp) onStartApp()
-            setTimeout(() => goToNextStep(), 600)
-          }, 500)
+          const handleClick = () => {
+            setTimeout(() => goToNextStep(), 500)
+            button.removeEventListener('click', handleClick)
+          }
+          button.addEventListener('click', handleClick)
         }
         break
 
       case 'chat_type_message':
-        const input = document.querySelector('[data-demo="chat-input"]')
-        if (input) {
-          setHighlightElement('[data-demo="chat-input"]')
-          setTooltipText('Observa cómo escribimos tu búsqueda en lenguaje natural...')
-          
-          const text = 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.'
-          let i = 0
-          
-          setTimeout(() => {
-            const interval = setInterval(() => {
-              if (i <= text.length) {
-                input.value = text.slice(0, i)
-                input.dispatchEvent(new Event('input', { bubbles: true }))
-                i++
-              } else {
-                clearInterval(interval)
-                
-                setTimeout(() => {
-                  const sendButton = document.querySelector('[data-demo="send-button"]')
-                  if (sendButton) sendButton.click()
-                  setTimeout(() => goToNextStep(), 1500)
-                }, 500)
-              }
-            }, 30)
-          }, 1000)
-        }
+        // Asegurar que el input está visible
+        setTimeout(() => {
+          const input = document.querySelector('[data-demo="chat-input"]')
+          if (input) {
+            setHighlightElement('[data-demo="chat-input"]')
+            setTooltipText('Observa cómo escribimos tu búsqueda en lenguaje natural...')
+            
+            const text = 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.'
+            let i = 0
+            
+            // Empezar a escribir después de un delay
+            setTimeout(() => {
+              const interval = setInterval(() => {
+                if (i <= text.length) {
+                  input.value = text.slice(0, i)
+                  // Disparar evento de input para que React actualice el estado
+                  const event = new Event('input', { bubbles: true })
+                  input.dispatchEvent(event)
+                  // También cambiar el estado directamente si es necesario
+                  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set
+                  nativeInputValueSetter.call(input, text.slice(0, i))
+                  const inputEvent = new Event('input', { bubbles: true})
+                  input.dispatchEvent(inputEvent)
+                  i++
+                } else {
+                  clearInterval(interval)
+                  
+                  // Después de escribir, encontrar el botón correcto de enviar (no el de audio)
+                  setTimeout(() => {
+                    // Buscar específicamente el botón cuando hay texto
+                    const buttons = document.querySelectorAll('[data-demo="send-button"]')
+                    let sendButton = null
+                    
+                    // El botón de enviar debe estar activo (no disabled) y visible
+                    buttons.forEach(btn => {
+                      if (!btn.disabled && btn.offsetParent !== null) {
+                        sendButton = btn
+                      }
+                    })
+                    
+                    if (sendButton) {
+                      sendButton.click()
+                      setTimeout(() => goToNextStep(), 2000)
+                    }
+                  }, 500)
+                }
+              }, 30)
+            }, 1000)
+          }
+        }, 500)
         break
 
       case 'chat_show_explanation':
         setTimeout(() => {
+          // Buscar mensajes del usuario
           const userMessages = document.querySelectorAll('[data-demo="chat-message"].from-user')
-          if (userMessages.length) {
+          if (userMessages.length > 0) {
+            // Tomar el último mensaje del usuario
             const lastMessage = userMessages[userMessages.length - 1]
             lastMessage.setAttribute('data-demo-focus', '1')
             setHighlightElement('[data-demo-focus="1"]')
@@ -102,12 +129,18 @@ export default function DemoController({ onStartApp }) {
               `Habitaclia, en proceso de sumar más.`
             )
           }
-        }, 500)
+        }, 1000)
         break
 
       case 'properties_carousel':
-        setHighlightElement('[data-demo="properties-carousel"]')
-        setTooltipText('Explora las propiedades encontradas. Puedes deslizar para ver más opciones.')
+        setTimeout(() => {
+          // Buscar el carousel de propiedades
+          const carousel = document.querySelector('[data-demo="properties-carousel"]')
+          if (carousel) {
+            setHighlightElement('[data-demo="properties-carousel"]')
+            setTooltipText('Explora las propiedades encontradas. Puedes deslizar para ver más opciones.')
+          }
+        }, 500)
         break
     }
   }, [isDemoActive, currentStep, setHighlightElement, setTooltipText, goToNextStep, onStartApp])
