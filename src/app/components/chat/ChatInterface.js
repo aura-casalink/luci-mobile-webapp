@@ -1152,6 +1152,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         <div className="p-6 bg-white border-t border-gray-200">
           <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 p-2.5 gap-2">
             <input
+              data-demo="chat-input"
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
@@ -1161,6 +1162,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
               disabled={isLoading || isPreparing || isRecording}
             />
             <button
+              data-demo="send-button"
               onClick={() => inputText.trim() ? sendMessage() : toggleRecording()}
               disabled={isLoading}
               className={`min-w-[52px] min-h-[52px] w-13 h-13 rounded-full text-white flex items-center justify-center transition-colors disabled:bg-gray-300 active:scale-95 ${
@@ -1204,9 +1206,10 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
+                    data-demo="chat-message"
                     className={`max-w-[70%] p-3 rounded-2xl ${
                       message.type === 'user'
-                        ? 'bg-gray-200 text-[#0A0A23] rounded-br-md'
+                        ? 'bg-gray-200 text-[#0A0A23] rounded-br-md from-user'
                         : message.type === 'error'
                         ? 'bg-red-100 text-red-800 border border-red-200'
                         : 'bg-white text-[#0A0A23] border border-gray-200 rounded-bl-md'
@@ -1300,6 +1303,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       <div className="p-4 bg-white border-t border-gray-200">
         <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 p-2.5 gap-2">
           <input
+            data-demo="chat-input"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -1309,6 +1313,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
             disabled={isLoading || isPreparing || isRecording || showAudioPreview}
           />
           <button
+            data-demo="send-button"
             onClick={() => inputText.trim() ? sendMessage() : toggleRecording()}
             disabled={isLoading || showAudioPreview}
             className={`min-w-[52px] min-h-[52px] w-13 h-13 rounded-full text-white flex items-center justify-center hover:bg-gray-700 transition-all active:scale-95 ${
