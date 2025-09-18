@@ -6,6 +6,7 @@ import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import SearchingAnimation from './SearchingAnimation'
+import { useDemo } from '@/contexts/DemoContext'
 
 export default function ChatInterface({ sessionId, savedProperties, user, onToggleSave, onStreetViewChange }) {
   const [messages, setMessages] = useState([])
@@ -13,6 +14,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   const [isLoading, setIsLoading] = useState(false)
   const [supabase, setSupabase] = useState(null)
   const [userIp, setUserIp] = useState(null)
+  const { isDemoActive, currentStep } = useDemo()
   
   // Inicializar supabase solo en el cliente
   useEffect(() => {
@@ -742,6 +744,88 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   
   // FUNCIÓN MEJORADA: sendMessage sin agregar mensaje prematuramente
   const sendMessage = async (overrideText) => {
+    // BLOQUEAR TODO en modo demo
+   if (isDemoActive) {
+     // NO loaders, NO toasts, NO llamadas
+     setIsLoading(false)
+     setIsPreparing(false)
+     setIsRecording(false)
+     
+     // Simular mensaje del usuario
+     const userMessage = { 
+       content: inputText || 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.', 
+       type: 'user', 
+       timestamp: new Date().toISOString(),
+       id: `demo-user-${Date.now()}`
+     }
+     setMessages(prev => [...prev, userMessage])
+     setInputText('')
+     setShowWelcome(false)
+     
+     // Simular respuesta después de 2 segundos
+     setTimeout(() => {
+       const botMessage = {
+         content: '¡Perfecto! He encontrado 5 propiedades que encajan con tus criterios en Madrid.',
+         type: 'assistant',
+         timestamp: new Date().toISOString(),
+         id: `demo-bot-${Date.now()}`
+       }
+       setMessages(prev => [...prev, botMessage])
+       
+       // Agregar propiedades de ejemplo (usa tus propiedades reales)
+       setTimeout(() => {
+         const demoProperties = [
+           {
+             property_id: 'demo1',
+             title: 'Piso luminoso en Chamberí',
+             location: 'Calle Fuencarral, Madrid',
+             neighborhood: 'Chamberí',
+             municipality: 'Madrid',
+             price: 425000,
+             pricePerSqm: 4473,
+             bedrooms: 3,
+             bathrooms: 2,
+             builtArea: 95,
+             usefulArea: 85,
+             lat: 40.4268,
+             lng: -3.7038,
+             thumbnail: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo1.jpg',
+             images: [
+               'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo1.jpg'
+             ]
+           },
+           {
+             property_id: 'demo2',
+             title: 'Ático con terraza en Retiro',
+             location: 'Calle Alcalá, Madrid',
+             neighborhood: 'Retiro',
+             municipality: 'Madrid',
+             price: 445000,
+             pricePerSqm: 4222,
+             bedrooms: 3,
+             bathrooms: 2,
+             builtArea: 105,
+             usefulArea: 95,
+             lat: 40.4150,
+             lng: -3.6823,
+             thumbnail: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo2.jpg',
+             images: [
+               'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo2.jpg'
+             ]
+           },
+           // Agregar 3 más similares...
+         ]
+         
+         setPropertySets(prev => [...prev, {
+           id: `demo-set-${Date.now()}`,
+           properties: demoProperties,
+           timestamp: new Date().toISOString()
+         }])
+       }, 1000)
+     }, 2000)
+     
+     return // NO EJECUTAR NADA MÁS
+   }
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
     
