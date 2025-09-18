@@ -20,7 +20,7 @@ export default function DemoOverlay() {
   const [highlightBox, setHighlightBox] = useState(null)
   const [isVisible, setIsVisible] = useState(false)
 
-  // Soporte para teclado
+  // Soporte teclado
   useEffect(() => {
     if (!isDemoActive) return
 
@@ -34,7 +34,7 @@ export default function DemoOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isDemoActive, canGoNext, canGoPrevious, goToNextStep, goToPreviousStep, endDemo])
 
-  // Calcular posición del highlight
+  // Calcular highlight
   useEffect(() => {
     if (highlightElement && isDemoActive) {
       const element = document.querySelector(highlightElement)
@@ -52,7 +52,7 @@ export default function DemoOverlay() {
     }
   }, [highlightElement, isDemoActive])
 
-  // Animación de entrada
+  // Fade in
   useEffect(() => {
     if (isDemoActive) {
       setTimeout(() => setIsVisible(true), 50)
@@ -65,7 +65,7 @@ export default function DemoOverlay() {
 
   return (
     <>
-      {/* Overlay oscuro */}
+      {/* Overlay negro */}
       <div 
         className="fixed inset-0 z-[100000] pointer-events-none"
         style={{ 
@@ -75,7 +75,7 @@ export default function DemoOverlay() {
         }}
       />
       
-      {/* Highlight box GOLD */}
+      {/* Highlight GOLD #D4AF37 */}
       {highlightBox && (
         <div
           className="fixed rounded-lg z-[100001] pointer-events-none"
@@ -103,45 +103,37 @@ export default function DemoOverlay() {
             fontSize: '1.5rem',
             lineHeight: '1.4',
             color: '#0A0A23',
-            whiteSpace: 'pre-wrap',
-            animation: 'demoFadeIn 0.3s ease'
+            whiteSpace: 'pre-wrap'
           }}
         >
           {tooltipText}
         </div>
       )}
 
-      {/* Navigation con z-index alto */}
+      {/* Flechas navegación */}
       <div className="fixed bottom-8 right-8 z-[100003] flex items-center gap-3 pointer-events-auto">
-        {/* Indicador de progreso */}
         <div className="bg-white rounded-full px-4 py-2 shadow-lg">
           <span className="text-sm font-medium text-gray-700">
             {currentStepIndex + 1} / {totalSteps}
           </span>
         </div>
 
-        {/* Botón anterior */}
         <button
           onClick={goToPreviousStep}
           disabled={!canGoPrevious}
           className={`w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center transition-all ${
-            canGoPrevious 
-              ? 'hover:bg-gray-100 hover:scale-110 cursor-pointer' 
-              : 'opacity-50 cursor-not-allowed'
+            canGoPrevious ? 'hover:scale-110 cursor-pointer' : 'opacity-50 cursor-not-allowed'
           }`}
           aria-label="Anterior (←)"
         >
           <ChevronLeft size={24} className="text-gray-700" />
         </button>
 
-        {/* Botón siguiente - COLOR GOLD */}
         <button
           onClick={goToNextStep}
           disabled={!canGoNext}
           className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${
-            canGoNext 
-              ? 'hover:scale-110 cursor-pointer' 
-              : 'opacity-50 cursor-not-allowed'
+            canGoNext ? 'hover:scale-110 cursor-pointer' : 'opacity-50 cursor-not-allowed'
           }`}
           style={{ backgroundColor: canGoNext ? '#D4AF37' : '#ccc' }}
           aria-label="Siguiente (→)"
@@ -149,29 +141,14 @@ export default function DemoOverlay() {
           <ChevronRight size={24} className="text-white" />
         </button>
 
-        {/* Botón cerrar */}
         <button
           onClick={endDemo}
           className="w-12 h-12 rounded-full bg-red-500 shadow-lg flex items-center justify-center hover:bg-red-600 hover:scale-110 transition-all ml-2"
-          aria-label="Cerrar demo (Esc)"
+          aria-label="Cerrar (Esc)"
         >
           <X size={20} className="text-white" />
         </button>
       </div>
-
-      {/* Estilos de animación */}
-      <style jsx>{`
-        @keyframes demoFadeIn {
-          from { 
-            opacity: 0; 
-            transform: translate(-50%, -48%); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translate(-50%, -50%); 
-          }
-        }
-      `}</style>
     </>
   )
 }
