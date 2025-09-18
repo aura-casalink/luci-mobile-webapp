@@ -1,7 +1,9 @@
 // src/app/components/landing/LandingPage.jsx
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles, Clock, Shield, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, MapPin, Heart, Sparkles, Clock, Shield, X, PlayCircle } from 'lucide-react'
+import { useDemo } from '@/contexts/DemoContext'
+
 
 export default function LandingPage({ onStart }) {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -13,6 +15,7 @@ export default function LandingPage({ onStart }) {
   const [showGeoConsent, setShowGeoConsent] = useState(false)
   const videoRef = useRef(null)
   const nextVideoRef = useRef(null)
+  const { startDemo } = useDemo()
 
   // URLs de los videos en Cloudinary
   const videoUrls = [
@@ -180,11 +183,21 @@ export default function LandingPage({ onStart }) {
             <div className="text-xl md:text-2xl lg:text-3xl mb-10 md:mb-12 max-w-3xl space-y-2" style={{ color: '#FAFAFA' }}>
               <p>Busca a la vez en todos los portales inmobiliarios.</p>
               <p>La IA filtra por ti características que no están en otras plataformas.</p>
-              <p className="font-bold">Bienvenido al Skyscanner inmobiliario.</p>
+              <p className="font-bold" data-demo="skyscanner-section">Bienvenido al Skyscanner inmobiliario.</p>
             </div>
 
+            {/* Botón Demo */}
+           <button
+             onClick={startDemo}
+             className="inline-flex items-center gap-2 px-6 py-3 mb-4 mr-4 bg-white text-gray-800 rounded-full font-medium hover:bg-gray-100 transition-all"
+           >
+             <PlayCircle size={20} />
+             Ver Demo
+           </button>
+            
             <button
               onClick={onStart}
+              data-demo="start-button
               className="group relative inline-flex items-center justify-center px-10 md:px-12 py-5 md:py-6 text-xl md:text-2xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
               style={{ 
                 backgroundColor: '#FFB300',
