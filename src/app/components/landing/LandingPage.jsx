@@ -197,7 +197,7 @@ export default function LandingPage({ onStart }) {
             
             <button
               onClick={onStart}
-              data-demo="start-button
+              data-demo="start-button"
               className="group relative inline-flex items-center justify-center px-10 md:px-12 py-5 md:py-6 text-xl md:text-2xl font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
               style={{ 
                 backgroundColor: '#FFB300',
