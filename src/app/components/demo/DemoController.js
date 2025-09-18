@@ -14,7 +14,6 @@ export default function DemoController({ onStartApp }) {
   useEffect(() => {
     if (!isDemoActive || !currentStep) return
 
-    // Limpiar estado anterior
     setHighlightElement(null)
     setTooltipText('')
 
@@ -31,7 +30,6 @@ export default function DemoController({ onStartApp }) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' })
           setTimeout(() => {
             setHighlightElement('[data-demo="skyscanner-section"]')
-            // TEXTO COMPLETO EXACTO
             setTooltipText(
               `Queremos devolver tiempo a las personas en el arduo proceso de compra de su piso.\n\n` +
               `Para ello, tenemos la potencia tecnológica de buscar por todo internet, y comparar lo que existe allí con las ` +
@@ -48,9 +46,9 @@ export default function DemoController({ onStartApp }) {
 
       case 'landing_click_start':
         setHighlightElement('[data-demo="start-button"]')
-        setTooltipText('Ahora vamos a empezar tu búsqueda personalizada...')
+        setTooltipText('Pulsa aquí para empezar tu búsqueda personalizada')
         
-        // Click INMEDIATO cuando llega a este paso
+        // Click inmediato al llegar a este paso
         const button = document.querySelector('[data-demo="start-button"]')
         if (button) {
           setTimeout(() => {
@@ -67,7 +65,6 @@ export default function DemoController({ onStartApp }) {
           setHighlightElement('[data-demo="chat-input"]')
           setTooltipText('Observa cómo escribimos tu búsqueda en lenguaje natural...')
           
-          // Simular escritura
           const text = 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.'
           let i = 0
           
@@ -80,12 +77,9 @@ export default function DemoController({ onStartApp }) {
               } else {
                 clearInterval(interval)
                 
-                // Simular envío del mensaje
                 setTimeout(() => {
                   const sendButton = document.querySelector('[data-demo="send-button"]')
-                  if (sendButton) {
-                    sendButton.click()
-                  }
+                  if (sendButton) sendButton.click()
                   setTimeout(() => goToNextStep(), 1500)
                 }, 500)
               }
@@ -95,7 +89,6 @@ export default function DemoController({ onStartApp }) {
         break
 
       case 'chat_show_explanation':
-        // Resaltar SOLO el último mensaje del usuario
         setTimeout(() => {
           const userMessages = document.querySelectorAll('[data-demo="chat-message"].from-user')
           if (userMessages.length) {
@@ -114,4 +107,10 @@ export default function DemoController({ onStartApp }) {
 
       case 'properties_carousel':
         setHighlightElement('[data-demo="properties-carousel"]')
-        setTooltipText('Explora las propiedades encontradas. Puedes desliz
+        setTooltipText('Explora las propiedades encontradas. Puedes deslizar para ver más opciones.')
+        break
+    }
+  }, [isDemoActive, currentStep, setHighlightElement, setTooltipText, goToNextStep, onStartApp])
+
+  return null
+}
