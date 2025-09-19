@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useDemo } from '@/contexts/DemoContext'
 
@@ -20,6 +20,7 @@ export default function DemoOverlay() {
   const [highlightBox, setHighlightBox] = useState(null)
   const [isVisible, setIsVisible] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ bottom: '120px' })
+  const updateIntervalRef = useRef(null)
 
   // Soporte teclado
   useEffect(() => {
@@ -35,66 +36,82 @@ export default function DemoOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isDemoActive, canGoNext, canGoPrevious, goToNextStep, goToPreviousStep, endDemo])
 
-  // Calcular highlight y posición del tooltip
+  // Actualizar highlight continuamente para elementos que se mueven
   useEffect(() => {
+    // Limpiar intervalo anterior
+    if (updateIntervalRef.current) {
+      clearInterval(updateIntervalRef.current)
+      updateIntervalRef.current = null
+    }
+
     if (highlightElement && isDemoActive) {
-      const element = document.querySelector(highlightElement)
-      if (element) {
-        const rect = element.getBoundingClientRect()
-        setHighlightBox({
-          top: rect.top - 8,
-          left: rect.left - 8,
-          width: rect.width + 16,
-          height: rect.height + 16
-        })
-        
-        // Ajustar posición del tooltip según el paso
-        switch(currentStepIndex) {
-          case 1: // Paso 2/6 - landing_scroll
-            // Texto ENCIMA del elemento resaltado, centrado
-            setTooltipPosition({
-              bottom: `${window.innerHeight - rect.top + 20}px`,
-              left: '5%',
-              right: '5%',
-              transform: 'none'
-            })
-            break
-          case 2: // Paso 3/6 - landing_click_start
-            // Texto en la parte superior de la pantalla
-            setTooltipPosition({
-              top: '20%',
-              left: '5%',
-              right: '5%'
-            })
-            break
-          case 3: // Paso 4/6 - chat_type_message
-            // Texto ENCIMA de la barra de escritura
-            setTooltipPosition({
-              bottom: `${window.innerHeight - rect.top + 20}px`,
-              left: '5%',
-              right: '5%'
-            })
-            break
-          case 4: // Paso 5/6 - chat_show_explanation
-            // Cerca de las flechas para no interferir con el carrusel
-            setTooltipPosition({ 
-              bottom: '120px',
-              left: '5%',
-              right: '5%'
-            })
-            break
-          default:
-            // Para otros pasos, cerca de las flechas
-            setTooltipPosition({ 
-              bottom: '120px',
-              left: '5%',
-              right: '5%'
-            })
+      const updateHighlight = () => {
+        const element = document.querySelector(highlightElement)
+        if (element) {
+          const rect = element.getBoundingClientRect()
+          setHighlightBox({
+            top: rect.top - 8,
+            left: rect.left - 8,
+            width: rect.width + 16,
+            height: rect.height + 16
+          })
+          
+          // Ajustar posición del tooltip según el paso
+          switch(currentStepIndex) {
+            case 1: // landing_scroll
+              setTooltipPosition({
+                bottom: `${window.innerHeight - rect.top + 20}px`,
+                left: '5%',
+                right: '5%'
+              })
+              break
+            case 2: // landing_click_start
+              setTooltipPosition({
+                top: '20%',
+                left: '5%',
+                right: '5%'
+              })
+              break
+            case 3: // chat_type_message
+              setTooltipPosition({
+                bottom: `${window.innerHeight - rect.top + 20}px`,
+                left: '5%',
+                right: '5%'
+              })
+              break
+            case 4: // chat_show_explanation - Actualización continua para seguir el scroll
+              setTooltipPosition({ 
+                bottom: '120px',
+                left: '5%',
+                right: '5%'
+              })
+              break
+            default:
+              setTooltipPosition({ 
+                bottom: '120px',
+                left: '5%',
+                right: '5%'
+              })
+          }
         }
+      }
+
+      // Actualizar inmediatamente
+      updateHighlight()
+
+      // Para el paso 4 (chat_show_explanation), actualizar continuamente
+      if (currentStepIndex === 4) {
+        updateIntervalRef.current = setInterval(updateHighlight, 100)
       }
     } else {
       setHighlightBox(null)
       setTooltipPosition({ bottom: '120px', left: '5%', right: '5%' })
+    }
+
+    return () => {
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current)
+      }
     }
   }, [highlightElement, isDemoActive, currentStepIndex])
 
@@ -122,7 +139,7 @@ export default function DemoOverlay() {
             height: `${highlightBox.height}px`,
             border: '4px solid #D4AF37',
             boxShadow: '0 0 30px rgba(212, 175, 55, 0.8), 0 0 60px rgba(212, 175, 55, 0.4)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            transition: currentStepIndex === 4 ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         />
       )}
