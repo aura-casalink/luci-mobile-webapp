@@ -746,86 +746,160 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   const sendMessage = async (overrideText) => {
     // BLOQUEAR TODO en modo demo
    if (isDemoActive) {
-     // NO loaders, NO toasts, NO llamadas
-     setIsLoading(false)
-     setIsPreparing(false)
-     setIsRecording(false)
-     
-     // Simular mensaje del usuario
-     const userMessage = { 
-       content: inputText || 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.', 
-       type: 'user', 
-       timestamp: new Date().toISOString(),
-       id: `demo-user-${Date.now()}`
-     }
-     setMessages(prev => [...prev, userMessage])
-     setInputText('')
-     setShowWelcome(false)
-     
-     // Simular respuesta después de 2 segundos
-     setTimeout(() => {
-       const botMessage = {
-         content: '¡Perfecto! He encontrado 5 propiedades que encajan con tus criterios en Madrid.',
-         type: 'assistant',
-         timestamp: new Date().toISOString(),
-         id: `demo-bot-${Date.now()}`
-       }
-       setMessages(prev => [...prev, botMessage])
-       
-       // Agregar propiedades de ejemplo (usa tus propiedades reales)
-       setTimeout(() => {
-         const demoProperties = [
-           {
-             property_id: 'demo1',
-             title: 'Piso luminoso en Chamberí',
-             location: 'Calle Fuencarral, Madrid',
-             neighborhood: 'Chamberí',
-             municipality: 'Madrid',
-             price: 425000,
-             pricePerSqm: 4473,
-             bedrooms: 3,
-             bathrooms: 2,
-             builtArea: 95,
-             usefulArea: 85,
-             lat: 40.4268,
-             lng: -3.7038,
-             thumbnail: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo1.jpg',
-             images: [
-               'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo1.jpg'
-             ]
-           },
-           {
-             property_id: 'demo2',
-             title: 'Ático con terraza en Retiro',
-             location: 'Calle Alcalá, Madrid',
-             neighborhood: 'Retiro',
-             municipality: 'Madrid',
-             price: 445000,
-             pricePerSqm: 4222,
-             bedrooms: 3,
-             bathrooms: 2,
-             builtArea: 105,
-             usefulArea: 95,
-             lat: 40.4150,
-             lng: -3.6823,
-             thumbnail: 'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo2.jpg',
-             images: [
-               'https://res.cloudinary.com/dr3mimpok/image/upload/v1733420507/properties/demo2.jpg'
-             ]
-           },
-           // Agregar 3 más similares...
-         ]
-         
-         setPropertySets(prev => [...prev, {
-           id: `demo-set-${Date.now()}`,
-           properties: demoProperties,
-           timestamp: new Date().toISOString()
-         }])
-       }, 1000)
-     }, 2000)
-     
-     return // NO EJECUTAR NADA MÁS
-   }
+    // NO loaders, NO toasts, NO llamadas
+    setIsLoading(false)
+    setIsPreparing(false)
+    setIsRecording(false)
+    
+    // Simular mensaje del usuario
+    const userMessage = { 
+      content: inputText || 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.', 
+      type: 'user', 
+      timestamp: new Date().toISOString(),
+      id: `demo-user-${Date.now()}`
+    }
+    setMessages(prev => [...prev, userMessage])
+    setInputText('')
+    setShowWelcome(false)
+    
+    // Simular respuesta después de 2 segundos
+    setTimeout(() => {
+      const botMessage = {
+        content: '¡Perfecto! He encontrado 36 propiedades que encajan con tus criterios en Madrid.',
+        type: 'assistant',
+        timestamp: new Date().toISOString(),
+        id: `demo-bot-${Date.now()}`
+      }
+      setMessages(prev => [...prev, botMessage])
+      
+      // Agregar 5 propiedades de ejemplo con imágenes
+      setTimeout(() => {
+        const demoProperties = [
+          {
+            property_id: 'demo1',
+            title: 'Piso luminoso en Chamberí',
+            location: 'Calle Fuencarral, Madrid',
+            neighborhood: 'Chamberí',
+            municipality: 'Madrid',
+            price: 425000,
+            pricePerSqm: 4473,
+            bedrooms: 3,
+            bathrooms: 2,
+            builtArea: 95,
+            usefulArea: 85,
+            lat: 40.4268,
+            lng: -3.7038,
+            thumbnail: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop',
+            images: [
+              'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800',
+              'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+              'https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=800'
+            ]
+          },
+          {
+            property_id: 'demo2',
+            title: 'Ático con terraza en Retiro',
+            location: 'Calle Alcalá, Madrid',
+            neighborhood: 'Retiro',
+            municipality: 'Madrid',
+            price: 445000,
+            pricePerSqm: 4222,
+            bedrooms: 3,
+            bathrooms: 2,
+            builtArea: 105,
+            usefulArea: 95,
+            lat: 40.4150,
+            lng: -3.6823,
+            thumbnail: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
+            images: [
+              'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+              'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=800',
+              'https://images.unsplash.com/photo-1558442086-8ea19a79cd4d?w=800'
+            ]
+          },
+          {
+            property_id: 'demo3',
+            title: 'Dúplex reformado en Malasaña',
+            location: 'Calle San Bernardo, Madrid',
+            neighborhood: 'Malasaña',
+            municipality: 'Madrid',
+            price: 395000,
+            pricePerSqm: 4388,
+            bedrooms: 3,
+            bathrooms: 2,
+            builtArea: 90,
+            usefulArea: 82,
+            lat: 40.4265,
+            lng: -3.7055,
+            thumbnail: 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=400&h=300&fit=crop',
+            images: [
+              'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800',
+              'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800',
+              'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800'
+            ]
+          },
+          {
+            property_id: 'demo4',
+            title: 'Piso exterior en Salamanca',
+            location: 'Calle Serrano, Madrid',
+            neighborhood: 'Salamanca',
+            municipality: 'Madrid',
+            price: 520000,
+            pricePerSqm: 5200,
+            bedrooms: 3,
+            bathrooms: 2,
+            builtArea: 100,
+            usefulArea: 90,
+            lat: 40.4305,
+            lng: -3.6845,
+            thumbnail: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop',
+            images: [
+              'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800',
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
+              'https://images.unsplash.com/photo-1522444121501-72a29d632e31?w=800'
+            ]
+          },
+          {
+            property_id: 'demo5',
+            title: 'Apartamento moderno en Chueca',
+            location: 'Plaza de Chueca, Madrid',
+            neighborhood: 'Chueca',
+            municipality: 'Madrid',
+            price: 410000,
+            pricePerSqm: 4555,
+            bedrooms: 3,
+            bathrooms: 2,
+            builtArea: 90,
+            usefulArea: 80,
+            lat: 40.4226,
+            lng: -3.6977,
+            thumbnail: 'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=400&h=300&fit=crop',
+            images: [
+              'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=800',
+              'https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=800',
+              'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=800'
+            ]
+          }
+        ]
+        
+        setPropertySets(prev => [...prev, {
+          id: `demo-set-${Date.now()}`,
+          properties: demoProperties,
+          timestamp: new Date().toISOString()
+        }])
+        
+        // Marcar el carousel como data-demo para el siguiente paso
+        setTimeout(() => {
+          const carousel = document.querySelector('.flex.overflow-x-auto')
+          if (carousel) {
+            carousel.setAttribute('data-demo', 'properties-carousel')
+          }
+        }, 100)
+      }, 1000)
+    }, 2000)
+    
+    return // NO EJECUTAR NADA MÁS
+  }
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
     
