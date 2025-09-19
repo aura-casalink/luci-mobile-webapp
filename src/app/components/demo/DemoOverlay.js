@@ -51,33 +51,50 @@ export default function DemoOverlay() {
         // Ajustar posición del tooltip según el paso
         switch(currentStepIndex) {
           case 1: // Paso 2/6 - landing_scroll
+            // Texto ENCIMA del elemento resaltado, centrado
             setTooltipPosition({
-              top: `${rect.top - 20}px`,
-              transform: 'translateY(-100%)'
+              bottom: `${window.innerHeight - rect.top + 20}px`,
+              left: '5%',
+              right: '5%',
+              transform: 'none'
             })
             break
           case 2: // Paso 3/6 - landing_click_start
             // Texto en la parte superior de la pantalla
             setTooltipPosition({
               top: '20%',
-              transform: 'translateX(-50%)'
+              left: '5%',
+              right: '5%'
             })
             break
           case 3: // Paso 4/6 - chat_type_message
-            // Texto en la parte superior de la pantalla
+            // Texto ENCIMA de la barra de escritura
             setTooltipPosition({
-              top: '20%',
-              transform: 'translateX(-50%)'
+              bottom: `${window.innerHeight - rect.top + 20}px`,
+              left: '5%',
+              right: '5%'
+            })
+            break
+          case 4: // Paso 5/6 - chat_show_explanation
+            // Cerca de las flechas para no interferir con el carrusel
+            setTooltipPosition({ 
+              bottom: '120px',
+              left: '5%',
+              right: '5%'
             })
             break
           default:
             // Para otros pasos, cerca de las flechas
-            setTooltipPosition({ bottom: '120px' })
+            setTooltipPosition({ 
+              bottom: '120px',
+              left: '5%',
+              right: '5%'
+            })
         }
       }
     } else {
       setHighlightBox(null)
-      setTooltipPosition({ bottom: '120px' })
+      setTooltipPosition({ bottom: '120px', left: '5%', right: '5%' })
     }
   }, [highlightElement, isDemoActive, currentStepIndex])
 
@@ -115,17 +132,7 @@ export default function DemoOverlay() {
         <div 
           className="fixed z-[100004]"
           style={{
-            ...(tooltipPosition.top ? {
-              top: tooltipPosition.top,
-              left: '50%',
-              transform: tooltipPosition.transform || 'translateX(-50%)'
-            } : {
-              bottom: tooltipPosition.bottom,
-              left: '5%',
-              right: '5%'
-            }),
-            width: tooltipPosition.top ? '90vw' : 'auto',
-            maxWidth: tooltipPosition.top ? '90vw' : 'none',
+            ...tooltipPosition,
             fontFamily: '"Caveat", cursive',
             fontSize: window.innerWidth < 768 ? '1.5rem' : '1.8rem',
             lineHeight: '1.3',
