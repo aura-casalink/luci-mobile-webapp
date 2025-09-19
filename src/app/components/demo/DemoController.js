@@ -71,60 +71,25 @@ export default function DemoController({ onStartApp }) {
             setTimeout(() => {
               const interval = setInterval(() => {
                 if (i <= text.length) {
-                  // Actualizar el valor del input Y el estado de React
                   input.value = text.slice(0, i)
-                  
-                  // Forzar actualización del estado de React
                   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set
                   nativeInputValueSetter.call(input, text.slice(0, i))
-                  
-                  // Disparar evento para que React detecte el cambio
                   const event = new Event('input', { bubbles: true })
                   input.dispatchEvent(event)
-                  
-                  // También disparar onChange por si acaso
-                  const changeEvent = new Event('change', { bubbles: true })
-                  input.dispatchEvent(changeEvent)
-                  
                   i++
                 } else {
                   clearInterval(interval)
                   
-                  // Esperar un poco para asegurar que el botón cambia de estado
                   setTimeout(() => {
-                    // El botón debería haber cambiado porque hay texto
-                    // Buscar el botón que esté visible y activo
                     const sendButton = document.querySelector('[data-demo="send-button"]')
-                    
                     if (sendButton) {
-                      // Verificar que el botón tiene el icono de enviar (no el de micrófono)
                       const hasSendIcon = sendButton.querySelector('svg path[d*="M12 2L12 22"]')
-                      
                       if (hasSendIcon) {
-                        // Es el botón correcto de enviar
-                        console.log('Clicking send button with text')
                         sendButton.click()
-                      } else {
-                        // Intentar forzar el click del formulario
-                        console.log('Attempting form submit')
-                        const form = input.closest('form')
-                        if (form) {
-                          form.requestSubmit()
-                        } else {
-                          // Como último recurso, simular Enter
-                          const enterEvent = new KeyboardEvent('keypress', {
-                            key: 'Enter',
-                            code: 'Enter',
-                            keyCode: 13,
-                            bubbles: true
-                          })
-                          input.dispatchEvent(enterEvent)
-                        }
                       }
-                      
                       setTimeout(() => goToNextStep(), 2000)
                     }
-                  }, 1000) // Esperar 1 segundo para que React actualice el botón
+                  }, 1000)
                 }
               }, 30)
             }, 1000)
@@ -137,14 +102,20 @@ export default function DemoController({ onStartApp }) {
           const userMessages = document.querySelectorAll('[data-demo="chat-message"].from-user')
           if (userMessages.length > 0) {
             const lastMessage = userMessages[userMessages.length - 1]
-            lastMessage.setAttribute('data-demo-focus', '1')
-            setHighlightElement('[data-demo-focus="1"]')
             
-            setTooltipText(
-              `A partir del texto o de una nota de voz, nuestra inteligencia artificial descompone lo que es importante ` +
-              `y busca en <10" en los principales portales inmobiliarios, actualmente integrados Idealista, Fotocasa y ` +
-              `Habitaclia, en proceso de sumar más.`
-            )
+            // Hacer scroll para mantener el mensaje visible cuando aparece el carrusel
+            lastMessage.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            
+            setTimeout(() => {
+              lastMessage.setAttribute('data-demo-focus', '1')
+              setHighlightElement('[data-demo-focus="1"]')
+              
+              setTooltipText(
+                `A partir del texto o de una nota de voz, nuestra inteligencia artificial descompone lo que es importante ` +
+                `y busca en <10" en los principales portales inmobiliarios, actualmente integrados Idealista, Fotocasa y ` +
+                `Habitaclia, en proceso de sumar más.`
+              )
+            }, 500)
           }
         }, 1000)
         break
@@ -153,10 +124,164 @@ export default function DemoController({ onStartApp }) {
         setTimeout(() => {
           const carousel = document.querySelector('[data-demo="properties-carousel"]')
           if (carousel) {
+            carousel.scrollIntoView({ behavior: 'smooth', block: 'center' })
             setHighlightElement('[data-demo="properties-carousel"]')
             setTooltipText('Explora las propiedades encontradas. Puedes deslizar para ver más opciones.')
           }
         }, 500)
+        break
+
+      case 'properties_scroll':
+        // Deslizar automáticamente el carrusel
+        const carousel = document.querySelector('[data-demo="properties-carousel"]')
+        if (carousel) {
+          setHighlightElement('[data-demo="properties-carousel"]')
+          setTooltipText('Observa cómo puedes deslizar para ver más propiedades...')
+          
+          // Animar el scroll del carrusel
+          let scrollAmount = 0
+          const scrollStep = 5
+          const scrollInterval = setInterval(() => {
+            carousel.scrollLeft += scrollStep
+            scrollAmount += scrollStep
+            
+            if (scrollAmount >= 600) { // Aproximadamente 2 propiedades
+              clearInterval(scrollInterval)
+              
+              // Resaltar la tercera propiedad
+              setTimeout(() => {
+                const thirdProperty = carousel.children[2]
+                if (thirdProperty) {
+                  thirdProperty.setAttribute('data-demo-property', '1')
+                  setHighlightElement('[data-demo-property="1"]')
+                  setTooltipText('Haz clic en esta propiedad para ver todos los detalles')
+                  
+                  // Esperar click del usuario
+                  const handlePropertyClick = () => {
+                    setTimeout(() => goToNextStep(), 500)
+                    thirdProperty.removeEventListener('click', handlePropertyClick)
+                  }
+                  thirdProperty.addEventListener('click', handlePropertyClick)
+                }
+              }, 1000)
+            }
+          }, 20)
+        }
+        break
+
+      case 'property_open':
+        // La propiedad ya debería estar abierta
+        setTimeout(() => {
+          setTooltipText('Aquí puedes ver todos los detalles de la propiedad: fotos, características, ubicación y más.')
+          setTimeout(() => goToNextStep(), 3000)
+        }, 1000)
+        break
+
+      case 'property_contact':
+        // Scroll hasta "Contacta con ventas"
+        setTimeout(() => {
+          const contactSection = document.querySelector('[data-demo="contact-sales"]')
+          if (contactSection) {
+            contactSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            setTimeout(() => {
+              setHighlightElement('[data-demo="contact-sales"]')
+              setTooltipText('Una vez encontramos el piso ideal, nuestro equipo de ventas se encarga de ponerse en contacto con la propiedad y realizar la intermediación.')
+              setTimeout(() => goToNextStep(), 4000)
+            }, 1000)
+          }
+        }, 500)
+        break
+
+      case 'property_street_view':
+        // Mostrar Street View
+        setTimeout(() => {
+          const streetViewButton = document.querySelector('[data-demo="street-view"]')
+          if (streetViewButton) {
+            streetViewButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            setTimeout(() => {
+              setHighlightElement('[data-demo="street-view"]')
+              setTooltipText('Explora los alrededores con Street View para conocer mejor el barrio')
+              
+              // Click en Street View
+              setTimeout(() => {
+                streetViewButton.click()
+                
+                // Cerrar después de 3 segundos
+                setTimeout(() => {
+                  const closeButton = document.querySelector('[data-demo="close-street-view"]')
+                  if (closeButton) closeButton.click()
+                  goToNextStep()
+                }, 3000)
+              }, 2000)
+            }, 1000)
+          }
+        }, 500)
+        break
+
+      case 'property_question':
+        // Ir a la barra de preguntas
+        setTimeout(() => {
+          const questionInput = document.querySelector('[data-demo="property-question-input"]')
+          if (questionInput) {
+            questionInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            setTimeout(() => {
+              setHighlightElement('[data-demo="property-question-bar"]')
+              setTooltipText('Puedes hacer preguntas específicas sobre cualquier propiedad')
+              
+              // Escribir la pregunta
+              const question = '¿Cuántos pisos similares a este en el mismo barrio valen menos en este momento?'
+              let i = 0
+              
+              setTimeout(() => {
+                const interval = setInterval(() => {
+                  if (i <= question.length) {
+                    questionInput.value = question.slice(0, i)
+                    const event = new Event('input', { bubbles: true })
+                    questionInput.dispatchEvent(event)
+                    i++
+                  } else {
+                    clearInterval(interval)
+                    
+                    // Simular envío
+                    setTimeout(() => {
+                      const sendButton = document.querySelector('[data-demo="send-property-question"]')
+                      if (sendButton) {
+                        sendButton.click()
+                        setTimeout(() => goToNextStep(), 1000)
+                      }
+                    }, 500)
+                  }
+                }, 30)
+              }, 2000)
+            }, 1000)
+          }
+        }, 500)
+        break
+
+      case 'property_answer':
+        // Mostrar respuesta
+        setTimeout(() => {
+          setTooltipText('Luci analiza el mercado en tiempo real y te da información actualizada')
+          
+          // Simular respuesta del chat
+          const responseContainer = document.querySelector('[data-demo="property-responses"]')
+          if (responseContainer) {
+            const response = document.createElement('div')
+            response.className = 'p-3 bg-white border border-gray-200 rounded-lg mt-2'
+            response.innerHTML = `
+              <p class="text-sm text-gray-700">Actualmente solamente estos 2 pisos que te dejo a continuación están por debajo de este precio:</p>
+              <div class="mt-2 space-y-2">
+                <div class="p-2 bg-gray-50 rounded text-sm">• Piso en Calle Goya - 389.000€</div>
+                <div class="p-2 bg-gray-50 rounded text-sm">• Piso en Calle Velázquez - 415.000€</div>
+              </div>
+            `
+            responseContainer.appendChild(response)
+          }
+          
+          setTimeout(() => {
+            setTooltipText('¡Demo completado! Ya conoces todas las funcionalidades de Luci. ¿Listo para encontrar tu hogar ideal?')
+          }, 3000)
+        }, 1000)
         break
     }
   }, [isDemoActive, currentStep, setHighlightElement, setTooltipText, goToNextStep, onStartApp])
