@@ -71,46 +71,64 @@ export default function DemoController({ onStartApp }) {
             setTimeout(() => {
               const interval = setInterval(() => {
                 if (i <= text.length) {
-                  input.value = text.slice(0, i)
+                  // Actualizar el valor
+                  const currentText = text.slice(0, i)
+                  input.value = currentText
                   
-                  // Actualizar React de múltiples formas
+                  // Método 1: Actualizar via setter nativo
                   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set
-                  nativeInputValueSetter.call(input, text.slice(0, i))
+                  nativeInputValueSetter.call(input, currentText)
                   
-                  const inputEvent = new Event('input', { bubbles: true })
-                  input.dispatchEvent(inputEvent)
+                  // Método 2: Disparar evento React
+                  const reactEvent = new Event('input', { bubbles: true })
+                  Object.defineProperty(reactEvent, 'target', {
+                    value: input,
+                    enumerable: true
+                  })
+                  input.dispatchEvent(reactEvent)
                   
+                  // Método 3: Forzar onChange también
                   const changeEvent = new Event('change', { bubbles: true })
                   input.dispatchEvent(changeEvent)
+                  
+                  // Método 4: Si el input tiene un handler React, llamarlo directamente
+                  const reactProps = Object.keys(input).find(key => key.startsWith('__reactProps'))
+                  if (reactProps && input[reactProps].onChange) {
+                    input[reactProps].onChange({ target: { value: currentText } })
+                  }
                   
                   i++
                 } else {
                   clearInterval(interval)
                   
-                  // Esperar más tiempo para que React actualice
+                  // Después de escribir todo el texto, esperar y buscar el botón correcto
                   setTimeout(() => {
-                    let sendButton = document.querySelector('[data-demo="send-button"]')
+                    // Verificar que el input tenga el texto completo
+                    console.log('Demo: Input value is:', input.value)
                     
-                    if (!sendButton) {
-                      const buttons = document.querySelectorAll('button')
-                      buttons.forEach(btn => {
-                        const svg = btn.querySelector('svg')
-                        if (svg && btn.offsetParent !== null && !btn.disabled) {
-                          const path = svg.querySelector('path[d*="M12 2"]')
-                          if (path) {
-                            sendButton = btn
-                          }
+                    // Buscar específicamente el botón con el icono de enviar
+                    const buttons = document.querySelectorAll('button')
+                    let sendButton = null
+                    
+                    buttons.forEach(btn => {
+                      // Buscar el SVG con la flecha hacia arriba (icono de enviar)
+                      const svg = btn.querySelector('svg')
+                      if (svg) {
+                        const pathWithArrow = svg.querySelector('path[d*="M12 2L12 22"]') || 
+                                             svg.querySelector('path[d*="M12 2L5 9"]')
+                        if (pathWithArrow && !btn.disabled) {
+                          sendButton = btn
+                          console.log('Demo: Found send button with arrow icon')
                         }
-                      })
-                    }
+                      }
+                    })
                     
-                    if (sendButton && !sendButton.disabled) {
-                      console.log('Demo: Clicking send button')
-                      sendButton.click()
-                      setTimeout(() => goToNextStep(), 2500)
-                    } else {
-                      console.log('Demo: Send button not found, trying Enter')
-                      const enterEvent = new KeyboardEvent('keypress', {
+                    // Si no encontramos el botón con flecha, el estado no se actualizó
+                    if (!sendButton) {
+                      console.log('Demo: No send button found, forcing update')
+                      
+                      // Último intento: disparar manualmente el evento con tecla Enter
+                      const enterEvent = new KeyboardEvent('keydown', {
                         key: 'Enter',
                         code: 'Enter',
                         keyCode: 13,
@@ -118,10 +136,32 @@ export default function DemoController({ onStartApp }) {
                         bubbles: true,
                         cancelable: true
                       })
+                      
+                      // Primero asegurarnos de que el input tiene el foco
+                      input.focus()
+                      
+                      // Disparar el evento
                       input.dispatchEvent(enterEvent)
+                      
+                      // También intentar con keypress
+                      const keypressEvent = new KeyboardEvent('keypress', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        which: 13,
+                        bubbles: true,
+                        cancelable: true
+                      })
+                      input.dispatchEvent(keypressEvent)
+                      
+                      setTimeout(() => goToNextStep(), 2500)
+                    } else {
+                      // Si encontramos el botón, hacer click
+                      sendButton.click()
+                      console.log('Demo: Clicked send button')
                       setTimeout(() => goToNextStep(), 2500)
                     }
-                  }, 1500)
+                  }, 2000) // Esperar 2 segundos completos para que React se actualice
                 }
               }, 30)
             }, 1000)
