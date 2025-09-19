@@ -35,7 +35,7 @@ export default function DemoOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isDemoActive, canGoNext, canGoPrevious, goToNextStep, goToPreviousStep, endDemo])
 
-  // Calcular highlight
+  // Calcular highlight y posición del tooltip
   useEffect(() => {
     if (highlightElement && isDemoActive) {
       const element = document.querySelector(highlightElement)
@@ -48,15 +48,31 @@ export default function DemoOverlay() {
           height: rect.height + 16
         })
         
-        // Para el paso 2/6 (landing_scroll), posicionar el texto arriba del elemento
-        if (currentStepIndex === 1) { // Paso 2 es índice 1
-          setTooltipPosition({
-            top: `${rect.top - 20}px`,
-            transform: 'translateY(-100%)'
-          })
-        } else {
-          // Para otros pasos, cerca de las flechas
-          setTooltipPosition({ bottom: '120px' })
+        // Ajustar posición del tooltip según el paso
+        switch(currentStepIndex) {
+          case 1: // Paso 2/6 - landing_scroll
+            setTooltipPosition({
+              top: `${rect.top - 20}px`,
+              transform: 'translateY(-100%)'
+            })
+            break
+          case 2: // Paso 3/6 - landing_click_start
+            // Texto en la parte superior de la pantalla
+            setTooltipPosition({
+              top: '20%',
+              transform: 'translateX(-50%)'
+            })
+            break
+          case 3: // Paso 4/6 - chat_type_message
+            // Texto en la parte superior de la pantalla
+            setTooltipPosition({
+              top: '20%',
+              transform: 'translateX(-50%)'
+            })
+            break
+          default:
+            // Para otros pasos, cerca de las flechas
+            setTooltipPosition({ bottom: '120px' })
         }
       }
     } else {
@@ -78,8 +94,6 @@ export default function DemoOverlay() {
 
   return (
     <>
-      {/* SIN OVERLAY OSCURO DE FONDO */}
-      
       {/* Solo el borde dorado alrededor del elemento destacado */}
       {highlightBox && (
         <div
@@ -96,22 +110,22 @@ export default function DemoOverlay() {
         />
       )}
 
-      {/* Tooltip con fondo - MÁS ANCHO */}
+      {/* Tooltip con fondo */}
       {tooltipText && isVisible && (
         <div 
           className="fixed z-[100004]"
           style={{
             ...(tooltipPosition.top ? {
               top: tooltipPosition.top,
-              transform: tooltipPosition.transform,
               left: '50%',
-              marginLeft: '-45vw'
+              transform: tooltipPosition.transform || 'translateX(-50%)'
             } : {
               bottom: tooltipPosition.bottom,
               left: '5%',
               right: '5%'
             }),
             width: tooltipPosition.top ? '90vw' : 'auto',
+            maxWidth: tooltipPosition.top ? '90vw' : 'none',
             fontFamily: '"Caveat", cursive',
             fontSize: window.innerWidth < 768 ? '1.5rem' : '1.8rem',
             lineHeight: '1.3',
@@ -124,8 +138,7 @@ export default function DemoOverlay() {
             border: '2px solid #D4AF37',
             boxShadow: '0 10px 40px rgba(0,0,0,0.4), 0 0 60px rgba(212, 175, 55, 0.2)',
             maxHeight: '45vh',
-            overflowY: 'auto',
-            animation: 'demoFadeIn 0.3s ease'
+            overflowY: 'auto'
           }}
         >
           {tooltipText}
@@ -171,20 +184,6 @@ export default function DemoOverlay() {
           <X size={20} className="text-white" />
         </button>
       </div>
-
-      {/* Estilos de animación */}
-      <style jsx>{`
-        @keyframes demoFadeIn {
-          from { 
-            opacity: 0; 
-            transform: ${tooltipPosition.top ? 'translateX(-50%) translateY(-95%)' : 'translateY(10px)'};
-          }
-          to { 
-            opacity: 1; 
-            transform: ${tooltipPosition.top ? 'translateX(-50%) translateY(-100%)' : 'translateY(0)'};
-          }
-        }
-      `}</style>
     </>
   )
 }
