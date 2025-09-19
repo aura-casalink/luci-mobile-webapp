@@ -34,7 +34,7 @@ export default function DemoOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isDemoActive, canGoNext, canGoPrevious, goToNextStep, goToPreviousStep, endDemo])
 
-  // Calcular highlight
+  // Calcular highlight y aplicar z-index al elemento
   useEffect(() => {
     if (highlightElement && isDemoActive) {
       const element = document.querySelector(highlightElement)
@@ -46,9 +46,32 @@ export default function DemoOverlay() {
           width: rect.width + 16,
           height: rect.height + 16
         })
+        
+        // Hacer que el elemento resaltado esté por encima del overlay
+        element.style.position = 'relative'
+        element.style.zIndex = '100002'
       }
     } else {
+      // Limpiar z-index cuando no hay highlight
+      if (highlightElement) {
+        const oldElement = document.querySelector(highlightElement)
+        if (oldElement) {
+          oldElement.style.position = ''
+          oldElement.style.zIndex = ''
+        }
+      }
       setHighlightBox(null)
+    }
+    
+    // Cleanup function
+    return () => {
+      if (highlightElement) {
+        const element = document.querySelector(highlightElement)
+        if (element) {
+          element.style.position = ''
+          element.style.zIndex = ''
+        }
+      }
     }
   }, [highlightElement, isDemoActive])
 
@@ -65,49 +88,85 @@ export default function DemoOverlay() {
 
   return (
     <>
-      {/* Overlay negro */}
+      {/* Overlay negro MÁS OSCURO */}
       <div 
         className="fixed inset-0 z-[100000] pointer-events-none"
         style={{ 
-          background: 'rgba(0, 0, 0, 0.7)',
+          background: 'rgba(0, 0, 0, 0.85)', // Más oscuro: 0.85 en lugar de 0.7
           opacity: isVisible ? 1 : 0,
           transition: 'opacity 0.3s ease'
         }}
       />
       
-      {/* Highlight GOLD #D4AF37 */}
+      {/* Recorte para el highlight - crea un "agujero" en el overlay */}
       {highlightBox && (
-        <div
-          className="fixed rounded-lg z-[100001] pointer-events-none"
-          style={{
-            top: `${highlightBox.top}px`,
-            left: `${highlightBox.left}px`,
-            width: `${highlightBox.width}px`,
-            height: `${highlightBox.height}px`,
-            outline: '4px solid #D4AF37',
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.7), 0 10px 30px rgba(0,0,0,0.35)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        />
+        <>
+          {/* Overlay con máscara SVG para crear el agujero */}
+          <svg
+            className="fixed inset-0 z-[100001] pointer-events-none"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <defs>
+              <mask id="highlight-mask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                <rect
+                  x={highlightBox.left}
+                  y={highlightBox.top}
+                  width={highlightBox.width}
+                  height={highlightBox.height}
+                  rx="8"
+                  fill="black"
+                />
+              </mask>
+            </defs>
+            <rect
+              x="0"
+              y="0"
+              width="100%"
+              height="100%"
+              fill="rgba(0, 0, 0, 0.85)"
+              mask="url(#highlight-mask)"
+            />
+          </svg>
+          
+          {/* Borde dorado alrededor del elemento */}
+          <div
+            className="fixed rounded-lg z-[100002] pointer-events-none"
+            style={{
+              top: `${highlightBox.top}px`,
+              left: `${highlightBox.left}px`,
+              width: `${highlightBox.width}px`,
+              height: `${highlightBox.height}px`,
+              border: '4px solid #D4AF37',
+              boxShadow: '0 0 20px rgba(212, 175, 55, 0.5)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          />
+        </>
       )}
 
-      {/* Tooltip handwritten - TEXTO BLANCO SOBRE TRANSPARENTE */}
+      {/* Tooltip handwritten - CERCA DE LAS FLECHAS Y MÁS ANCHO */}
       {tooltipText && isVisible && (
         <div 
-          className="fixed z-[100002] max-w-2xl p-6"
+          className="fixed z-[100004] px-4"
           style={{
-            top: '20%',  // Mitad superior de la pantalla
+            bottom: '120px', // Justo encima de las flechas de navegación
             left: '50%',
             transform: 'translateX(-50%)',
+            width: window.innerWidth < 768 ? '90%' : '70%', // Más ancho
+            maxWidth: '800px',
             fontFamily: '"Caveat", cursive',
-            fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem', // Más pequeño en móvil
+            fontSize: window.innerWidth < 768 ? '1.4rem' : '1.8rem',
             lineHeight: '1.4',
-            color: '#FFFFFF',  // TEXTO BLANCO
-            backgroundColor: 'transparent', // SIN FONDO
-            textShadow: '0 2px 10px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6)', // Sombra para legibilidad
+            color: '#FFFFFF',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente para mejor legibilidad
+            textShadow: '0 2px 10px rgba(0,0,0,0.9)',
             whiteSpace: 'pre-wrap',
-            padding: window.innerWidth < 768 ? '1rem' : '1.5rem', // Menos padding en móvil
-            maxHeight: '40vh', // Limitar altura en móvil
+            padding: '1.5rem',
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            maxHeight: '40vh',
             overflowY: 'auto'
           }}
         >
@@ -116,7 +175,7 @@ export default function DemoOverlay() {
       )}
 
       {/* Flechas navegación */}
-      <div className="fixed bottom-8 right-8 z-[100003] flex items-center gap-3 pointer-events-auto">
+      <div className="fixed bottom-8 right-8 z-[100005] flex items-center gap-3 pointer-events-auto">
         <div className="bg-white rounded-full px-4 py-2 shadow-lg">
           <span className="text-sm font-medium text-gray-700">
             {currentStepIndex + 1} / {totalSteps}
