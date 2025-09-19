@@ -8,8 +8,14 @@ export const DEMO_STEPS = [
   'landing_scroll', 
   'landing_click_start',
   'chat_type_message',
-  'chat_show_explanation', 
-  'properties_carousel'
+  'chat_show_explanation',
+  'properties_carousel',
+  'properties_scroll',
+  'property_open',
+  'property_contact',
+  'property_street_view',
+  'property_question',
+  'property_answer'
 ]
 
 export function DemoProvider({ children }) {
