@@ -48,8 +48,6 @@ export default function DemoController({ onStartApp }) {
         setHighlightElement('[data-demo="start-button"]')
         setTooltipText('Pulsa el botón "Comenzar a buscar" para iniciar tu búsqueda personalizada')
         
-        // NO AUTO-CLICK - El usuario debe pulsar manualmente
-        // Escuchar el click del usuario
         const button = document.querySelector('[data-demo="start-button"]')
         if (button) {
           const handleClick = () => {
@@ -61,7 +59,6 @@ export default function DemoController({ onStartApp }) {
         break
 
       case 'chat_type_message':
-        // Asegurar que el input está visible
         setTimeout(() => {
           const input = document.querySelector('[data-demo="chat-input"]')
           if (input) {
@@ -71,41 +68,63 @@ export default function DemoController({ onStartApp }) {
             const text = 'Un piso en Madrid, de al menos 3 habitaciones, en una zona cercana a un metro por menos de 450k€.'
             let i = 0
             
-            // Empezar a escribir después de un delay
             setTimeout(() => {
               const interval = setInterval(() => {
                 if (i <= text.length) {
+                  // Actualizar el valor del input Y el estado de React
                   input.value = text.slice(0, i)
-                  // Disparar evento de input para que React actualice el estado
-                  const event = new Event('input', { bubbles: true })
-                  input.dispatchEvent(event)
-                  // También cambiar el estado directamente si es necesario
+                  
+                  // Forzar actualización del estado de React
                   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set
                   nativeInputValueSetter.call(input, text.slice(0, i))
-                  const inputEvent = new Event('input', { bubbles: true})
-                  input.dispatchEvent(inputEvent)
+                  
+                  // Disparar evento para que React detecte el cambio
+                  const event = new Event('input', { bubbles: true })
+                  input.dispatchEvent(event)
+                  
+                  // También disparar onChange por si acaso
+                  const changeEvent = new Event('change', { bubbles: true })
+                  input.dispatchEvent(changeEvent)
+                  
                   i++
                 } else {
                   clearInterval(interval)
                   
-                  // Después de escribir, encontrar el botón correcto de enviar (no el de audio)
+                  // Esperar un poco para asegurar que el botón cambia de estado
                   setTimeout(() => {
-                    // Buscar específicamente el botón cuando hay texto
-                    const buttons = document.querySelectorAll('[data-demo="send-button"]')
-                    let sendButton = null
-                    
-                    // El botón de enviar debe estar activo (no disabled) y visible
-                    buttons.forEach(btn => {
-                      if (!btn.disabled && btn.offsetParent !== null) {
-                        sendButton = btn
-                      }
-                    })
+                    // El botón debería haber cambiado porque hay texto
+                    // Buscar el botón que esté visible y activo
+                    const sendButton = document.querySelector('[data-demo="send-button"]')
                     
                     if (sendButton) {
-                      sendButton.click()
+                      // Verificar que el botón tiene el icono de enviar (no el de micrófono)
+                      const hasSendIcon = sendButton.querySelector('svg path[d*="M12 2L12 22"]')
+                      
+                      if (hasSendIcon) {
+                        // Es el botón correcto de enviar
+                        console.log('Clicking send button with text')
+                        sendButton.click()
+                      } else {
+                        // Intentar forzar el click del formulario
+                        console.log('Attempting form submit')
+                        const form = input.closest('form')
+                        if (form) {
+                          form.requestSubmit()
+                        } else {
+                          // Como último recurso, simular Enter
+                          const enterEvent = new KeyboardEvent('keypress', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            bubbles: true
+                          })
+                          input.dispatchEvent(enterEvent)
+                        }
+                      }
+                      
                       setTimeout(() => goToNextStep(), 2000)
                     }
-                  }, 500)
+                  }, 1000) // Esperar 1 segundo para que React actualice el botón
                 }
               }, 30)
             }, 1000)
@@ -115,10 +134,8 @@ export default function DemoController({ onStartApp }) {
 
       case 'chat_show_explanation':
         setTimeout(() => {
-          // Buscar mensajes del usuario
           const userMessages = document.querySelectorAll('[data-demo="chat-message"].from-user')
           if (userMessages.length > 0) {
-            // Tomar el último mensaje del usuario
             const lastMessage = userMessages[userMessages.length - 1]
             lastMessage.setAttribute('data-demo-focus', '1')
             setHighlightElement('[data-demo-focus="1"]')
@@ -134,7 +151,6 @@ export default function DemoController({ onStartApp }) {
 
       case 'properties_carousel':
         setTimeout(() => {
-          // Buscar el carousel de propiedades
           const carousel = document.querySelector('[data-demo="properties-carousel"]')
           if (carousel) {
             setHighlightElement('[data-demo="properties-carousel"]')
