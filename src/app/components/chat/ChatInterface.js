@@ -532,7 +532,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (!supabase) return // Guard
     
     try {
-      devLog('💾 Saving conversation with', updatedMessages.length, 'messages'))
+      devLog('💾 Saving conversation with', updatedMessages.length, 'messages')
       devLog('💾 Messages to save:', sanitize(updatedMessages))
       
       const { data, error } = await supabase
