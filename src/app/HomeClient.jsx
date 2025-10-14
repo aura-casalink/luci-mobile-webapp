@@ -11,6 +11,7 @@ import AuthModal from './components/auth/AuthModal'
 import LandingPage from './components/landing/LandingPage'
 import { useSavedProperties } from './hooks/useSavedProperties'
 import { getSupabase } from '@/lib/supabase-browser'
+import { devLog, errorLog } from '@/utils/logger'
 
 export default function HomeClient() {
   const [activeTab, setActiveTab] = useState('chat')
@@ -76,9 +77,9 @@ export default function HomeClient() {
         
         deviceId = `device_${Math.abs(hash)}_${Date.now().toString(36)}`
         localStorage.setItem('luci_device_id', deviceId)
-        console.log('🔧 Generated new device ID:', deviceId)
+        devLog('🔧 Generated new device ID:', deviceId)
       } else {
-        console.log('🔧 Using existing device ID:', deviceId)
+        devLog('🔧 Using existing device ID:', deviceId)
       }
       
       if (typeof window !== 'undefined') {
@@ -93,7 +94,7 @@ export default function HomeClient() {
     generateDeviceId()
 
     if (localStorage.getItem('geo_consent') === 'true') {
-      console.log('🌍 Forcing geolocation tracking due to existing consent')
+      devLog('🌍 Forcing geolocation tracking due to existing consent')
       // Limpiar marca de sessionStorage para forzar nuevo tracking
       if (typeof sessionStorage !== 'undefined') {
         const keys = Object.keys(sessionStorage)
@@ -207,7 +208,7 @@ useEffect(() => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.requireAuth = (message, callback) => {
-        console.log('🔐 requireAuth called:', message)
+        devLog('🔐 requireAuth called:', message)
         setAuthMessage(message || 'Inicia sesión para continuar')
         setShowAuthModal(true)
         
@@ -215,7 +216,7 @@ useEffect(() => {
         window.pendingAuthCallback = callback
       }
       
-      console.log('🔐 window.requireAuth configured')
+      devLog('🔐 window.requireAuth configured')
     }
   }, [])
 
