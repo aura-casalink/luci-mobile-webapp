@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Heart, Share2, MapPin, Bed, Bath, Square, Layers, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getStreetViewUrl } from '@/lib/maps'
-import PricingModal from '@/components/pricing/PricingModal'
+import PricingModal from '@/app/components/pricing/PricingModal'
 
 export default function PropertyDetailView({ property, onClose, onSendMessage, savedProperties, onToggleSave, onStreetViewChange }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
