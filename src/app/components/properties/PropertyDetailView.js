@@ -3,8 +3,10 @@ import { useState, useRef, useEffect } from 'react'
 import { X, Heart, Share2, MapPin, Bed, Bath, Square, Layers, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getStreetViewUrl } from '@/lib/maps'
 import PricingModal from '@/app/components/pricing/PricingModal'
+import { useRouter } from 'next/navigation'
 
 export default function PropertyDetailView({ property, onClose, onSendMessage, savedProperties, onToggleSave, onStreetViewChange }) {
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [inputText, setInputText] = useState('')
   const [showFullDescription, setShowFullDescription] = useState(false)
@@ -12,7 +14,6 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
   const imageRef = useRef(null)
   const [showStreetView, setShowStreetView] = useState(false)
   const [images, setImages] = useState([])
-  const [showPricing, setShowPricing] = useState(false)
 
   useEffect(() => {
     if (onStreetViewChange) {
@@ -45,18 +46,6 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
 
     setImages(extractImages())
   }, [property])
-
-  useEffect(() => {
-    // Detectar si debe reabrir el modal de precios después del login
-    const shouldReopenPricing = sessionStorage.getItem('return_to_pricing_modal')
-    if (shouldReopenPricing === 'true') {
-      sessionStorage.removeItem('return_to_pricing_modal')
-      // Pequeño delay para que se cargue todo antes de abrir el modal
-      setTimeout(() => {
-        setShowPricing(true)
-      }, 500)
-    }
-  }, [])
     
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-ES', {
@@ -246,9 +235,12 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           </div>
 
           <div>
-            {/* Botón "Me interesa" - NUEVO */}
+            {/* Botón "Me interesa" */}
             <button
-              onClick={() => setShowPricing(true)}
+              onClick={() => {
+                const propertyCode = property.propertyCode || property.property_id || property.id
+                router.push(`/property/${propertyCode}/pricing`)
+              }}
               className="w-full py-3 px-4 rounded-lg font-bold mb-6 transition-opacity hover:opacity-90"
               style={{
                 backgroundColor: '#FFB300',
@@ -420,9 +412,6 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
           </div>
         </div>
       )}
-
-      {/* Modal de Planes de Precios */}
-      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} property={property} />
     </div>
   )
 }
