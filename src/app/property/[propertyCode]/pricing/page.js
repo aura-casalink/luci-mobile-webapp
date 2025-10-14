@@ -100,8 +100,8 @@ export default function PropertyPricingPage() {
   }, [propertyCode, sessionId])
 
   const handleClose = () => {
-    // Volver al detalle de la propiedad
-    router.push(`/property/${propertyCode}`)
+    // Usar back() en lugar de push() para no duplicar historial
+    router.back()
   }
 
   if (loading) {
