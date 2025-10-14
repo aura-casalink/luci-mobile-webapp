@@ -2,13 +2,13 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function PricingModal({ isOpen, onClose }) {
+export default function PricingModal({ isOpen, onClose, property }) {
   if (!isOpen) return null
 
-  return <PricingModalContent onClose={onClose} />
+  return <PricingModalContent onClose={onClose} property={property} />
 }
 
-function PricingModalContent({ onClose }) {
+function PricingModalContent({ onClose, property }) {
   // Bloquear scroll del body mientras el modal está abierto
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -27,7 +27,8 @@ function PricingModalContent({ onClose }) {
     {
       name: 'Free',
       price: 'GRATIS',
-      description: 'Descubre la versión esencial de AURA. Ideal para explorar sin compromiso',
+      description: 'Descubre la versión esencial de AURA. Ideal para explorar sin compromiso.',
+      boldPhrase: null,
       features: [
         'Búsquedas básicas ilimitadas',
         'Acceso a propiedades multiplataforma',
@@ -40,12 +41,14 @@ function PricingModalContent({ onClose }) {
       textColor: '#A5A5B0',
       borderColor: '#E5E7EB',
       showCurrentTag: true,
-      showPopularTag: false
+      showPopularTag: false,
+      whatsappMessage: null
     },
     {
       name: 'Pro',
       price: '4,99€/mes',
-      description: 'Para quienes quieren más control, más datos y más velocidad. Tu radar inmobiliario, siempre encendido.',
+      description: 'Para quienes quieren más control, más datos y más velocidad.',
+      boldPhrase: 'Tu radar inmobiliario, siempre encendido.',
       features: [
         'Búsquedas y alertas ilimitadas',
         'Recomendaciones inteligentes basadas en tus preferencias',
@@ -58,12 +61,14 @@ function PricingModalContent({ onClose }) {
       textColor: '#374151',
       borderColor: '#E5E7EB',
       showCurrentTag: false,
-      showPopularTag: false
+      showPopularTag: false,
+      whatsappMessage: null
     },
     {
       name: 'Success',
       price: '10% del descuento conseguido',
-      description: 'Solo pagas si ganamos por ti. Nos encargamos de coordinar visitas, negociar y cerrar al mejor precio. Tú eliges la casa. Nosotros conseguimos el mejor trato.',
+      description: 'Solo pagas si ganamos por ti. Nos encargamos de coordinar visitas, negociar y cerrar al mejor precio.',
+      boldPhrase: 'Tú eliges la casa. Nosotros conseguimos el mejor trato.',
       features: [
         'Visita gestionada en menos de 2 horas laborables',
         'Negociación profesional con el vendedor',
@@ -76,12 +81,14 @@ function PricingModalContent({ onClose }) {
       textColor: '#374151',
       borderColor: '#FFB300',
       showCurrentTag: false,
-      showPopularTag: true
+      showPopularTag: true,
+      whatsappMessage: 'success'
     },
     {
       name: 'Care',
       price: '799€',
-      description: 'Tu personal shopper inmobiliario completo. Un consultor AURA te acompaña durante 3 meses: búsqueda, visitas, trámites, reformas y más. La forma más inteligente y tranquila de comprar tu casa.',
+      description: 'Tu personal shopper inmobiliario completo. Un consultor AURA te acompaña durante 3 meses: búsqueda, visitas, trámites, reformas y más.',
+      boldPhrase: 'La forma más inteligente y tranquila de comprar tu casa.',
       features: [
         'Reuniones periódicas con propuestas seleccionadas',
         'Informes detallados de barrios, precios y servicios',
@@ -94,9 +101,24 @@ function PricingModalContent({ onClose }) {
       textColor: '#374151',
       borderColor: '#E5E7EB',
       showCurrentTag: false,
-      showPopularTag: false
+      showPopularTag: false,
+      whatsappMessage: 'care'
     }
   ]
+
+  const getWhatsAppUrl = (messageType) => {
+    const propertyCode = property?.propertyCode || property?.property_id || property?.id || ''
+    const propertyUrl = propertyCode ? `https://luci.aura-app.es/share/${propertyCode}` : ''
+    
+    let message = ''
+    if (messageType === 'success') {
+      message = `Hola! Estoy interesado en agendar una llamada para conocer más sobre vuestro servicio a éxito. Me interesa la propiedad ${propertyUrl}. ¿Me podrías dar más información?`
+    } else if (messageType === 'care') {
+      message = `Hola! Estoy interesado en agendar una llamada para conocer más sobre vuestro servicio de personal shopping completo. ¿Me podrías dar más información?`
+    }
+    
+    return `https://wa.me/34910626648?text=${encodeURIComponent(message)}`
+  }
 
   const modal = (
     <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
@@ -165,12 +187,12 @@ function PricingModalContent({ onClose }) {
                 </p>
 
                 {/* Description - JUSTIFICADO */}
-                <p 
-                  className="text-sm mb-6 flex-grow text-justify"
-                  style={{ color: plan.textColor }}
-                >
-                  {plan.description}
-                </p>
+                <div className="text-sm mb-6 flex-grow text-justify" style={{ color: plan.textColor }}>
+                  <p>{plan.description}</p>
+                  {plan.boldPhrase && (
+                    <p className="font-bold mt-2">{plan.boldPhrase}</p>
+                  )}
+                </div>
 
                 {/* Features List */}
                 <ul className="space-y-3 mb-6">
@@ -188,21 +210,38 @@ function PricingModalContent({ onClose }) {
 
                 {/* Button */}
                 {plan.buttonText && (
-                  <button
-                    className="w-full py-3 px-4 rounded-lg font-bold transition-opacity hover:opacity-90"
-                    style={{
-                      backgroundColor: plan.buttonColor,
-                      color: '#FAFAFA',
-                      fontFamily: 'Poppins, sans-serif'
-                    }}
-                    onClick={() => {
-                      // TODO: manejar acción (seleccionar plan o abrir agenda)
-                      console.log(`Plan seleccionado: ${plan.name}`)
-                      onClose?.()
-                    }}
-                  >
-                    {plan.buttonText}
-                  </button>
+                  <>
+                    {plan.whatsappMessage ? (
+                      <a
+                        href={getWhatsAppUrl(plan.whatsappMessage)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 px-4 rounded-lg font-bold transition-opacity hover:opacity-90 text-center"
+                        style={{
+                          backgroundColor: plan.buttonColor,
+                          color: '#FAFAFA',
+                          fontFamily: 'Poppins, sans-serif'
+                        }}
+                      >
+                        {plan.buttonText}
+                      </a>
+                    ) : (
+                      <button
+                        className="w-full py-3 px-4 rounded-lg font-bold transition-opacity hover:opacity-90"
+                        style={{
+                          backgroundColor: plan.buttonColor,
+                          color: '#FAFAFA',
+                          fontFamily: 'Poppins, sans-serif'
+                        }}
+                        onClick={() => {
+                          console.log(`Plan seleccionado: ${plan.name}`)
+                          onClose?.()
+                        }}
+                      >
+                        {plan.buttonText}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             ))}
