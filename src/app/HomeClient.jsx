@@ -109,6 +109,16 @@ export default function HomeClient() {
     setConsent(localStorage.getItem('geo_consent') === 'true')
   }, [])
   
+  // Sincronizar showLanding desde localStorage DESPUÉS de hidratar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('landing_seen') === 'true'
+      if (seen) {
+        setShowLanding(false)
+      }
+    }
+  }, [])
+  
   // Restaurar pestaña después del login o desde URL
   useEffect(() => {
     // 1) Restaurar la pestaña elegida antes del login
