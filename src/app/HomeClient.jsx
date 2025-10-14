@@ -16,13 +16,7 @@ export default function HomeClient() {
   const [activeTab, setActiveTab] = useState('chat')
   const [sessionId, setSessionId] = useState('')
   const [consent, setConsent] = useState(false)
-  const [showLanding, setShowLanding] = useState(() => {
-    // Inicializar desde localStorage para evitar el flash
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('landing_seen') !== 'true'
-    }
-    return true
-  })
+  const [showLanding, setShowLanding] = useState(true)
   const [user, setUser] = useState(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
