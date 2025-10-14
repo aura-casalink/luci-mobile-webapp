@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase-browser'
 import { Send, Mic, MicOff, Play, Pause, X, Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
@@ -949,7 +950,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   }
 
-  const [selectedProperty, setSelectedProperty] = useState(null)
+  const router = useRouter()
 
   useEffect(() => {
     devLog('🆔 SessionId changed:', sanitize(sessionId))
@@ -957,27 +958,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   }, [sessionId, savedProperties])
 
   const handlePropertyClick = (property) => {
-    setSelectedProperty({
-      ...property,
-      images_count: property.images?.length ?? 0,
-      images: property.images,
-      thumbnail: property.thumbnail,
-      full_property: property
-    })
-  }
-
-  const handleClosePropertyDetail = () => {
-    setSelectedProperty(null)
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
-      }
-    }, 50)
-  }
-
-  const handlePropertyMessage = (message) => {
-    setSelectedProperty(null)
-    addMessage(message, 'user')
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    router.push(`/property/${propertyCode}`)
   }
 
   const getCombinedItems = () => {
@@ -1009,18 +991,6 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (isPreparing) return "#f59e0b"
     if (isRecording) return "#ef4444"
     return inputText.trim() ? "#0A0A23" : "#D1D5DB"
-  }
-
-  if (selectedProperty) {
-    return (
-      <PropertyDetailView
-        property={selectedProperty}
-        onClose={handleClosePropertyDetail}
-        onSendMessage={handlePropertyMessage}
-        savedProperties={savedProperties}
-        onToggleSave={onToggleSave} 
-      />
-    )
   }
 
   if (showWelcome && !(showAudioPreview && recordedAudio)) {
