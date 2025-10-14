@@ -46,6 +46,18 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
     setImages(extractImages())
   }, [property])
 
+  useEffect(() => {
+    // Detectar si debe reabrir el modal de precios después del login
+    const shouldReopenPricing = sessionStorage.getItem('return_to_pricing_modal')
+    if (shouldReopenPricing === 'true') {
+      sessionStorage.removeItem('return_to_pricing_modal')
+      // Pequeño delay para que se cargue todo antes de abrir el modal
+      setTimeout(() => {
+        setShowPricing(true)
+      }, 500)
+    }
+  }, [])
+    
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
