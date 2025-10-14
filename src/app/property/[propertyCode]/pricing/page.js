@@ -99,6 +99,23 @@ export default function PropertyPricingPage() {
     loadProperty()
   }, [propertyCode, sessionId])
 
+  // Manejar popup después del login
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const shouldShowPopup = sessionStorage.getItem('show_dev_popup_after_login')
+    
+    if (shouldShowPopup === 'true') {
+      // Limpiar flag
+      sessionStorage.removeItem('show_dev_popup_after_login')
+      
+      // Mostrar popup después de un pequeño delay
+      setTimeout(() => {
+        alert('🚧 Funcionalidad en desarrollo\n\nPronto podrás contratar planes directamente desde aquí.')
+      }, 500)
+    }
+  }, [])
+  
   const handleClose = () => {
     // Usar back() en lugar de push() para no duplicar historial
     router.back()
