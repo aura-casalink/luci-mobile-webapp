@@ -7,15 +7,17 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const makeRedirect = () => {
-    const currentPath = window.location.pathname
-    const sid = window.sessionId || localStorage.getItem('luci_session_id')
-    
-    const callbackUrl = new URL('/auth/callback', window.location.origin)
-    callbackUrl.searchParams.set('next', currentPath)
-    if (sid) callbackUrl.searchParams.set('sid', sid)
-    
-    return callbackUrl.toString()
+  // Función helper para obtener el dominio correcto
+  const getProductionDomain = () => {
+    // Si estamos en el dominio de producción, úsalo
+    if (typeof window !== 'undefined') {
+      const currentHost = window.location.hostname
+      if (currentHost === 'luci.aura-app.es' || currentHost === 'desktop-luci.aura-app.es') {
+        return window.location.origin
+      }
+    }
+    // Fallback: siempre redirigir a móvil por defecto
+    return 'https://luci.aura-app.es'
   }
 
   const signInWithGoogle = async () => {
@@ -24,12 +26,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     
     // Guardar el estado actual antes de redirigir
     const currentTab = window.activeTab || 'chat'
+    const currentPath = window.location.pathname
+    const sid = window.sessionId || localStorage.getItem('luci_session_id')
+    
     localStorage.setItem('pending_tab', currentTab)
+    
+    const productionDomain = getProductionDomain()
+    const redirectUrl = `${productionDomain}/auth/callback?next=${encodeURIComponent(currentPath)}&sid=${sid}&tab=${currentTab}`
+    
+    console.log('🔐 Login redirect URL:', redirectUrl) // Debug
     
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}` 
+        redirectTo: redirectUrl
       }
     })
   }
@@ -41,9 +51,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess, message }) {
     
     // Guardar el estado actual antes de redirigir
     const currentTab = window.activeTab || 'chat'
+    const currentPath = window.location.pathname
+    const sid = window.sessionId || localStorage.getItem('luci_session_id')
+    
     localStorage.setItem('pending_tab', currentTab)
     
-    const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}&sid=${window.sessionId || localStorage.getItem('luci_session_id')}&tab=${currentTab}`
+    const productionDomain = getProductionDomain()
+    const redirectUrl = `${productionDomain}/auth/callback?next=${encodeURIComponent(currentPath)}&sid=${sid}&tab=${currentTab}`
+    
+    console.log('🔐 Magic link redirect URL:', redirectUrl) // Debug
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
