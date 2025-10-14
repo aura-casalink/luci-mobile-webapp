@@ -5,6 +5,8 @@ import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import BottomNavigation from '@/app/components/layout/BottomNavigation'
 import { useSavedProperties } from '@/app/hooks/useSavedProperties'
 import { getSupabase } from '@/lib/supabase-browser'
+import AuthModal from '@/app/components/auth/AuthModal'
+
 
 export default function PropertyPage() {
   const params = useParams()
@@ -15,6 +17,9 @@ export default function PropertyPage() {
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [user, setUser] = useState(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMessage, setAuthMessage] = useState('')
   const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
   
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
@@ -35,6 +40,51 @@ export default function PropertyPage() {
     }
   }, [])
 
+  // Auth setup
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+  
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+  
+    return () => subscription.unsubscribe()
+  }, [])
+  
+  // Configurar window.requireAuth
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.requireAuth = (message, callback) => {
+        setAuthMessage(message || 'Inicia sesión para continuar')
+        setShowAuthModal(true)
+        window.pendingAuthCallback = callback
+      }
+    }
+  }, [])
+  
+  // Ejecutar callback pendiente después del login
+  useEffect(() => {
+    if (user && typeof window !== 'undefined' && window.pendingAuthCallback) {
+      setTimeout(() => {
+        if (window.pendingAuthCallback) {
+          window.pendingAuthCallback()
+          window.pendingAuthCallback = null
+        }
+      }, 300)
+    }
+  }, [user])
+  
   // Cargar propiedad
   useEffect(() => {
     if (!propertyCode || !sessionId) return
@@ -234,6 +284,19 @@ export default function PropertyPage() {
           hasUnvisitedSaves={hasUnvisitedSaves}
         />
       </div>
+      {/* AuthModal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(user) => {
+          setUser(user)
+          setShowAuthModal(false)
+          if (typeof window !== 'undefined' && window.pendingAuthCallback) {
+            window.pendingAuthCallback()
+          }
+        }}
+        message={authMessage}
+      />
     </>
   )
 }
