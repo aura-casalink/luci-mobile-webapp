@@ -167,11 +167,10 @@ function PricingModalContent({ onClose, property, isOpen }) {
         
         // Guardar que debe mostrar el popup después del login
         sessionStorage.setItem('show_dev_popup_after_login', 'true')
-        sessionStorage.setItem('return_to_pricing_modal', 'true')
         
         // Guardar la ruta actual para volver después del login
         const currentPath = window.location.pathname
-        sessionStorage.setItem('pricing_return_path', currentPath)
+        sessionStorage.setItem('auth_return_to', currentPath) // ← Usar el mismo sistema que el resto
         
         // PRIMERO cerrar el modal de precios
         onClose?.()
