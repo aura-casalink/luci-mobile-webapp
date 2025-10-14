@@ -6,12 +6,11 @@ import { X } from 'lucide-react'
 export default function PricingModal({ isOpen, onClose, property }) {
   if (!isOpen) return null
 
-  return <PricingModalContent onClose={onClose} property={property} />
+  return <PricingModalContent onClose={onClose} property={property} isOpen={isOpen} />
 }
 
-function PricingModalContent({ onClose, property }) {
+function PricingModalContent({ onClose, property, isOpen }) {
   const [showDevPopup, setShowDevPopup] = useState(false)
-  const [shouldShowDevPopup, setShouldShowDevPopup] = useState(false)
 
   // Bloquear scroll del body mientras el modal está abierto
   useEffect(() => {
@@ -40,7 +39,6 @@ function PricingModalContent({ onClose, property }) {
     if (isOpen) {
       const pendingPopup = sessionStorage.getItem('show_dev_popup_after_login')
       if (pendingPopup === 'true') {
-        setShouldShowDevPopup(true)
         sessionStorage.removeItem('show_dev_popup_after_login')
         // Pequeño delay para que se vea la transición
         setTimeout(() => {
