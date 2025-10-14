@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body className={`${poppins.variable} font-sans antialiased`}>
         {/* Redirect desktop → site de escritorio, antes de hidratar */}
-        <Script id="device-redirect" strategy="beforeInteractive">
+        <Script id="device-redirect" strategy="afterInteractive">
         {`
           (function() {
             try {
