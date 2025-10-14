@@ -1,36 +1,51 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function RootRedirect() {
+export default function LandingRoute() {
   const router = useRouter()
+  const [countdown, setCountdown] = useState(5)
 
   useEffect(() => {
-    // IMPORTANTE: El redirect a desktop se maneja en next.config.mjs
-    // Este código solo se ejecuta si NO hubo redirect (es decir, si es móvil)
+    console.log('✅ Landing route loaded successfully!')
     
-    if (typeof window !== 'undefined') {
-      // Verificar si ya vieron la landing
-      const seen = localStorage.getItem('landing_seen')
-      
-      if (seen === 'true') {
-        // Ya vieron landing → ir directo a chat
-        console.log('✅ Usuario recurrente → Redirigiendo a /chat')
-        router.replace('/chat')
-      } else {
-        // Primera visita → mostrar landing
-        console.log('🆕 Primera visita → Redirigiendo a /landing')
-        router.replace('/landing')
-      }
-    }
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          router.push('/chat')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
   }, [router])
 
-  // Mostrar un loader mientras decide
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-yellow-400 to-yellow-600 p-8">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <p className="mt-4 text-gray-600">Cargando...</p>
+        <h1 className="text-6xl font-bold text-white mb-4">
+          ✅ LANDING FUNCIONA
+        </h1>
+        <p className="text-2xl text-white mb-8">
+          El routing está correcto
+        </p>
+        <div className="bg-white rounded-2xl p-8 shadow-2xl">
+          <p className="text-4xl font-bold text-gray-900 mb-4">
+            {countdown}
+          </p>
+          <p className="text-gray-600">
+            Redirigiendo a /chat...
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/chat')}
+          className="mt-8 bg-white text-yellow-600 px-8 py-4 rounded-full font-bold text-xl hover:bg-gray-100 transition"
+        >
+          Ir a Chat ahora
+        </button>
       </div>
     </div>
   )
