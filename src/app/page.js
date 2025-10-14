@@ -6,12 +6,21 @@ export default function RootRedirect() {
   const router = useRouter()
 
   useEffect(() => {
-    // IMPORTANTE: El redirect a desktop se maneja en next.config.mjs
-    // Este código solo se ejecuta si NO hubo redirect (es decir, si es móvil)
-    
+    // IMPORTANTE: Solo ejecutar si estamos exactamente en '/'
     if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname
+      
+      // Si ya estamos en otra ruta, no hacer nada
+      if (currentPath !== '/' && currentPath !== '') {
+        console.log('⏭️ No estamos en /, skip redirect')
+        return
+      }
+      
+      console.log('🔍 Estamos en /, verificando landing_seen...')
+      
       // Verificar si ya vieron la landing
       const seen = localStorage.getItem('landing_seen')
+      console.log('🔍 landing_seen:', seen)
       
       if (seen === 'true') {
         // Ya vieron landing → ir directo a chat
