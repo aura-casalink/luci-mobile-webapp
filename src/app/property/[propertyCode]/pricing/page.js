@@ -106,15 +106,19 @@ export default function PropertyPricingPage() {
     const shouldShowPopup = sessionStorage.getItem('show_dev_popup_after_login')
     
     if (shouldShowPopup === 'true') {
+      console.log('🚧 Mostrando popup de desarrollo después del login')
+      
       // Limpiar flag
       sessionStorage.removeItem('show_dev_popup_after_login')
       
-      // Mostrar popup después de un pequeño delay
+      // Mostrar popup con delay más largo para que cargue bien la página
       setTimeout(() => {
-        alert('🚧 Funcionalidad en desarrollo\n\nPronto podrás contratar planes directamente desde aquí.')
-      }, 500)
+        if (window.confirm('🚧 Funcionalidad en desarrollo\n\nPronto podrás contratar planes directamente desde aquí.\n\n¿Quieres volver al detalle de la propiedad?')) {
+          router.back()
+        }
+      }, 800)
     }
-  }, [])
+  }, [router])
   
   const handleClose = () => {
     // Usar back() en lugar de push() para no duplicar historial
