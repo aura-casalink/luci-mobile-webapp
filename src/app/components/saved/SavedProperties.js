@@ -1,10 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Heart, Share2, MapPin, Bed, Bath, Square } from 'lucide-react'
-import PropertyDetailView from '../properties/PropertyDetailView'
 
 export default function SavedProperties({ savedPropertiesList, savedProperties, onToggleSave, onSendMessage }) {
-  const [selectedProperty, setSelectedProperty] = useState(null)
+  const router = useRouter()
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-ES', {
@@ -17,7 +16,7 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
   const handleShare = async (property) => {
     const text = `${property.title} - ${formatPrice(property.price)}`
     const propertyCode = property.propertyCode || property.property_id || property.id
-    const shareUrl = `https://luci.aura-app.es/share/${propertyCode}`
+    const shareUrl = `https://luci.aura-app.es/property/${propertyCode}`
     
     if (navigator.share) {
       try {
@@ -37,16 +36,11 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
     }
   }
 
-  if (selectedProperty) {
-    return (
-      <PropertyDetailView
-        property={selectedProperty}
-        onClose={() => setSelectedProperty(null)}
-        onSendMessage={onSendMessage || (() => {})}
-        savedProperties={savedProperties}
-        onToggleSave={onToggleSave}
-      />
-    )
+  const handlePropertyClick = (property) => {
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    // Guardar la ruta actual como origen
+    sessionStorage.setItem('property_return_to', '/saved')
+    router.push(`/property/${propertyCode}`)
   }
 
   if (!savedPropertiesList || savedPropertiesList.length === 0) {
@@ -76,8 +70,8 @@ export default function SavedProperties({ savedPropertiesList, savedProperties, 
           {savedPropertiesList.map((property, index) => (
             <div
               key={property.property_id || property.propertyCode || index}
-              className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer"
-              onClick={() => setSelectedProperty(property)}
+              className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => handlePropertyClick(property)}
             >
               <div className="relative h-48">
                 <img
