@@ -410,7 +410,7 @@ export default function PropertyDetailView({ property, onClose, onSendMessage, s
       )}
 
       {/* Modal de Planes de Precios */}
-      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
+      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} property={property} />
     </div>
   )
 }
