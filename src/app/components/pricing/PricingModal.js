@@ -1,6 +1,7 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 
 export default function PricingModal({ isOpen, onClose, property }) {
   if (!isOpen) return null
@@ -9,6 +10,9 @@ export default function PricingModal({ isOpen, onClose, property }) {
 }
 
 function PricingModalContent({ onClose, property }) {
+  const [showDevPopup, setShowDevPopup] = useState(false)
+  const [shouldShowDevPopup, setShouldShowDevPopup] = useState(false)
+
   // Bloquear scroll del body mientras el modal está abierto
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -18,10 +22,33 @@ function PricingModalContent({ onClose, property }) {
 
   // Cerrar con ESC
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose?.() }
+    const onKey = (e) => { 
+      if (e.key === 'Escape') {
+        if (showDevPopup) {
+          setShowDevPopup(false)
+        } else {
+          onClose?.()
+        }
+      }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, showDevPopup])
+
+  // Verificar si debe mostrar el popup al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      const pendingPopup = sessionStorage.getItem('show_dev_popup_after_login')
+      if (pendingPopup === 'true') {
+        setShouldShowDevPopup(true)
+        sessionStorage.removeItem('show_dev_popup_after_login')
+        // Pequeño delay para que se vea la transición
+        setTimeout(() => {
+          setShowDevPopup(true)
+        }, 300)
+      }
+    }
+  }, [isOpen])
 
   const plans = [
     {
@@ -43,7 +70,8 @@ function PricingModalContent({ onClose, property }) {
       showCurrentTag: true,
       showPopularTag: false,
       whatsappMessage: null,
-      tagColor: '#0A0A23'
+      tagColor: '#0A0A23',
+      planType: 'free'
     },
     {
       name: 'Pro',
@@ -64,7 +92,8 @@ function PricingModalContent({ onClose, property }) {
       showCurrentTag: false,
       showPopularTag: false,
       whatsappMessage: null,
-      tagColor: '#FFB300'
+      tagColor: '#FFB300',
+      planType: 'pro'
     },
     {
       name: 'Success',
@@ -85,11 +114,12 @@ function PricingModalContent({ onClose, property }) {
       showCurrentTag: false,
       showPopularTag: true,
       whatsappMessage: 'success',
-      tagColor: '#FFB300'
+      tagColor: '#FFB300',
+      planType: 'success'
     },
     {
       name: 'Care',
-      price: '799€',
+      price: '399€',
       description: 'Tu personal shopper inmobiliario completo. Un consultor AURA te acompaña durante 3 meses: búsqueda, visitas, trámites, reformas y más.',
       boldPhrase: 'La forma más inteligente y tranquila de comprar tu casa.',
       features: [
@@ -106,7 +136,8 @@ function PricingModalContent({ onClose, property }) {
       showCurrentTag: false,
       showPopularTag: false,
       whatsappMessage: 'care',
-      tagColor: '#FFB300'
+      tagColor: '#FFB300',
+      planType: 'care'
     }
   ]
 
@@ -124,10 +155,46 @@ function PricingModalContent({ onClose, property }) {
     return `https://wa.me/34910626648?text=${encodeURIComponent(message)}`
   }
 
+  const handlePlanClick = (plan) => {
+    console.log(`Plan seleccionado: ${plan.name}`)
+    
+    // Si es el plan Pro, verificar autenticación
+    if (plan.planType === 'pro') {
+      // Verificar si el usuario está logueado usando window.currentUser
+      const currentUser = typeof window !== 'undefined' ? window.currentUser : null
+      
+      if (!currentUser) {
+        // Usuario NO logueado: guardar estado y mostrar modal de auth
+        console.log('Usuario no logueado, mostrando modal de auth...')
+        
+        // Guardar que debe mostrar el popup después del login
+        sessionStorage.setItem('show_dev_popup_after_login', 'true')
+        sessionStorage.setItem('return_to_pricing_modal', 'true')
+        
+        // Guardar la ruta actual para volver después del login
+        const currentPath = window.location.pathname
+        sessionStorage.setItem('pricing_return_path', currentPath)
+        
+        // Activar el modal de autenticación usando la función global
+        if (typeof window !== 'undefined' && window.requireAuth) {
+          window.requireAuth('Inicia sesión para seleccionar el plan Pro')
+        }
+      } else {
+        // Usuario SÍ logueado: mostrar popup directamente
+        console.log('Usuario logueado, mostrando popup de desarrollo...')
+        setShowDevPopup(true)
+      }
+    } else {
+      // Para otros planes, cerrar modal normalmente
+      onClose?.()
+    }
+  }
+
   const modal = (
     <div className="fixed inset-0 z-[105] flex items-center justify-center p-4">
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      
       {/* Content */}
       <div className="relative bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
         {/* Header */}
@@ -237,10 +304,7 @@ function PricingModalContent({ onClose, property }) {
                           color: '#FAFAFA',
                           fontFamily: 'Poppins, sans-serif'
                         }}
-                        onClick={() => {
-                          console.log(`Plan seleccionado: ${plan.name}`)
-                          onClose?.()
-                        }}
+                        onClick={() => handlePlanClick(plan)}
                       >
                         {plan.buttonText}
                       </button>
@@ -252,6 +316,46 @@ function PricingModalContent({ onClose, property }) {
           </div>
         </div>
       </div>
+
+      {/* Popup de "En Desarrollo" - ENCIMA del modal de precios */}
+      {showDevPopup && (
+        <div 
+          className="absolute inset-0 z-[110] flex items-center justify-center p-4"
+          onClick={() => setShowDevPopup(false)}
+        >
+          {/* Overlay oscuro adicional */}
+          <div className="absolute inset-0 bg-black/30" />
+          
+          {/* Popup content */}
+          <div 
+            className="relative rounded-2xl p-8 max-w-md w-full shadow-2xl"
+            style={{ backgroundColor: '#0A0A23' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setShowDevPopup(false)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+              aria-label="Cerrar"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Contenido */}
+            <div 
+              className="text-center"
+              style={{ 
+                color: '#FAFAFA',
+                fontFamily: 'Poppins, sans-serif'
+              }}
+            >
+              <p className="text-lg leading-relaxed">
+                Esta funcionalidad está en desarrollo. Nos quedamos con tu email para avisarte tan pronto la tengamos disponible. Perdona la demora.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
