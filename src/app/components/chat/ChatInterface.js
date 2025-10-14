@@ -754,7 +754,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
 
     // Verificar sesión PRIMERO, antes de agregar el mensaje
     const loggedIn = await getIsLoggedIn()
-    devLog('🚀 Login status:', loggedIn
+    devLog('🚀 Login status:', loggedIn)
     devLog('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
 
     // // Si ya hubo 10 o más búsquedas y NO hay login, guardamos para después del auth
