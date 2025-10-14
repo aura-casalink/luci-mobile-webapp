@@ -37,12 +37,13 @@ function PricingModalContent({ onClose, property }) {
       ],
       buttonText: null,
       buttonColor: null,
-      backgroundColor: '#DADADA',
+      backgroundColor: '#F0F0F0',
       textColor: '#A5A5B0',
       borderColor: '#E5E7EB',
       showCurrentTag: true,
       showPopularTag: false,
-      whatsappMessage: null
+      whatsappMessage: null,
+      tagColor: '#0A0A23'
     },
     {
       name: 'Pro',
@@ -62,7 +63,8 @@ function PricingModalContent({ onClose, property }) {
       borderColor: '#E5E7EB',
       showCurrentTag: false,
       showPopularTag: false,
-      whatsappMessage: null
+      whatsappMessage: null,
+      tagColor: '#FFB300'
     },
     {
       name: 'Success',
@@ -82,7 +84,8 @@ function PricingModalContent({ onClose, property }) {
       borderColor: '#FFB300',
       showCurrentTag: false,
       showPopularTag: true,
-      whatsappMessage: 'success'
+      whatsappMessage: 'success',
+      tagColor: '#FFB300'
     },
     {
       name: 'Care',
@@ -102,7 +105,8 @@ function PricingModalContent({ onClose, property }) {
       borderColor: '#E5E7EB',
       showCurrentTag: false,
       showPopularTag: false,
-      whatsappMessage: 'care'
+      whatsappMessage: 'care',
+      tagColor: '#FFB300'
     }
   ]
 
@@ -154,7 +158,7 @@ function PricingModalContent({ onClose, property }) {
                 {plan.showCurrentTag && (
                   <div 
                     className="absolute -top-3 right-4 text-white text-xs font-semibold px-3 py-1 rounded-full"
-                    style={{ backgroundColor: '#FFB300' }}
+                    style={{ backgroundColor: plan.tagColor || '#FFB300' }}
                   >
                     Plan actual
                   </div>
@@ -164,7 +168,7 @@ function PricingModalContent({ onClose, property }) {
                 {plan.showPopularTag && (
                   <div 
                     className="absolute -top-3 right-4 text-white text-xs font-semibold px-3 py-1 rounded-full"
-                    style={{ backgroundColor: '#FFB300' }}
+                    style={{ backgroundColor: plan.tagColor || '#FFB300' }}
                   >
                     Más Popular
                   </div>
