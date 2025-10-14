@@ -34,6 +34,23 @@ function PricingModalContent({ onClose, property, isOpen }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, showDevPopup])
 
+  // Detectar si debe mostrar popup después del login
+  useEffect(() => {
+    if (!isOpen) return
+    
+    const shouldShowPopup = sessionStorage.getItem('show_dev_popup_after_login')
+    
+    if (shouldShowPopup === 'true') {
+      console.log('🚧 Mostrando popup de desarrollo después del login')
+      sessionStorage.removeItem('show_dev_popup_after_login')
+      
+      // Delay para que cargue el modal primero
+      setTimeout(() => {
+        setShowDevPopup(true)
+      }, 500)
+    }
+  }, [isOpen])
+  
   const plans = [
     {
       name: 'Free',
