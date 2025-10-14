@@ -153,7 +153,17 @@ export default function PropertyPage() {
   }, [propertyCode, sessionId])
 
   const handleClose = () => {
-    router.back()
+    // Verificar si hay una ruta de retorno guardada
+    const returnTo = sessionStorage.getItem('property_return_to')
+    
+    if (returnTo) {
+      // Limpiar y volver a la ruta guardada
+      sessionStorage.removeItem('property_return_to')
+      router.push(returnTo)
+    } else {
+      // Fallback: intentar volver atrás
+      router.push('/chat')
+    }
   }
 
   const handleSendMessage = (message) => {
