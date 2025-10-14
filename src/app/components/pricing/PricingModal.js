@@ -151,9 +151,6 @@ function PricingModalContent({ onClose, property, isOpen }) {
         // Usuario NO logueado: guardar estado y mostrar modal de auth
         console.log('Usuario no logueado, mostrando modal de auth...')
         
-        // Guardar que debe mostrar el popup después del login
-        sessionStorage.setItem('show_dev_popup_after_login', 'true')
-        
         // Guardar la ruta actual para volver después del login
         const currentPath = window.location.pathname
         sessionStorage.setItem('auth_return_to', currentPath) // ← Usar el mismo sistema que el resto
