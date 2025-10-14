@@ -1,13 +1,13 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import PropertyCarousel from './PropertyCarousel'
 import ServicesCarousel from './ServicesCarousel'
-import PropertyDetailView from '../properties/PropertyDetailView'
 import { useExploreProperties } from '../../hooks/useExploreProperties'
 import DiscoverProperties from './DiscoverProperties'
 
 export default function ExploreContainer({ sessionId, savedProperties, onToggleSave, onSendMessage }) {
-  const [selectedProperty, setSelectedProperty] = useState(null)
+  const router = useRouter()
   const [discoverCurrentIndex, setDiscoverCurrentIndex] = useState(0)
   const [isTikTokMode, setIsTikTokMode] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
@@ -33,10 +33,11 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
     setIsTikTokMode(false)
     ioCooldownRef.current = Date.now() + 800
     
-    const pid = property?.propertyCode || property?.id || property?.propertyId
-    const fullProperty = pid ? getPropertyDetails(pid) : null
-    setSelectedProperty(fullProperty || property)
+    const propertyCode = property?.propertyCode || property?.id || property?.propertyId
+    sessionStorage.setItem('property_return_to', '/explore')
+    router.push(`/property/${propertyCode}`)
   }
+  
 
   const exitTikTokToTop = () => {
     // 1) Congelar el alto visual mientras salimos
@@ -160,34 +161,7 @@ export default function ExploreContainer({ sessionId, savedProperties, onToggleS
       window.removeEventListener('touchmove', prevent)
     }
   }, [isTikTokMode, discoverCurrentIndex])
-
-  if (selectedProperty) {
-    return (
-      <PropertyDetailView
-        property={selectedProperty}
-        onClose={() => {
-          setSelectedProperty(null)
-          unlockScroll()
-          ioCooldownRef.current = Date.now() + 200
-          
-          // Reactivar TikTok si estamos en la sección
-          requestAnimationFrame(() => {
-            const el = discoverRef.current
-            if (!el) return
-            const rect = el.getBoundingClientRect()
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-              setIsTikTokMode(true)
-              el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-          })
-        }}
-        onSendMessage={onSendMessage || (() => {})}
-        savedProperties={savedProperties}
-        onToggleSave={onToggleSave}
-      />
-    )
-  }
-
+  
   return (
     <div className="h-full overflow-y-auto bg-white scroll-smooth">
       <div className="h-16"></div>
