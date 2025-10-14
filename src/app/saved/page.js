@@ -66,6 +66,17 @@ export default function SavedPage() {
     }
   }, [user, savedProperties])
 
+  useEffect(() => {
+    if (!user && showAuthModal === false && savedProperties && savedProperties.size > 0) {
+      // Si no hay usuario y cerró el modal, volver a chat
+      const timer = setTimeout(() => {
+        router.push('/chat')
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [user, showAuthModal, savedProperties, router])
+
   const handleTabChange = (tabId) => {
     // Navegar a la nueva ruta según la pestaña
     if (tabId === 'chat') {
@@ -100,7 +111,12 @@ export default function SavedPage() {
       
       <AuthModal 
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={() => {
+          setShowAuthModal(false)
+          if (!user) {
+            setTimeout(() => router.push('/chat'), 100)
+          }
+        }}
         onSuccess={(user) => {
           setUser(user)
           setShowAuthModal(false)
