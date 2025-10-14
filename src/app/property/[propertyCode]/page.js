@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
+import BottomNavigation from '@/app/components/layout/BottomNavigation'
 import { useSavedProperties } from '@/app/hooks/useSavedProperties'
 import { getSupabase } from '@/lib/supabase-browser'
 
@@ -14,6 +15,7 @@ export default function PropertyPage() {
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [hasUnvisitedSaves, setHasUnvisitedSaves] = useState(false)
   
   const { savedProperties, toggleSaveProperty } = useSavedProperties(sessionId)
 
@@ -156,8 +158,19 @@ export default function PropertyPage() {
 
   const handleSendMessage = (message) => {
     console.log('Message from property:', message)
-    // Aquí podrías redirigir a /chat con el mensaje
     router.push(`/chat?message=${encodeURIComponent(message)}`)
+  }
+
+  const handleTabChange = (tabId) => {
+    if (tabId === 'chat') {
+      router.push('/chat')
+    } else if (tabId === 'explore') {
+      router.push('/explore')
+    } else if (tabId === 'saved') {
+      router.push('/saved')
+    } else if (tabId === 'nearby') {
+      router.push('/map')
+    }
   }
 
   if (loading) {
@@ -193,12 +206,24 @@ export default function PropertyPage() {
   }
 
   return (
-    <PropertyDetailView
-      property={property}
-      onClose={handleClose}
-      onSendMessage={handleSendMessage}
-      savedProperties={savedProperties}
-      onToggleSave={toggleSaveProperty}
-    />
+    <>
+      <PropertyDetailView
+        property={property}
+        onClose={handleClose}
+        onSendMessage={handleSendMessage}
+        savedProperties={savedProperties}
+        onToggleSave={toggleSaveProperty}
+      />
+      
+      {/* BottomNavigation con z-index alto para estar por encima */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100]">
+        <BottomNavigation 
+          activeTab="chat"
+          onTabChange={handleTabChange}
+          savedCount={savedProperties.size}
+          hasUnvisitedSaves={hasUnvisitedSaves}
+        />
+      </div>
+    </>
   )
 }
