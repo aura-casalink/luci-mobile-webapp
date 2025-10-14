@@ -1,40 +1,42 @@
 'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 
 export default function RootRedirect() {
   const router = useRouter()
+  const pathname = usePathname()
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
-    // IMPORTANTE: Solo ejecutar si estamos exactamente en '/'
+    // Solo ejecutar si pathname es exactamente '/'
+    console.log('🔍 Current pathname:', pathname)
+    
+    if (pathname !== '/') {
+      console.log('⏭️ Not on root path, skip redirect')
+      return
+    }
+
+    console.log('✅ On root path, checking landing_seen...')
+    setShouldRedirect(true)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!shouldRedirect) return
+
     if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname
-      
-      // Si ya estamos en otra ruta, no hacer nada
-      if (currentPath !== '/' && currentPath !== '') {
-        console.log('⏭️ No estamos en /, skip redirect')
-        return
-      }
-      
-      console.log('🔍 Estamos en /, verificando landing_seen...')
-      
-      // Verificar si ya vieron la landing
       const seen = localStorage.getItem('landing_seen')
       console.log('🔍 landing_seen:', seen)
       
       if (seen === 'true') {
-        // Ya vieron landing → ir directo a chat
         console.log('✅ Usuario recurrente → Redirigiendo a /chat')
         router.replace('/chat')
       } else {
-        // Primera visita → mostrar landing
         console.log('🆕 Primera visita → Redirigiendo a /landing')
         router.replace('/landing')
       }
     }
-  }, [router])
+  }, [shouldRedirect, router])
 
-  // Mostrar un loader mientras decide
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
