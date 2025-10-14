@@ -1,8 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-browser'
 import MapView from '../map/MapView'
-import PropertyDetailView from '../properties/PropertyDetailView'
 
 // Propiedades hardcodeadas (manteniendo lat/lng)
 const HARDCODED_PROPERTIES = [
@@ -201,7 +201,7 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
   const [userLocation, setUserLocation] = useState(null)
-  const [selectedProperty, setSelectedProperty] = useState(null)
+  const router = useRouter()
 
   // Obtener ubicación del usuario
   useEffect(() => {
@@ -389,23 +389,13 @@ export default function NearbyContainer({ sessionId, savedProperties, onToggleSa
   }, [sessionId, savedProperties]) // Añadir savedProperties como dependencia
 
   const handlePropertyClick = (property) => {
-    setSelectedProperty(property)
+    const propertyCode = property.propertyCode || property.property_id || property.id
+    sessionStorage.setItem('property_return_to', '/map')
+    router.push(`/property/${propertyCode}`)
   }
 
   const handleSendMessage = (message) => {
     console.log('Mensaje desde mapa:', message)
-  }
-
-  if (selectedProperty) {
-    return (
-      <PropertyDetailView
-        property={selectedProperty}
-        onClose={() => setSelectedProperty(null)}
-        onSendMessage={handleSendMessage}
-        savedProperties={savedProperties}
-        onToggleSave={onToggleSave}
-      />
-    )
   }
 
   if (loading) {
