@@ -6,6 +6,7 @@ import { useCallbacks } from '../../hooks/useCallbacks'
 import PropertyResults from '../properties/PropertyResults'
 import PropertyDetailView from '@/app/components/properties/PropertyDetailView'
 import SearchingAnimation from './SearchingAnimation'
+import { devLog, errorLog, successLog, sanitize } from '@/utils/logger'
 
 export default function ChatInterface({ sessionId, savedProperties, user, onToggleSave, onStreetViewChange }) {
   const [messages, setMessages] = useState([])
@@ -63,8 +64,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   }
 
   useEffect(() => {
-    console.log('📊 Messages state updated. Current length:', messages.length)
-    console.log('📊 Current messages:', messages)
+    devLog('📊 Messages state updated. Current length:', messages.length)
+    devLog('📊 Current messages:', sanitize(messages))
     scrollToBottom()
   }, [messages, propertySets, isLoading])
 
@@ -144,12 +145,12 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (!supabase || !sessionId) return
     
     try {
-      console.log('🌐 Loading session history...')
+      devLog('🌐 Loading session history...')
       
       // Obtener IP del usuario usando endpoint propio
       const ipRes = await fetch('/api/ip', { cache: 'no-store' })
       const { ip } = await ipRes.json()
-      console.log('🌐 User IP:', ip)
+      devLog('🌐 User IP:', sanitize(ip))
       setUserIp(ip)
       
       await supabase
@@ -264,10 +265,10 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
       )
       
-      console.log(`📱 Loaded from IP ${ip}:`)
-      console.log(`   - ${allConversations.length} messages`)
-      console.log(`   - ${allPropertySets.length} property sets`)
-      console.log(`   - From ${allSessions.length} sessions`)
+      devLog('📱 Loaded session history:')
+      devLog(`   - ${allConversations.length} messages`)
+      devLog(`   - ${allPropertySets.length} property sets`)
+      devLog(`   - From ${allSessions.length} sessions`)
       
       setMessages(allConversations)
       setPropertySets(allPropertySets)
@@ -303,7 +304,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   useEffect(() => {
     if (!sessionId || !supabase) return
   
-    console.log('🔄 Setting up chat_sessions subscription for session:', sessionId)
+    devLog('🔄 Setting up chat_sessions subscription for session:', sanitize(sessionId))
     
     const channel = supabase
       .channel(`chat_sessions:${sessionId}`)
@@ -316,7 +317,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
           filter: `session_id=eq.${sessionId}` 
         },
         (payload) => {
-          console.log('🔄 Chat session updated from server:', payload)
+          devLog('🔄 Chat session updated from server:', sanitize(payload))
           
           // Obtener mensajes del servidor
           const serverMessages = Array.isArray(payload.new?.conversations) 
@@ -350,7 +351,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
               session_id: sessionId
             }))
           
-          console.log(`🔄 Synced ${mergedMessages.length} messages from server`)
+          devLog(`🔄 Synced ${mergedMessages.length} messages from server`)
           
           // CAMBIO: Usar Map para evitar duplicados
           setMessages(prevMessages => {
@@ -373,7 +374,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
             const dedupedMessages = Array.from(messageMap.values())
               .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
             
-            console.log(`🔄 Total unique messages: ${dedupedMessages.length}`)
+            devLog(`🔄 Total unique messages: ${dedupedMessages.length}`)
             return dedupedMessages
           })
                     
@@ -394,20 +395,20 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
               const otherSessionSets = prevSets.filter(s => s.session_id !== sessionId)
               const merged = [...otherSessionSets, ...serverPropertySets]
               merged.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0))
-              console.log(`🔄 Updated property sets for session ${sessionId}`)
+              devLog('🔄 Updated property sets for session')
               return merged
             })
-            console.log(`🔄 Synced ${serverPropertySets.length} property sets from server`)
+            devLog(`🔄 Synced ${serverPropertySets.length} property sets from server`)
           }
         }
       )
       .subscribe((status) => {
-        console.log('🔄 Chat session subscription status:', status)
+        devLog('🔄 Chat session subscription status:', status)
       })
   
     // Cleanup
     return () => {
-      console.log('🔄 Cleaning up chat_sessions subscription')
+      devLog('🔄 Cleaning up chat_sessions subscription')
       supabase.removeChannel(channel)
     }
   }, [sessionId, supabase])
@@ -426,7 +427,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     
     try {
       const payload = callback.payload
-      console.log('Processing callback:', payload)
+      devLog('Processing callback:', sanitize(payload))
       
       if (payload.type === 'assistant_message') {
         addMessage(payload.message, 'assistant')
@@ -434,7 +435,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       else if (payload.type === 'properties_search_completed') {
         const propertiesFound = callback.properties || []
         
-        console.log(`🏠 Processing ${propertiesFound.length} properties`)
+        devLog(`🏠 Processing ${propertiesFound.length} properties`)
         
         if (propertiesFound.length > 0) {
           const newPropertySet = {
@@ -454,7 +455,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         addMessage('Entendido, estoy buscando propiedades que coincidan con tus criterios. Esto puede tomar unos momentos...', 'assistant')
       }
       else if (payload.properties && Array.isArray(payload.properties)) {
-        console.log(`🏠 N8N Real Format: Processing ${payload.properties.length} properties`)
+        devLog(`🏠 N8N Real Format: Processing ${payload.properties.length} properties`)
         
         if (payload.message) {
           addMessage(payload.message, 'assistant')
@@ -472,7 +473,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         setIsLoading(false)
       }
       else {
-        console.log('Unknown callback type. Payload:', payload)
+        devLog('Unknown callback type. Payload:', sanitize(payload))
         
         if (payload.message) {
           addMessage(payload.message, 'assistant')
@@ -495,7 +496,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     }
   
     const trimmed = content.trim()
-    console.log(`📝 addMessage called: type="${type}", content="${trimmed.substring(0, 50)}..."`)
+    devLog(`📝 addMessage called: type="${type}"`)
     
     const newMessage = {
       id: `msg_${sessionId || 'anon'}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
@@ -508,7 +509,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   
     setMessages(prevMessages => {
       const updatedMessages = [...prevMessages, newMessage]
-      console.log(`📝 Previous length: ${prevMessages.length}, New length: ${updatedMessages.length}`)
+      devLog(`📝 Previous length: ${prevMessages.length}, New length: ${updatedMessages.length}`)
   
       clearTimeout(window.saveTimeout)
       window.saveTimeout = setTimeout(() => {
@@ -531,8 +532,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (!supabase) return // Guard
     
     try {
-      console.log('💾 Saving conversation with', updatedMessages.length, 'messages')
-      console.log('💾 Messages to save:', updatedMessages)
+      devLog('💾 Saving conversation with', updatedMessages.length, 'messages'))
+      devLog('💾 Messages to save:', sanitize(updatedMessages))
       
       const { data, error } = await supabase
         .from('chat_sessions')
@@ -545,7 +546,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         .eq('session_id', sessionId)
       
       if (error) {
-        console.log('💾 Update failed, trying upsert:', error)
+        devLog('💾 Update failed, trying upsert:', error)
         
         const { data: upsertData, error: upsertError } = await supabase
           .from('chat_sessions')
@@ -562,7 +563,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         }
       }
         
-      console.log('💾 Conversation saved successfully')
+      devLog('💾 Conversation saved successfully')
     } catch (error) {
       console.error('💾 Error saving conversation:', error)
     }
@@ -587,7 +588,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       setPropertySets(prev => {
         // Verificar si ya existe por ID
         if (prev.some(set => set.id === normalizedSet.id)) {
-          console.log('⚠️ Property set already exists, skipping:', normalizedSet.id)
+          devLog('⚠️ Property set already exists, skipping')
           return prev
         }
         
@@ -598,7 +599,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         })
         
         if (recentDuplicate) {
-          console.log('⚠️ Recent duplicate property set detected, skipping')
+          devLog('⚠️ Recent duplicate property set detected, skipping')
           return prev
         }
         
@@ -637,7 +638,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         return updated
       })
       
-      console.log('💾 Property set processed')
+      devLog('💾 Property set processed')
       return normalizedSet
     } catch (error) {
       console.error('💾 Error in savePropertySetToCurrentSession:', error)
@@ -649,7 +650,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     if (!sessionId || !propertySets || propertySets.length === 0 || !supabase) return // Guard
     
     try {
-      console.log('💾 Saving property sets to session:', propertySets.length)
+      devLog('💾 Saving property sets to session:', propertySets.length)
       
       await supabase
         .from('chat_sessions')
@@ -660,7 +661,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         })
         .eq('session_id', sessionId)
         
-      console.log('💾 Property sets saved to session successfully')
+      devLog('💾 Property sets saved to session successfully')
     } catch (error) {
       console.error('💾 Error saving property sets to session:', error)
     }
@@ -668,7 +669,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
 
   const sendVoiceMessage = async (audioBlob, duration) => {
     try {
-      console.log('🎤 Sending voice message with duration:', duration)
+      devLog('🎤 Sending voice message with duration:', duration)
       const reader = new FileReader()
       reader.onloadend = async () => {
         const base64Audio = reader.result.split(",")[1]
@@ -677,7 +678,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         setIsLoading(true)
         
         try {
-          console.log('🎤 Sending to API with audio data length:', base64Audio.length)
+          devLog('🎤 Sending to API with audio data length:', base64Audio.length)
           const result = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -695,7 +696,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
           })
           
           const data = await result.json()
-          console.log('🎤 Voice API Response:', data)
+          devLog('🎤 Voice API Response:', sanitize(data))
           
           if (result.ok) {
             if (data.assistant_reply) {
@@ -713,7 +714,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
               setIsLoading(false)
             }
           } else {
-            console.error('🎤 Voice API Error:', data)
+            errorLog('🎤 Voice API Error:', sanitize(data))
             setIsLoading(false)
           }
         } catch (error) {
@@ -745,21 +746,20 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     const text = (overrideText ?? inputText).trim()
     if (!text || isLoading) return
 
-    console.log('🚀 sendMessage called with:', text)
-    console.log('🚀 Current state:', {
+    devLog('🚀 sendMessage called')
+    devLog('🚀 Current state:', {
       propertySets: propertySets.length,
-      user: !!user,
-      sessionId
+      hasUser: !!user
     })
 
     // Verificar sesión PRIMERO, antes de agregar el mensaje
     const loggedIn = await getIsLoggedIn()
-    console.log('🚀 Login status:', loggedIn)
-    console.log('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
+    devLog('🚀 Login status:', loggedIn
+    devLog('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
 
     // // Si ya hubo 10 o más búsquedas y NO hay login, guardamos para después del auth
     if (propertySets.length > 10 && !loggedIn) {
-      console.log('🚀 Triggering auth flow after 10 results...')
+      devLog('🚀 Triggering auth flow after 10 results...')
       
       // Guardar el mensaje pendiente y el draft actual
       const action = {
@@ -776,16 +776,16 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       
       // Mostrar auth modal
       if (typeof window !== 'undefined' && window.requireAuth) {
-        console.log('🚀 Calling window.requireAuth')
+        devLog('🚀 Calling window.requireAuth')
         window.requireAuth('Inicia sesión para continuar la conversación')
       } else {
-        console.error('🚀 window.requireAuth not found!')
+        errorLog('🚀 window.requireAuth not found!')
         addMessage('Error: Sistema de autenticación no disponible. Recarga la página.', 'assistant')
       }
       return
     }
 
-    console.log('🚀 No auth needed, sending message directly...')
+    devLog('🚀 No auth needed, sending message directly...')
     
     // Si llegamos aquí, podemos enviar el mensaje
     setInputText('')
@@ -808,10 +808,10 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       })
       
       const data = await result.json()
-      console.log('API Response:', data)
+      devLog('API Response:', sanitize(data))
       
       if (result.ok) {
-        console.log('✅ Message sent successfully')
+        successLog('✅ Message sent successfully')
         
         if (data.assistant_reply) {
           setTimeout(() => {
@@ -867,7 +867,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
           setIsPreparing(false)
           setIsRecording(true)
           setRecordingDuration(1)
-          console.log('🎤 Recording actually started')
+          devLog('🎤 Recording actually started')
           
           const interval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000) + 1
@@ -885,7 +885,7 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
         
         recorder.onstop = () => {
           const actualDuration = startTime ? Math.floor((Date.now() - startTime) / 1000) : recordingDuration
-          console.log('🎤 Recording stopped. Actual duration:', actualDuration)
+          devLog('🎤 Recording stopped. Actual duration:', actualDuration)
           
           const audioBlob = new Blob(chunks, { type: recorder.mimeType })
           const audioUrl = URL.createObjectURL(audioBlob)
@@ -952,8 +952,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
   const [selectedProperty, setSelectedProperty] = useState(null)
 
   useEffect(() => {
-    console.log('🆔 SessionId changed:', sessionId)
-    console.log('🆔 SavedProperties:', Array.from(savedProperties || []))
+    devLog('🆔 SessionId changed:', sanitize(sessionId))
+    devLog('🆔 SavedProperties:', Array.from(savedProperties || []).length)
   }, [sessionId, savedProperties])
 
   const handlePropertyClick = (property) => {
