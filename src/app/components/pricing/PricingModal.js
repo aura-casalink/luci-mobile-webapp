@@ -153,7 +153,7 @@ function PricingModalContent({ onClose, property, isOpen }) {
     return `https://wa.me/34910626648?text=${encodeURIComponent(message)}`
   }
 
-  const handlePlanClick = (plan) => {
+ const handlePlanClick = (plan) => {
     console.log(`Plan seleccionado: ${plan.name}`)
     
     // Si es el plan Pro, verificar autenticación
@@ -173,10 +173,15 @@ function PricingModalContent({ onClose, property, isOpen }) {
         const currentPath = window.location.pathname
         sessionStorage.setItem('pricing_return_path', currentPath)
         
-        // Activar el modal de autenticación usando la función global
-        if (typeof window !== 'undefined' && window.requireAuth) {
-          window.requireAuth('Inicia sesión para seleccionar el plan Pro')
-        }
+        // PRIMERO cerrar el modal de precios
+        onClose?.()
+        
+        // LUEGO (con un pequeño delay) activar el modal de autenticación
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.requireAuth) {
+            window.requireAuth('Inicia sesión para seleccionar el plan Pro')
+          }
+        }, 100)
       } else {
         // Usuario SÍ logueado: mostrar popup directamente
         console.log('Usuario logueado, mostrando popup de desarrollo...')
