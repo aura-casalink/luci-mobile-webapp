@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import PricingModal from '@/app/components/pricing/PricingModal'
+import AuthModal from '@/app/components/auth/AuthModal'
 import { useSavedProperties } from '@/app/hooks/useSavedProperties'
 import { getSupabase } from '@/lib/supabase-browser'
 
@@ -13,6 +14,9 @@ export default function PropertyPricingPage() {
   const [sessionId, setSessionId] = useState('')
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMessage, setAuthMessage] = useState('')
 
   // Generar sessionId
   useEffect(() => {
@@ -30,7 +34,52 @@ export default function PropertyPricingPage() {
     }
   }, [])
 
-  // Cargar propiedad (mismo código que en page.js)
+  // Auth setup
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+  
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (typeof window !== 'undefined') {
+        window.currentUser = session?.user ?? null
+      }
+    })
+  
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Configurar window.requireAuth
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.requireAuth = (message, callback) => {
+        setAuthMessage(message || 'Inicia sesión para continuar')
+        setShowAuthModal(true)
+        window.pendingAuthCallback = callback
+      }
+    }
+  }, [])
+
+  // Ejecutar callback pendiente después del login
+  useEffect(() => {
+    if (user && typeof window !== 'undefined' && window.pendingAuthCallback) {
+      setTimeout(() => {
+        if (window.pendingAuthCallback) {
+          window.pendingAuthCallback()
+          window.pendingAuthCallback = null
+        }
+      }, 300)
+    }
+  }, [user])
+
+  // Cargar propiedad
   useEffect(() => {
     if (!propertyCode || !sessionId) return
 
@@ -98,17 +147,6 @@ export default function PropertyPricingPage() {
 
     loadProperty()
   }, [propertyCode, sessionId])
-
-  // Manejar popup después del login
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    const shouldShowPopup = sessionStorage.getItem('show_dev_popup_after_login')
-    
-    if (shouldShowPopup === 'true') {
-      console.log('🚧 Flag detectado - el popup se mostrará en PricingModal')
-    }
-  }, [router])
   
   const handleClose = () => {
     // Usar back() en lugar de push() para no duplicar historial
@@ -127,12 +165,27 @@ export default function PropertyPricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black/50 flex items-center justify-center">
-      <PricingModal
-        isOpen={true}
-        onClose={handleClose}
-        property={property}
+    <>
+      <div className="min-h-screen bg-black/50 flex items-center justify-center">
+        <PricingModal
+          isOpen={true}
+          onClose={handleClose}
+          property={property}
+        />
+      </div>
+      
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(user) => {
+          setUser(user)
+          setShowAuthModal(false)
+          if (typeof window !== 'undefined' && window.pendingAuthCallback) {
+            window.pendingAuthCallback()
+          }
+        }}
+        message={authMessage}
       />
-    </div>
+    </>
   )
 }
