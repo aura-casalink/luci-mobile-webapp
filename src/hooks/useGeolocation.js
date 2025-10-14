@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { devLog, errorLog, successLog, sanitize } from '@/utils/logger'
 
 export function useGeolocation({ sessionId, consent = false } = {}) {
   const attemptedRef = useRef(false)
@@ -9,15 +10,15 @@ export function useGeolocation({ sessionId, consent = false } = {}) {
     if (attemptedRef.current || !sessionId || typeof window === 'undefined') return
     attemptedRef.current = true
 
-    console.log('🌍 useGeolocation starting for session:', sessionId)
+    devLog('🌍 useGeolocation starting for session:', sanitize(sessionId))
 
     const savedConsent = localStorage.getItem('geo_consent') === 'true'
     const shouldTrack = consent || savedConsent
     
-    console.log('🌍 Consent status:', { consent, savedConsent, shouldTrack })
+    devLog('🌍 Consent status:', { consent, savedConsent, shouldTrack })
 
     const send = async (browser_geo = null) => {
-      console.log('🌍 Sending location to server:', { session_id: sessionId, browser_geo })
+      devLog('🌍 Sending location to server:', sanitize({ session_id: sessionId, browser_geo }))
       
       try {
         const response = await fetch('/api/track-location', {
@@ -30,10 +31,10 @@ export function useGeolocation({ sessionId, consent = false } = {}) {
         })
         
         const data = await response.json()
-        console.log('🌍 Server response:', data)
+        devLog('🌍 Server response:', sanitize(data))
         
         if (data.tracked) {
-          console.log('✅ Location successfully tracked')
+          successLog('✅ Location successfully tracked')
         }
       } catch (err) {
         console.error('❌ Error sending location:', err)
@@ -42,18 +43,18 @@ export function useGeolocation({ sessionId, consent = false } = {}) {
 
     // Si no hay consentimiento, enviar solo datos básicos
     if (!shouldTrack) {
-      console.log('🌍 No consent, sending basic data')
+      devLog('🌍 No consent, sending basic data')
       send(null)
       return
     }
 
     // Si hay consentimiento, obtener ubicación
     if ('geolocation' in navigator) {
-      console.log('🌍 Requesting current position...')
+      devLog('🌍 Requesting current position...')
       
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('✅ Position obtained:', position.coords)
+          devLog('✅ Position obtained:', sanitize(position.coords))
           
           const browser_geo = {
             latitude: position.coords.latitude,
@@ -90,7 +91,7 @@ export function useGeolocation({ sessionId, consent = false } = {}) {
         }
       )
     } else {
-      console.log('⚠️ Geolocation not supported')
+      devLog('⚠️ Geolocation not supported')
       send(null)
     }
   }, [sessionId, consent])
