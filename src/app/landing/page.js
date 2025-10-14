@@ -1,52 +1,55 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import LandingPage from '@/app/components/landing/LandingPage'
 
 export default function LandingRoute() {
   const router = useRouter()
-  const [countdown, setCountdown] = useState(5)
+  const [isChecking, setIsChecking] = useState(true)
 
+  // Verificar si ya vieron la landing
   useEffect(() => {
-    console.log('✅ Landing route loaded successfully!')
+    console.log('🔍 Landing route mounted')
     
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          router.push('/chat')
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('landing_seen')
+      console.log('🔍 landing_seen value:', seen)
+      
+      if (seen === 'true') {
+        console.log('✅ Usuario recurrente en /landing → Redirigiendo a /chat')
+        router.replace('/chat')
+      } else {
+        console.log('🆕 Primera visita → Mostrando landing')
+        setIsChecking(false)
+      }
+    }
   }, [router])
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-yellow-400 to-yellow-600 p-8">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-white mb-4">
-          ✅ LANDING FUNCIONA
-        </h1>
-        <p className="text-2xl text-white mb-8">
-          El routing está correcto
-        </p>
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
-          <p className="text-4xl font-bold text-gray-900 mb-4">
-            {countdown}
-          </p>
-          <p className="text-gray-600">
-            Redirigiendo a /chat...
-          </p>
+  const handleStartApp = () => {
+    console.log('🚀 handleStartApp called')
+    
+    // Guardar que ya vieron la landing
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('landing_seen', 'true')
+      console.log('✅ landing_seen guardado')
+    }
+    
+    // Redirigir a chat
+    console.log('🚀 Redirigiendo a /chat')
+    router.push('/chat')
+  }
+
+  // Mientras verifica, mostrar loader
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Preparando experiencia...</p>
         </div>
-        <button
-          onClick={() => router.push('/chat')}
-          className="mt-8 bg-white text-yellow-600 px-8 py-4 rounded-full font-bold text-xl hover:bg-gray-100 transition"
-        >
-          Ir a Chat ahora
-        </button>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return <LandingPage onStart={handleStartApp} />
 }
