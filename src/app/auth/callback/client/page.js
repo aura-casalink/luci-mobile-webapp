@@ -9,7 +9,7 @@ function OAuthCallbackContent() {
 
   useEffect(() => {
     async function handleCallback() {
-      const next = searchParams.get('next') || '/'
+      const next = searchParams.get('next') || '/chat'
       const sid = searchParams.get('sid')
       const error = searchParams.get('error')
 
@@ -27,13 +27,41 @@ function OAuthCallbackContent() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (session) {
-          // Éxito: redirigir al destino
+          console.log('✅ Login exitoso')
+          
+          // IMPORTANTE: Verificar si hay una ruta de retorno guardada
+          let returnPath = null
+          
+          if (typeof window !== 'undefined') {
+            returnPath = sessionStorage.getItem('auth_return_to')
+            
+            if (returnPath) {
+              console.log('🔙 Retornando a:', returnPath)
+              sessionStorage.removeItem('auth_return_to')
+              
+              // Restaurar el usuario globalmente
+              window.currentUser = session.user
+              
+              router.replace(returnPath)
+              return
+            }
+          }
+          
+          // Si no hay ruta guardada, usar el parámetro 'next' o fallback
           const finalUrl = new URL(next, window.location.origin)
           if (sid) finalUrl.searchParams.set('sid', sid)
+          
+          console.log('🔙 Retornando a (fallback):', finalUrl.pathname + finalUrl.search)
+          
+          // Restaurar el usuario globalmente
+          if (typeof window !== 'undefined') {
+            window.currentUser = session.user
+          }
+          
           router.replace(finalUrl.pathname + finalUrl.search)
         } else {
           // Error: redirigir con mensaje
-          console.error('No session after callback:', sessionError)
+          console.error('❌ No session after callback:', sessionError)
           router.replace(`/?error=auth&reason=no_session`)
         }
       }, 500) // Dar tiempo a Supabase para procesar
