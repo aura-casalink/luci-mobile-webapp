@@ -959,6 +959,8 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
 
   const handlePropertyClick = (property) => {
     const propertyCode = property.propertyCode || property.property_id || property.id
+    // Guardar la ruta actual como origen
+    sessionStorage.setItem('property_return_to', '/chat')
     router.push(`/property/${propertyCode}`)
   }
 
