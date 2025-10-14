@@ -36,8 +36,11 @@ function PricingModalContent({ onClose }) {
       ],
       buttonText: null,
       buttonColor: null,
-      backgroundColor: '#BFC0C9',
-      showCurrentTag: true
+      backgroundColor: '#DADADA',
+      textColor: '#A5A5B0',
+      borderColor: '#E5E7EB',
+      showCurrentTag: true,
+      showPopularTag: false
     },
     {
       name: 'Pro',
@@ -52,7 +55,10 @@ function PricingModalContent({ onClose }) {
       buttonText: 'Seleccionar plan',
       buttonColor: '#FFB300',
       backgroundColor: '#FFFFFF',
-      showCurrentTag: false
+      textColor: '#374151',
+      borderColor: '#E5E7EB',
+      showCurrentTag: false,
+      showPopularTag: false
     },
     {
       name: 'Success',
@@ -67,7 +73,10 @@ function PricingModalContent({ onClose }) {
       buttonText: 'Agendar Llamada Gratuita',
       buttonColor: '#0A0A23',
       backgroundColor: '#FFFFFF',
-      showCurrentTag: false
+      textColor: '#374151',
+      borderColor: '#FFB300',
+      showCurrentTag: false,
+      showPopularTag: true
     },
     {
       name: 'Care',
@@ -82,7 +91,10 @@ function PricingModalContent({ onClose }) {
       buttonText: 'Agendar Llamada Gratuita',
       buttonColor: '#0A0A23',
       backgroundColor: '#FFFFFF',
-      showCurrentTag: false
+      textColor: '#374151',
+      borderColor: '#E5E7EB',
+      showCurrentTag: false,
+      showPopularTag: false
     }
   ]
 
@@ -110,28 +122,71 @@ function PricingModalContent({ onClose }) {
             {plans.map((plan, idx) => (
               <div
                 key={idx}
-                className="relative border-2 border-gray-200 rounded-xl p-6 flex flex-col"
-                style={{ backgroundColor: plan.backgroundColor }}
+                className="relative rounded-xl p-6 flex flex-col"
+                style={{ 
+                  backgroundColor: plan.backgroundColor,
+                  border: `2px solid ${plan.borderColor}`
+                }}
               >
+                {/* Current Plan Tag - FUERA del borde */}
                 {plan.showCurrentTag && (
-                  <div className="absolute top-4 right-4 bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  <div 
+                    className="absolute -top-3 right-4 text-white text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ backgroundColor: '#FFB300' }}
+                  >
                     Plan actual
                   </div>
                 )}
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <p className="text-3xl font-bold text-gray-900 mb-3">{plan.price}</p>
-                <p className="text-sm text-gray-700 mb-6 flex-grow">{plan.description}</p>
+                {/* Popular Tag - FUERA del borde */}
+                {plan.showPopularTag && (
+                  <div 
+                    className="absolute -top-3 right-4 text-white text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ backgroundColor: '#FFB300' }}
+                  >
+                    Más Popular
+                  </div>
+                )}
 
+                {/* Plan Name - CENTRADO */}
+                <h3 
+                  className="text-xl font-bold mb-2 text-center"
+                  style={{ color: plan.textColor }}
+                >
+                  {plan.name}
+                </h3>
+
+                {/* Price - CENTRADO */}
+                <p 
+                  className="text-3xl font-bold mb-3 text-center"
+                  style={{ color: plan.textColor }}
+                >
+                  {plan.price}
+                </p>
+
+                {/* Description - JUSTIFICADO */}
+                <p 
+                  className="text-sm mb-6 flex-grow text-justify"
+                  style={{ color: plan.textColor }}
+                >
+                  {plan.description}
+                </p>
+
+                {/* Features List */}
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start text-sm text-gray-700">
+                    <li 
+                      key={i} 
+                      className="flex items-start text-sm"
+                      style={{ color: plan.textColor }}
+                    >
                       <span className="mr-2 font-bold flex-shrink-0">✓</span>
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
 
+                {/* Button */}
                 {plan.buttonText && (
                   <button
                     className="w-full py-3 px-4 rounded-lg font-bold transition-opacity hover:opacity-90"
