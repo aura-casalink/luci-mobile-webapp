@@ -42,6 +42,12 @@ function OAuthCallbackContent() {
               // Restaurar el usuario globalmente
               window.currentUser = session.user
               
+              // Si vuelve a pricing, marcar que debe mostrar popup
+              if (returnPath.includes('/pricing')) {
+                console.log('🚧 Guardando flag para mostrar popup en pricing')
+                sessionStorage.setItem('show_dev_popup_after_login', 'true')
+              }
+              
               router.replace(returnPath)
               return
             }
