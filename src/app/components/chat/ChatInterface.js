@@ -757,9 +757,9 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
     console.log('🚀 Login status:', loggedIn)
     console.log('🚀 Should require auth?', propertySets.length > 0 && !loggedIn)
 
-    // Si ya hubo búsquedas y NO hay login, guardamos para después del auth
-    if (propertySets.length > 0 && !loggedIn) {
-      console.log('🚀 Triggering auth flow...')
+    // // Si ya hubo 10 o más búsquedas y NO hay login, guardamos para después del auth
+    if (propertySets.length > 10 && !loggedIn) {
+      console.log('🚀 Triggering auth flow after 10 results...')
       
       // Guardar el mensaje pendiente y el draft actual
       const action = {
