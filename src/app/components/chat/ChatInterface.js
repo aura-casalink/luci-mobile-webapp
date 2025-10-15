@@ -209,21 +209,61 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       
       devLog('📊 Traffic source captured:', { utmSource, referrerUrl })
       
-      // GUARDAR EN SUPABASE
-      await supabase
-        .from('chat_sessions')
-        .upsert(
-          { 
-            session_id: sessionId,
-            device_id: window?.deviceId || null,
-            topic: 'Buscar propiedades para comprar',
-            ip,
-            utm_source: utmSource,
-            referrer_url: referrerUrl,
-            updated_at: new Date().toISOString() 
-          },
-          { onConflict: 'session_id' }
-        )
+      // GUARDAR EN SUPABASE (con manejo de errores)
+      try {
+        const { error: upsertError } = await supabase
+          .from('chat_sessions')
+          .upsert(
+            { 
+              session_id: sessionId,
+              device_id: window?.deviceId || null,
+              topic: 'Buscar propiedades para comprar',
+              ip,
+              utm_source: utmSource,
+              referrer_url: referrerUrl,
+              updated_at: new Date().toISOString() 
+            },
+            { onConflict: 'session_id' }
+          )
+        
+        if (upsertError) {
+          console.error('❌ Error guardando origen:', upsertError)
+          // Intentar guardar sin las columnas nuevas (fallback)
+          await supabase
+            .from('chat_sessions')
+            .upsert(
+              { 
+                session_id: sessionId,
+                device_id: window?.deviceId || null,
+                topic: 'Buscar propiedades para comprar',
+                ip, 
+                updated_at: new Date().toISOString() 
+              },
+              { onConflict: 'session_id' }
+            )
+        } else {
+          devLog('✅ Origen guardado correctamente')
+        }
+      } catch (error) {
+        console.error('❌ Error en upsert:', error)
+        // Fallback: guardar sin las columnas nuevas
+        try {
+          await supabase
+            .from('chat_sessions')
+            .upsert(
+              { 
+                session_id: sessionId,
+                device_id: window?.deviceId || null,
+                topic: 'Buscar propiedades para comprar',
+                ip, 
+                updated_at: new Date().toISOString() 
+              },
+              { onConflict: 'session_id' }
+            )
+        } catch (fallbackError) {
+          console.error('❌ Fallback también falló:', fallbackError)
+        }
+      }
       
       // Cargar últimos 30 días de historiales con esta IP
       const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString()
