@@ -22,17 +22,21 @@ export default function RootRedirect() {
 
   useEffect(() => {
     if (!shouldRedirect) return
-
+  
     if (typeof window !== 'undefined') {
       const seen = localStorage.getItem('landing_seen')
       console.log('🔍 landing_seen:', seen)
       
+      // Preservar parámetros UTM de la URL actual
+      const searchParams = window.location.search // Incluye el "?"
+      console.log('📊 Search params capturados:', searchParams)
+      
       if (seen === 'true') {
-        console.log('✅ Usuario recurrente → Redirigiendo a /chat')
-        router.replace('/chat')
+        console.log('✅ Usuario recurrente → Redirigiendo a /chat con params:', searchParams)
+        router.replace(`/chat${searchParams}`)
       } else {
-        console.log('🆕 Primera visita → Redirigiendo a /landing')
-        router.replace('/landing')
+        console.log('🆕 Primera visita → Redirigiendo a /landing con params:', searchParams)
+        router.replace(`/landing${searchParams}`)
       }
     }
   }, [shouldRedirect, router])
