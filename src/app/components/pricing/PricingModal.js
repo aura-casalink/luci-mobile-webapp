@@ -163,28 +163,60 @@ function PricingModalContent({ onClose, property, isOpen, sessionId }) {
       console.warn('⚠️ No sessionId disponible para tracking')
       return
     }
-
+  
     try {
       const supabase = getSupabase()
       if (!supabase) {
         console.warn('⚠️ Supabase no disponible')
         return
       }
-
+  
       console.log('📊 Trackeando selección de plan:', planType)
-
-      const { error } = await supabase
+  
+      // 1. Leer el valor actual de selected_pricing_plan
+      const { data: currentSession, error: fetchError } = await supabase
+        .from('chat_sessions')
+        .select('selected_pricing_plan')
+        .eq('session_id', sessionId)
+        .single()
+  
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('❌ Error obteniendo sesión actual:', fetchError)
+        return
+      }
+  
+      // 2. Parsear la lista actual (separada por comas)
+      const currentPlans = currentSession?.selected_pricing_plan 
+        ? currentSession.selected_pricing_plan.split(',').map(p => p.trim()).filter(Boolean)
+        : []
+  
+      console.log('📋 Planes actuales:', currentPlans)
+  
+      // 3. Añadir el nuevo plan si no está ya en la lista
+      if (!currentPlans.includes(planType)) {
+        currentPlans.push(planType)
+        console.log('➕ Añadiendo plan:', planType)
+      } else {
+        console.log('ℹ️ Plan ya estaba en la lista:', planType)
+        return // No actualizar si ya está
+      }
+  
+      // 4. Guardar la lista actualizada (separada por comas)
+      const updatedPlans = currentPlans.join(',')
+      console.log('💾 Guardando planes:', updatedPlans)
+  
+      const { error: updateError } = await supabase
         .from('chat_sessions')
         .update({
-          selected_pricing_plan: planType,
+          selected_pricing_plan: updatedPlans,
           updated_at: new Date().toISOString()
         })
         .eq('session_id', sessionId)
-
-      if (error) {
-        console.error('❌ Error trackeando plan:', error)
+  
+      if (updateError) {
+        console.error('❌ Error actualizando planes:', updateError)
       } else {
-        console.log('✅ Plan trackeado correctamente:', planType)
+        console.log('✅ Planes trackeados correctamente:', updatedPlans)
       }
     } catch (err) {
       console.error('❌ Excepción al trackear plan:', err)
