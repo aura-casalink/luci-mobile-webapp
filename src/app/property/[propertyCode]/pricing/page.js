@@ -171,6 +171,7 @@ export default function PropertyPricingPage() {
           isOpen={true}
           onClose={handleClose}
           property={property}
+          sessionId={sessionId}
         />
       </div>
       
