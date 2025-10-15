@@ -153,7 +153,63 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
       const { ip } = await ipRes.json()
       devLog('🌐 User IP:', sanitize(ip))
       setUserIp(ip)
+  
+      // CAPTURAR ORIGEN DEL TRÁFICO (UTM + REFERRER)
+      let utmSource = 'direct'
+      let referrerUrl = null
       
+      if (typeof window !== 'undefined') {
+        // 1. Capturar referrer completo
+        referrerUrl = document.referrer || null
+        
+        // 2. PRIORIDAD: Intentar obtener UTM de la URL actual
+        const urlParams = new URLSearchParams(window.location.search)
+        const utmFromUrl = urlParams.get('utm_source')
+        
+        if (utmFromUrl) {
+          // Si hay UTM en la URL, usar ese valor directamente
+          utmSource = utmFromUrl.toLowerCase()
+          devLog('📊 UTM detected from URL:', utmSource)
+        } else if (referrerUrl) {
+          // Si NO hay UTM, analizar el referrer
+          try {
+            const refUrl = new URL(referrerUrl)
+            const hostname = refUrl.hostname.toLowerCase()
+            
+            // Detectar orígenes específicos
+            if (hostname.includes('linkedin')) {
+              utmSource = 'linkedin'
+            } else if (hostname.includes('youtube') || hostname.includes('youtu.be')) {
+              utmSource = 'youtube'
+            } else if (hostname.includes('instagram')) {
+              utmSource = 'instagram'
+            } else if (hostname.includes('tiktok')) {
+              utmSource = 'tiktok'
+            } else if (hostname.includes('facebook') || hostname.includes('fb.com')) {
+              utmSource = 'facebook'
+            } else if (hostname.includes('twitter') || hostname.includes('x.com')) {
+              utmSource = 'twitter'
+            } else if (hostname.includes('google')) {
+              utmSource = 'google'
+            } else if (hostname.includes('aura-app.es') || hostname.includes('aura.app.es')) {
+              utmSource = 'aura_website'
+            } else if (hostname.includes('y.gy') || hostname.includes('bit.ly') || hostname.includes('tinyurl')) {
+              utmSource = 'shortened_link'
+            } else {
+              utmSource = 'referral'
+            }
+            
+            devLog('📊 Source detected from referrer:', { hostname, utmSource })
+          } catch (e) {
+            console.error('Error parsing referrer:', e)
+            utmSource = 'unknown'
+          }
+        }
+      }
+      
+      devLog('📊 Traffic source captured:', { utmSource, referrerUrl })
+      
+      // GUARDAR EN SUPABASE
       await supabase
         .from('chat_sessions')
         .upsert(
@@ -161,7 +217,9 @@ export default function ChatInterface({ sessionId, savedProperties, user, onTogg
             session_id: sessionId,
             device_id: window?.deviceId || null,
             topic: 'Buscar propiedades para comprar',
-            ip, 
+            ip,
+            utm_source: utmSource,
+            referrer_url: referrerUrl,
             updated_at: new Date().toISOString() 
           },
           { onConflict: 'session_id' }
