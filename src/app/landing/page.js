@@ -37,9 +37,13 @@ export default function LandingRoute() {
       console.log('✅ landing_seen guardado')
     }
     
+    // Preservar parámetros UTM al redirigir
+    const searchParams = typeof window !== 'undefined' ? window.location.search : ''
+    console.log('📊 Search params al empezar:', searchParams)
+    
     // Redirigir a chat
-    console.log('🚀 Redirigiendo a /chat')
-    router.push('/chat')
+    console.log('🚀 Redirigiendo a /chat con params:', searchParams)
+    router.push(`/chat${searchParams}`)
   }
 
   // Mientras verifica, mostrar loader
