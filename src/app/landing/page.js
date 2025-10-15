@@ -15,14 +15,17 @@ export default function LandingRoute() {
       const seen = localStorage.getItem('landing_seen')
       console.log('🔍 landing_seen value:', seen)
       
+      // Preservar parámetros UTM
+      const searchParams = window.location.search
+      console.log('📊 Search params en landing:', searchParams)
+      
       if (seen === 'true') {
-        console.log('✅ Usuario recurrente en /landing → Redirigiendo a /chat')
-        router.replace('/chat')
+        console.log('✅ Usuario recurrente en /landing → Redirigiendo a /chat con params:', searchParams)
+        router.replace(`/chat${searchParams}`)
       } else {
         console.log('🆕 Primera visita → Mostrando landing')
         setIsChecking(false)
       }
-    }
   }, [router])
 
   const handleStartApp = () => {
