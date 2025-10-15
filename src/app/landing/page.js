@@ -26,6 +26,7 @@ export default function LandingRoute() {
         console.log('🆕 Primera visita → Mostrando landing')
         setIsChecking(false)
       }
+    }  // <-- ESTA LLAVE FALTABA
   }, [router])
 
   const handleStartApp = () => {
