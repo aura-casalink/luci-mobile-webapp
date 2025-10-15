@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { getSupabase } from '@/lib/supabase-browser'
 
-export default function PricingModal({ isOpen, onClose, property }) {
+export default function PricingModal({ isOpen, onClose, property, sessionId }) {
   if (!isOpen) return null
 
-  return <PricingModalContent onClose={onClose} property={property} isOpen={isOpen} />
+  return <PricingModalContent onClose={onClose} property={property} isOpen={isOpen} sessionId={sessionId} />
 }
 
-function PricingModalContent({ onClose, property, isOpen }) {
+function PricingModalContent({ onClose, property, isOpen, sessionId }) {
   const [showDevPopup, setShowDevPopup] = useState(false)
 
   // Bloquear scroll del body mientras el modal está abierto
@@ -155,9 +156,46 @@ function PricingModalContent({ onClose, property, isOpen }) {
     
     return `https://wa.me/34910626648?text=${encodeURIComponent(message)}`
   }
+ 
+  // Función para trackear selección de plan
+  const trackPlanSelection = async (planType) => {
+    if (!sessionId) {
+      console.warn('⚠️ No sessionId disponible para tracking')
+      return
+    }
 
- const handlePlanClick = (plan) => {
+    try {
+      const supabase = getSupabase()
+      if (!supabase) {
+        console.warn('⚠️ Supabase no disponible')
+        return
+      }
+
+      console.log('📊 Trackeando selección de plan:', planType)
+
+      const { error } = await supabase
+        .from('chat_sessions')
+        .update({
+          selected_pricing_plan: planType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
+
+      if (error) {
+        console.error('❌ Error trackeando plan:', error)
+      } else {
+        console.log('✅ Plan trackeado correctamente:', planType)
+      }
+    } catch (err) {
+      console.error('❌ Excepción al trackear plan:', err)
+    }
+  }
+  
+  const handlePlanClick = async (plan) => {
     console.log(`Plan seleccionado: ${plan.name}`)
+    
+    // NUEVO: Trackear SIEMPRE la selección del plan
+    await trackPlanSelection(plan.planType)
     
     // Si es el plan Pro, verificar autenticación
     if (plan.planType === 'pro') {
@@ -168,9 +206,13 @@ function PricingModalContent({ onClose, property, isOpen }) {
         // Usuario NO logueado: guardar estado y mostrar modal de auth
         console.log('Usuario no logueado, mostrando modal de auth...')
         
+        // Guardar que debe mostrar el popup después del login
+        sessionStorage.setItem('show_dev_popup_after_login', 'true')
+        sessionStorage.setItem('return_to_pricing_modal', 'true')
+        
         // Guardar la ruta actual para volver después del login
         const currentPath = window.location.pathname
-        sessionStorage.setItem('auth_return_to', currentPath) // ← Usar el mismo sistema que el resto
+        sessionStorage.setItem('pricing_return_path', currentPath)
         
         // PRIMERO cerrar el modal de precios
         onClose?.()
@@ -289,6 +331,7 @@ function PricingModalContent({ onClose, property, isOpen }) {
                         href={getWhatsAppUrl(plan.whatsappMessage)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackPlanSelection(plan.planType)}
                         className="w-full py-3 px-4 rounded-lg font-bold transition-opacity hover:opacity-90 text-center"
                         style={{
                           backgroundColor: plan.buttonColor,
